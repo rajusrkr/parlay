@@ -1,0 +1,25 @@
+{
+  "name": "prediction-betting",
+  "version": "1.0.0",
+  "private": "true",
+  "workspaces": [
+    "admin-fe",
+    "user-fe",
+    "platform-api",
+    "price-engine",
+    "ws-server",
+    "shared"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "dev:all": "concurrently \"npm --workspaces platform-api run dev\" \"npm --workspaces price-engine run dev\" \"npm --workspaces ws-server run dev \""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.8.3"
+  }
+}
