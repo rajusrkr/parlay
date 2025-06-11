@@ -1,25 +1,20 @@
 {
   "name": "prediction-betting",
-  "version": "1.0.0",
-  "private": "true",
-  "workspaces": [
-    "admin-fe",
-    "user-fe",
-    "platform-api",
-    "price-engine",
-    "ws-server",
-    "shared"
-  ],
+  "private": true,
   "scripts": {
-    "build": "npm run build --workspaces",
-    "dev:all": "concurrently \"npm --workspaces platform-api run dev\" \"npm --workspaces price-engine run dev\" \"npm --workspaces ws-server run dev \""
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "devDependencies": {
-    "concurrently": "^9.1.2",
-    "typescript": "^5.8.3"
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.4",
+    "typescript": "5.8.2"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
   }
 }
