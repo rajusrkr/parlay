@@ -1,8 +1,7 @@
 import { Router } from "express";
-import { createMarket } from "../controllers/admin.controller";
+import { adminRegister } from "../controllers/admin.controller";
 
 const router  = Router()
 
-router.post("/create-market", createMarket)
-
+router.post("/auth/register", adminRegister)
 export default router
