@@ -17,7 +17,7 @@ export const usersTable = pgTable("users", {
     updatedOn: timestamp("updated_on)").$onUpdate(() => new Date())
 })
 
-export const CurrentMarketStatus = pgEnum("current_status", ["CLOSED", "OPEN", "SETTLED"])
+export const CurrentMarketStatus = pgEnum("current_status", ["NOT_STARTED", "OPEN", "SETTLED", "CANCELLED"])
 
 export const marketTable = pgTable("markets", {
     id: serial("id").primaryKey(),
@@ -27,8 +27,9 @@ export const marketTable = pgTable("markets", {
     side2: varchar("side_2", {length: 20}).notNull(),
     marketStarts: timestamp("market_start").notNull(),
     marketEnds: timestamp("market_ends").notNull(),
-    currentStatus: CurrentMarketStatus().default("CLOSED"),
+    currentStatus: CurrentMarketStatus().default("NOT_STARTED"),
     winnerSide: varchar("winner_side", {length: 20}),
+    marketCreatedBy: varchar("market_created_by", {length: 36}).references(() => adminsTable.adminId).notNull(),
     createdOn: timestamp("created_on").defaultNow(),
     updatedOn: timestamp().$onUpdate(() => new Date())
 })

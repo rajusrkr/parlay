@@ -1,7 +1,7 @@
 import { Request } from "express";
-import {RegisterSchema, LoginShema} from "shared/dist/index"
+import {RegisterSchema, LoginShema, MarketSchema} from "shared/dist/index"
 import { db } from "../db/dbConnection";
-import { adminsTable } from "../db/schema";
+import { adminsTable, marketTable } from "../db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt"
 import {v4 as uuidv4} from "uuid"
@@ -71,7 +71,7 @@ const adminLogin = async (req: Request, res: any) => {
         }
 
         // sign jwt
-        const jwtToken = jwt.sign({adminId: findAdmin[0].adminId, role: findAdmin[0].role},`${process.env.JWT_SECRET_KEY}`)
+        const jwtToken = jwt.sign({adminId: findAdmin[0].adminId, role: findAdmin[0].role},`${process.env.ADMIN_JWT_SECRET_KEY}`)
 
         return res.status(200).json({success: true, message: "Login success", token: jwtToken})
     } catch (error) {
@@ -82,8 +82,35 @@ const adminLogin = async (req: Request, res: any) => {
 }
 
 const createMarket = async (req: Request, res: any) => {
+    const data = req.body;
+    // @ts-ignore
+    const adminId = req.adminId
+    // @ts-ignore
+    const role = req.role
+    
+    const validateAdminInput = MarketSchema.safeParse(data);
 
+    if (!validateAdminInput.success) {
+        return res.status(400).json({})
+    }
+
+    try {
+        const createMarket = await db.insert(marketTable).values({
+            marketId: uuidv4(),
+            marketTitle: data.title,
+            side1: data.side1,
+            side2: data.side2,
+            marketStarts: data.marketStarts,
+            marketEnds: data.marketEnds,
+            marketCreatedBy: ""
+        }).returning()
+
+        return res.status(200).json({success: true, message: `Market ${createMarket[0].marketTitle} created successfully`})
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({success: false, message: "Internal server error"})
+    }
 }
 
 
-export { adminRegister, adminLogin }
+export { adminRegister, adminLogin, createMarket }
