@@ -2,7 +2,7 @@ import { Request } from "express";
 import {RegisterSchema, LoginShema, MarketSchema} from "shared/dist/index"
 import { db } from "../db/dbConnection";
 import { adminsTable, marketTable } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import bcrypt from "bcrypt"
 import {v4 as uuidv4} from "uuid"
 import jwt from "jsonwebtoken"
@@ -111,5 +111,30 @@ const createMarket = async (req: Request, res: any) => {
     }
 }
 
+const deleteMarket = async (req: Request, res: any) => {
+    const marketId = req.query.marketId
+    
+    // @ts-ignore
+    const adminId = req.adminId
 
-export { adminRegister, adminLogin, createMarket }
+    try {
+        const deleteMarketById = await db.delete(marketTable).where(
+            and(
+                eq(marketTable.marketId, marketId!.toString()),
+                eq(marketTable.marketCreatedBy, adminId)
+            )
+        ).returning()
+
+        if (deleteMarketById.length === 0) {
+            return res.status(400).json({success: false, message: `Nothing found with this id, ${marketId}`})
+        }
+
+        return res.status(200).json({success: true, message: `Delete success for ${marketId}`})
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({success: false, message: "Internal server error"})
+    }
+}
+
+
+export { adminRegister, adminLogin, createMarket, deleteMarket }

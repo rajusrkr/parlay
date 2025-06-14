@@ -22,7 +22,7 @@ export const CurrentMarketStatus = pgEnum("current_status", ["NOT_STARTED", "OPE
 export const marketTable = pgTable("markets", {
     id: serial("id").primaryKey(),
     marketId: varchar("market_id", {length: 36}).notNull().unique(),
-    marketTitle: varchar("market_title", {length: 120}).notNull(),
+    marketTitle: varchar("market_title", {length: 120}).notNull().unique(),
     side1: varchar("side_1", {length: 20}).notNull(),
     side2: varchar("side_2", {length: 20}).notNull(),
     marketStarts: timestamp("market_start").notNull(),

@@ -43,6 +43,13 @@
       "when": 1749850419753,
       "tag": "0005_freezing_siren",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1749895567333,
+      "tag": "0006_mixed_starfox",
+      "breakpoints": true
     }
   ]
 }
