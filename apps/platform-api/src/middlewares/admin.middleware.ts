@@ -15,10 +15,7 @@ function adminJwt(req: Request, res: any, next: NextFunction){
         const adminId = decode.adminId;
         // @ts-ignore
         req.adminId = adminId;
-        // @ts-ignore
-        const role = decode.role;
-        // @ts-ignore
-        req.role = role;
+
         return next()
     } catch (error: any) {
         return res.status(400).json({success: false, message:"Invalid token, login again", error: error.message})

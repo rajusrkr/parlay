@@ -71,7 +71,7 @@ const adminLogin = async (req: Request, res: any) => {
         }
 
         // sign jwt
-        const jwtToken = jwt.sign({adminId: findAdmin[0].adminId, role: findAdmin[0].role},`${process.env.ADMIN_JWT_SECRET_KEY}`)
+        const jwtToken = jwt.sign({adminId: findAdmin[0].adminId},`${process.env.ADMIN_JWT_SECRET_KEY}`)
 
         return res.status(200).json({success: true, message: "Login success", token: jwtToken})
     } catch (error) {
@@ -83,29 +83,28 @@ const adminLogin = async (req: Request, res: any) => {
 
 const createMarket = async (req: Request, res: any) => {
     const data = req.body;
+
     // @ts-ignore
     const adminId = req.adminId
-    // @ts-ignore
-    const role = req.role
     
     const validateAdminInput = MarketSchema.safeParse(data);
 
     if (!validateAdminInput.success) {
-        return res.status(400).json({})
+        return res.status(400).json({success: false, message: "Invalid data received from admin", error: validateAdminInput.error})
     }
 
     try {
         const createMarket = await db.insert(marketTable).values({
             marketId: uuidv4(),
-            marketTitle: data.title,
+            marketTitle: data.marketTitle,
             side1: data.side1,
             side2: data.side2,
-            marketStarts: data.marketStarts,
-            marketEnds: data.marketEnds,
-            marketCreatedBy: ""
+            marketStarts: new Date(data.marketStarts),
+            marketEnds: new Date(data.marketEnds),
+            marketCreatedBy: adminId
         }).returning()
 
-        return res.status(200).json({success: true, message: `Market ${createMarket[0].marketTitle} created successfully`})
+        return res.status(200).json({success: true, message: `${createMarket[0].marketTitle} - created successfully`})
     } catch (error) {
         console.log(error);
         return res.status(500).json({success: false, message: "Internal server error"})
