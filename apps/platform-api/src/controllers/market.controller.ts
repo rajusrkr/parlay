@@ -7,8 +7,8 @@ const getAllMarket = async (req: Request, res: any) => {
         const getAllMarkets = await db.select({
             marketId: marketTable.marketId,
             marketTitle: marketTable.marketTitle,
-            side1: marketTable.side1,
-            side2: marketTable.side2,
+            yesSide: marketTable.yesSide,
+            noSide: marketTable.noSide,
             marketStarts: marketTable.marketStarts,
             marketEnds: marketTable.marketEnds,
             currentStatus: marketTable.currentStatus,

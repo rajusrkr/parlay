@@ -97,8 +97,8 @@ const createMarket = async (req: Request, res: any) => {
         const createMarket = await db.insert(marketTable).values({
             marketId: uuidv4(),
             marketTitle: data.marketTitle,
-            side1: data.side1,
-            side2: data.side2,
+            yesSide: data.side1,
+            noSide: data.side2,
             marketStarts: new Date(data.marketStarts),
             marketEnds: new Date(data.marketEnds),
             marketCreatedBy: adminId

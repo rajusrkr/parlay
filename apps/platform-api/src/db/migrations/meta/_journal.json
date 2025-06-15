@@ -50,6 +50,13 @@
       "when": 1749895567333,
       "tag": "0006_mixed_starfox",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1749971983971,
+      "tag": "0007_tired_franklin_storm",
+      "breakpoints": true
     }
   ]
 }
