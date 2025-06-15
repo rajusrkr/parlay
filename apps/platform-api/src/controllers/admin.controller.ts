@@ -136,5 +136,35 @@ const deleteMarket = async (req: Request, res: any) => {
     }
 }
 
+const editMarketStatus = async (req: Request, res: any) => {
+    const data = req.query.status;
+    const marketId = req.query.marketId;
+    // @ts-ignore
+    const adminId = req.adminId;
 
-export { adminRegister, adminLogin, createMarket, deleteMarket }
+    const allowedInputs = ["NOT_STARTED", "OPEN", "SETTLED", "CANCELLED"] as const;
+
+    const status = allowedInputs.find((s) => s === data!.toString().toUpperCase())
+
+
+    if (!status || typeof status === "undefined") {
+        return res.status(400).json({success: false, message: "Invalid status code"})
+    }
+
+    try {
+        const updateMarket = await db.update(marketTable).set({
+            currentStatus: status
+        }).where(and(
+            eq(marketTable.marketId, marketId!.toString()),
+            eq(marketTable.marketCreatedBy, adminId)
+        )).returning()
+
+        return res.status(200).json({success: true, message: "Update success", current_status: updateMarket[0].currentStatus})
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({success: false, message: "Internal server error"})
+    }
+}
+
+
+export { adminRegister, adminLogin, createMarket, deleteMarket, editMarketStatus }
