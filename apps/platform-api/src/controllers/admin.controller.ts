@@ -1,7 +1,7 @@
 import { Request } from "express";
 import {RegisterSchema, LoginShema, MarketSchema} from "shared/dist/index"
 import { db } from "../db/dbConnection";
-import { adminsTable, marketTable } from "../db/schema";
+import { adminsTable, marketTable, priceData } from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import bcrypt from "bcrypt"
 import {v4 as uuidv4} from "uuid"
@@ -158,6 +158,20 @@ const editMarketStatus = async (req: Request, res: any) => {
             eq(marketTable.marketId, marketId!.toString()),
             eq(marketTable.marketCreatedBy, adminId)
         )).returning()
+
+        if (updateMarket.length === 0) {
+            return res.status(200).json({success: false, message: "Unable change the status"})
+        }
+
+        if (updateMarket[0].currentStatus === "OPEN") {
+            await db.insert(priceData).values({
+                marketId: marketId!.toString(),
+                noSidePrice: 50,
+                yesSidePrice: 50
+            })
+
+            return res.status(200).json({success: true, message: "Market status changed to OPEN and price data created"})
+        }
 
         return res.status(200).json({success: true, message: "Update success", current_status: updateMarket[0].currentStatus})
     } catch (error) {

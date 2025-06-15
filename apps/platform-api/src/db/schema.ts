@@ -1,4 +1,5 @@
-import { boolean, decimal, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { boolean, check, decimal, integer, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const AccountRoleEnum = pgEnum("role", ["USER", "ADMIN"])
 export const CurrencyCode = pgEnum("currency_code", ["INR", "USD"])
@@ -33,6 +34,19 @@ export const marketTable = pgTable("markets", {
     createdOn: timestamp("created_on").defaultNow(),
     updatedOn: timestamp().$onUpdate(() => new Date())
 })
+// i need two table one is for price and another is for order
+export const priceData = pgTable("priceData", {
+    id: serial("id").primaryKey(),
+    marketId: varchar("marketId", {length: 36}).references(() => marketTable.marketId),
+    yesSidePrice: integer("yes_price").notNull(),
+    noSidePrice: integer("no_price").notNull(),
+    createdOn: timestamp("created_on").defaultNow(),
+    updatedOn: timestamp("updated_on").$onUpdate(() => new Date())
+}, (table) => ({
+    yesPriceCheck: check('yes_check', sql`${table.yesSidePrice} >=1 AND ${table.yesSidePrice} <=99`),
+    noPriceCheck: check('no_check', sql`${table.noSidePrice} >=1 AND ${table.noSidePrice} <=99`),
+    bothSidePriceCombined: check('both_side_combined', sql`${table.yesSidePrice} + ${table.noSidePrice} <=100`)
+}))
 
 
 
