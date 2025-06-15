@@ -48,7 +48,17 @@ export const priceData = pgTable("priceData", {
     bothSidePriceCombined: check('both_side_combined', sql`${table.yesSidePrice} + ${table.noSidePrice} <=100`)
 }))
 
-
+export const orderTable = pgTable("orders", {
+    id: serial("id").primaryKey(),
+    orderId: varchar("order_id", {length: 36}).notNull(),
+    marketId: varchar("market_id", {length: 36}).references(() => marketTable.marketId),
+    executionPrice: integer("price").notNull(),
+    qty: integer("qty").notNull(),
+    sideTaken: varchar("side_taken", {length:3}).notNull(),
+    orderPlacedBy: varchar("order_placed_by", {length: 36}).notNull().references(() => usersTable.userId),
+    createdOn: timestamp("created_on").defaultNow(),
+    updatedOn: timestamp("updated_on").$onUpdate(() => new Date())
+})
 
 
 // ADMIN
