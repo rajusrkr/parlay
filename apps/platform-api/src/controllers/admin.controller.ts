@@ -71,7 +71,7 @@ const adminLogin = async (req: Request, res: any) => {
         }
 
         // sign jwt
-        const jwtToken = jwt.sign({adminId: findAdmin[0].adminId},`${process.env.ADMIN_JWT_SECRET_KEY}`)
+        const jwtToken = jwt.sign({adminId: findAdmin[0].adminId},`${process.env.JWT_SECRET}`)
 
         return res.status(200).json({success: true, message: "Login success", token: jwtToken})
     } catch (error) {

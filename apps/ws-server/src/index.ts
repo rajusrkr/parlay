@@ -1,34 +1,57 @@
-import {WebSocketServer} from "ws"
+import { WebSocketServer, WebSocket } from "ws";
+import jwt from "jsonwebtoken"
+import dotnenv from "dotenv"
 
-const wss = new WebSocketServer({port: 8001});
+dotnenv.config()
 
-wss.on("connection", (ws) => {
-    console.log("new connection!!");
-    // handle error
-    ws.on("error", (error) => {
-        console.error("Websocket error", error)
-    })
+interface ExtendedWebsocket extends WebSocket {
+    isAlive?: boolean;
+    role?: string
+}
+
+
+const wss = new WebSocketServer({port: 8001})
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+console.log(`[WS] server runninf on port 8001`);
+
+wss.on("connection", (ws: ExtendedWebsocket) => {
+    console.log(`[WS] New client connected`);
     
+
+    ws.on("error", (error) => {
+        console.error(`[WS] Error:`, error)
+    })
+
+    // handling incoming messges
     ws.on("message", (data) => {
         try {
-            const messag = data.toString()
-            const parsedMessage = JSON.parse(messag)
-            console.log(parsedMessage.message);
-            console.log(parsedMessage.messageType);
+            const message = JSON.parse(data.toString())
 
-            if (parsedMessage.messageType === "greet") {
-                console.log("message type is greet");
-                
-                wss.clients.forEach(client => {
-                    if (client.readyState === ws.OPEN) {
-                        client.send(parsedMessage.message)
-                    }
-                })
+            if (message.token) {
+                try {
+                    const decode: any = jwt.verify(message.token, JWT_SECRET!)
+                    ws.role = decode.role
+
+                    console.log(`[WS] Authenticated as: ${ws.role}`);
+                    ws.send(JSON.stringify({type: "auth_success", role: ws.role}))
+                    return
+                } catch (error) {
+                    console.log(error);
+                    ws.send(JSON.stringify({type: "auth_failed", error: "Invalid token"}))
+                    ws.close()
+                    return
+                }
+            }
+
+            if (!ws.role) {
+                ws.send(JSON.stringify({type: "unauthorized"}))
+                ws.close()
+                return
             }
         } catch (error) {
-            console.error("Error in processing message")
+            
         }
     })
-
-    ws.send("connection successful")
 })

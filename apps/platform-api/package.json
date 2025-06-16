@@ -22,6 +22,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.44.2",
@@ -29,6 +30,7 @@
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.0",
     "shared": "workspace:*",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "ws": "^8.18.2"
   }
 }

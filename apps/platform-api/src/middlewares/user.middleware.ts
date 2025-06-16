@@ -9,7 +9,7 @@ function userJwt(req: Request, res: any, next: NextFunction){
     }
 
     try {
-        const decode = jwt.verify(token, `${process.env.USER_JWT_SECRET_KEY}`)
+        const decode = jwt.verify(token, `${process.env.JWT_SECRET}`)
         //@ts-ignore
         const userId = decode.userId;
         //@ts-ignore

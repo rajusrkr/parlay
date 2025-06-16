@@ -10,7 +10,7 @@ function adminJwt(req: Request, res: any, next: NextFunction){
     }
 
     try {
-        const decode = jwt.verify(token, `${process.env.ADMIN_JWT_SECRET_KEY}`)
+        const decode = jwt.verify(token, `${process.env.JWT_SECRET}`)
         // @ts-ignore
         const adminId = decode.adminId;
         // @ts-ignore

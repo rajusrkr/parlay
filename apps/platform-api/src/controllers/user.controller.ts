@@ -6,6 +6,9 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt"
 import { v4 as uuidv4 } from "uuid"
 import jwt from "jsonwebtoken"
+import WebSocket from "ws";
+
+const ws = new WebSocket("ws://localhost:8001")
 
 const userRegister = async (req: Request, res: any) => {
     const data = req.body;
@@ -71,7 +74,7 @@ const userLogin = async (req: Request, res: any) => {
         }
 
         // sign jwt
-        const signJWT = jwt.sign({userId: findUser[0].userId}, `${process.env.USER_JWT_SECRET_KEY}`)
+        const signJWT = jwt.sign({userId: findUser[0].userId}, `${process.env.JWT_SECRET}`)
 
         return res.status(200).json({success: true, message: "Login success", jwt_token: signJWT})
     } catch (error) {
@@ -83,7 +86,7 @@ const userLogin = async (req: Request, res: any) => {
 const placeOrder = async (req: Request, res: any) => {
     const data = req.body;
 
-    // userId,
+    //userId,
     //@ts-ignore
     const userId = req.userId
 
@@ -99,6 +102,13 @@ const placeOrder = async (req: Request, res: any) => {
 
         if (createOrder.length === 0) {
             return res.status(400).json({success: false, message: "unable to place order"})
+        }
+
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                event: "order-placed",
+                message: `Hey new order received, orderId: ${createOrder[0].orderId}`
+            }))
         }
 
         return res.status(200).json({success: true, message: "Order placed", orderId:createOrder[0].orderId})
