@@ -9,6 +9,8 @@ interface ExtendedWebsocket extends WebSocket {
     role?: string
 }
 
+const clients = new Map<ExtendedWebsocket, string>();
+
 
 const wss = new WebSocketServer({port: 8001})
 
@@ -36,6 +38,8 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
 
                     console.log(`[WS] Authenticated as: ${ws.role}`);
                     ws.send(JSON.stringify({type: "auth_success", role: ws.role}))
+                    clients.set(ws, ws.role!)
+                    logConnectedClients()
                     return
                 } catch (error) {
                     console.log(error);
@@ -48,6 +52,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             if (!ws.role) {
                 ws.send(JSON.stringify({type: "unauthorized"}))
                 ws.close()
+                logConnectedClients()
                 return
             }
         } catch (error) {
@@ -55,3 +60,16 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
         }
     })
 })
+
+
+
+function logConnectedClients(){
+    console.log('\n[WS] Connected clients');
+    clients.forEach((role, client) => {
+        console.log(`-Role: ${role}, Alive: ${client.readyState === client.OPEN}`);
+        
+    })
+
+    console.log(`[WS] Total: ${clients.size} clients are connected \n`);
+    
+}

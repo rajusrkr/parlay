@@ -5,7 +5,7 @@ let ws: WebSocket;
 
 export function connectToWsServer(){
     return new Promise<void>((resolve, reject) => {
-        // create token
+        // generate token
         const token = jwt.sign({role: "platform-api"}, `${process.env.JWT_SECRET}`)
         // provide url
         ws = new WebSocket("ws://localhost:8001")
