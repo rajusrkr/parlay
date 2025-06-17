@@ -6,7 +6,7 @@ dotnenv.config()
 
 interface ExtendedWebsocket extends WebSocket {
     isAlive?: boolean;
-    role?: string
+    clientRole?: string
 }
 
 const clients = new Map<ExtendedWebsocket, string>();
@@ -16,7 +16,7 @@ const wss = new WebSocketServer({port: 8001})
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-console.log(`[WS] server runninf on port 8001`);
+console.log(`[WS] server running on port 8001`);
 
 wss.on("connection", (ws: ExtendedWebsocket) => {
     console.log(`[WS] New client connected`);
@@ -24,6 +24,12 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
 
     ws.on("error", (error) => {
         console.error(`[WS] Error:`, error)
+    })
+
+    ws.on("close", () => {
+        console.log(`[WS] client disconnected: ${ws.clientRole}`);
+        clients.delete(ws)
+        logConnectedClients()
     })
 
     // handling incoming messges
@@ -34,11 +40,16 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             if (message.token) {
                 try {
                     const decode: any = jwt.verify(message.token, JWT_SECRET!)
-                    ws.role = decode.role
+                    
+                    if (typeof decode !== "object" || !decode.clientRole) {
+                        throw new Error("Invalid token payload")
+                    }
 
-                    console.log(`[WS] Authenticated as: ${ws.role}`);
-                    ws.send(JSON.stringify({type: "auth_success", role: ws.role}))
-                    clients.set(ws, ws.role!)
+                    ws.clientRole = decode.clientRole
+
+                    console.log(`[WS] Authenticated as: ${ws.clientRole}`);
+                    ws.send(JSON.stringify({type: "auth_success", role: ws.clientRole}))
+                    clients.set(ws, ws.clientRole!)
                     logConnectedClients()
                     return
                 } catch (error) {
@@ -49,7 +60,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                 }
             }
 
-            if (!ws.role) {
+            if (!ws.clientRole) {
                 ws.send(JSON.stringify({type: "unauthorized"}))
                 ws.close()
                 logConnectedClients()

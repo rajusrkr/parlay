@@ -7,7 +7,7 @@ export function connectToWsServer(){
     return new Promise<void>((resolve,reject) => {
 
         // generating the token with role
-        const token = jwt.sign({role: "price-engine"}, `${process.env.JWT_SECRET}`)
+        const token = jwt.sign({clientRole: "price-engine"}, `${process.env.JWT_SECRET}`)
         // url to connect
         ws = new WebSocket("ws://localhost:8001")
         // on connection open send token
