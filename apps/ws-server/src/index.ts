@@ -75,12 +75,12 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
 
 
 function logConnectedClients(){
-    console.log('\n[WS] Connected clients');
+    console.log('[WS] Connected clients');
     clients.forEach((role, client) => {
         console.log(`-Role: ${role}, Alive: ${client.readyState === client.OPEN}`);
         
     })
 
-    console.log(`[WS] Total: ${clients.size} clients are connected \n`);
+    console.log(`[WS] Total: ${clients.size} clients are connected`);
     
 }
