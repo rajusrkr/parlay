@@ -36,10 +36,14 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
     ws.on("message", (data) => {
         try {
             const message = JSON.parse(data.toString())
+            console.log("[MESSAGE]", message);
+            
 
-            if (message.token) {
+            if (message.data.event === "handShake") {
                 try {
-                    const decode: any = jwt.verify(message.token, JWT_SECRET!)
+                    const decode: any = jwt.verify(message.data.data.token, JWT_SECRET!)
+                    console.log("[DECODE]", decode);
+                    
                     
                     if (typeof decode !== "object" || !decode.clientRole) {
                         throw new Error("Invalid token payload")
