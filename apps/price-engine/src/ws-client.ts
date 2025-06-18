@@ -10,11 +10,11 @@ export function connectToWsServer(){
         const token = jwt.sign({clientRole: "price-engine"}, `${process.env.JWT_SECRET}`)
         // url to connect
         ws = new WebSocket("ws://localhost:8001")
-        const data: wsData = {event: "handShake", data: {token}} 
+        const wsData: wsData = {event: "handShake", data: {token}} 
 
         // on connection open send token
         ws.on("open", () => {
-            ws.send(JSON.stringify({ data }))
+            ws.send(JSON.stringify({ wsData }))
 
             console.log(`[WS] connected as price-engine`);
 

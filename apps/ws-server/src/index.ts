@@ -38,10 +38,10 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             const message = JSON.parse(data.toString())
             console.log("[MESSAGE]", message);
             
-
-            if (message.data.event === "handShake") {
+            // FOR AUTH
+            if (message.wsData.event === "handShake") {
                 try {
-                    const decode: any = jwt.verify(message.data.data.token, JWT_SECRET!)
+                    const decode: any = jwt.verify(message.wsData.data.token, JWT_SECRET!)
                     console.log("[DECODE]", decode);
                     
                     
@@ -61,6 +61,22 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                     ws.send(JSON.stringify({type: "auth_failed", error: "Invalid token"}))
                     ws.close()
                     return
+                }
+            }
+            // FOR SENDING ORDER-PLACED EVENT TO PRICE-ENGINE
+            if (message.wsData.event === "order-placed") {
+                console.log(`[WS] order-placed received from ${ws.clientRole}`);
+                
+                const orderPayload = message.wsData.data;
+
+                // find client with "price-engine role"
+                for(const [client, role] of clients.entries()) {
+                    if (role === "price-engine" && client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({
+                            type: "order-placed",
+                            payload: orderPayload
+                        }))
+                    }
                 }
             }
 

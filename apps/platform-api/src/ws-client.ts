@@ -2,7 +2,7 @@ import WebSocket from "ws";
 import jwt from "jsonwebtoken"
 import { wsData } from "shared/dist/index"
 
-let ws: WebSocket;
+export let ws: WebSocket;
 
 export function connectToWsServer(){
     return new Promise<void>((resolve, reject) => {
@@ -10,11 +10,11 @@ export function connectToWsServer(){
         const token = jwt.sign({clientRole: "platform-api"}, `${process.env.JWT_SECRET}`)
         // provide url
         ws = new WebSocket("ws://localhost:8001") 
-        const data: wsData = {event: "handShake", data: {token}} 
+        const wsData: wsData = {event: "handShake", data: {token}} 
         // on open
         ws.on("open", () => {
            
-            ws.send(JSON.stringify({ data }))
+            ws.send(JSON.stringify({ wsData }))
             console.log("[WS] connected as platform-api");
             resolve()
         })

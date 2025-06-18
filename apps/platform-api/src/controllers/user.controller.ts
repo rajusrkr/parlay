@@ -6,9 +6,9 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt"
 import { v4 as uuidv4 } from "uuid"
 import jwt from "jsonwebtoken"
-import WebSocket from "ws";
+import { ws } from "../ws-client";
+import {wsData} from "shared/dist/index"
 
-const ws = new WebSocket("ws://localhost:8001")
 
 const userRegister = async (req: Request, res: any) => {
     const data = req.body;
@@ -104,12 +104,20 @@ const placeOrder = async (req: Request, res: any) => {
             return res.status(400).json({success: false, message: "unable to place order"})
         }
 
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-                event: "order-placed",
-                message: `Hey new order received, orderId: ${createOrder[0].orderId}`
-            }))
+        const wsData: wsData = {
+            event: "order-placed",
+            data: {
+                marketId: createOrder[0].marketId,
+                sideTaken: createOrder[0].sideTaken
+            }
         }
+
+        if (ws.readyState === ws.OPEN) {
+            ws.send(JSON.stringify({wsData}))
+        } else {
+            console.warn("[WS] Not connected")
+        }
+
 
         return res.status(200).json({success: true, message: "Order placed", orderId:createOrder[0].orderId})
     } catch (error) {
