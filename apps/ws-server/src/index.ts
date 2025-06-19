@@ -36,14 +36,11 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
     ws.on("message", (data) => {
         try {
             const message = JSON.parse(data.toString())
-            console.log("[MESSAGE]", message);
-            
+
             // FOR AUTH
             if (message.wsData.event === "handShake") {
                 try {
                     const decode: any = jwt.verify(message.wsData.data.token, JWT_SECRET!)
-                    console.log("[DECODE]", decode);
-                    
                     
                     if (typeof decode !== "object" || !decode.clientRole) {
                         throw new Error("Invalid token payload")
@@ -73,8 +70,8 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                 for(const [client, role] of clients.entries()) {
                     if (role === "price-engine" && client.readyState === WebSocket.OPEN) {
                         client.send(JSON.stringify({
-                            type: "order-placed",
-                            payload: orderPayload
+                            event: "order-placed",
+                            orderDetails: orderPayload
                         }))
                     }
                 }

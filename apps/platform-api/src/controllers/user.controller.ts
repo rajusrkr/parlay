@@ -108,7 +108,9 @@ const placeOrder = async (req: Request, res: any) => {
             event: "order-placed",
             data: {
                 marketId: createOrder[0].marketId,
-                sideTaken: createOrder[0].sideTaken
+                sideTaken: createOrder[0].sideTaken,
+                qty: createOrder[0].qty,
+                executionPrice: createOrder[0].executionPrice
             }
         }
 
