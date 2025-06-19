@@ -2,7 +2,7 @@ import { Request } from "express";
 import { RegisterSchema, LoginShema } from "shared/dist/index"
 import { db } from "../db/dbConnection";
 import { orderTable, usersTable } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt"
 import { v4 as uuidv4 } from "uuid"
 import jwt from "jsonwebtoken"
@@ -104,9 +104,34 @@ const placeOrder = async (req: Request, res: any) => {
             return res.status(400).json({success: false, message: "unable to place order"})
         }
 
+        // get latest market states
+        const marketState = await db.execute<{side_taken: string; total_qty: number}>(
+            sql`
+            SELECT side_taken, SUM(qty)::int as total_qty
+            FROM orders
+            WHERE market_id = ${createOrder[0].marketId}
+            GROUP BY side_taken;
+            `
+        );
+
+        console.log("MARKET STATE", marketState);
+
+        let yesVolume = 0;
+        let noVolume = 0;
+
+        for (const row of marketState.rows) {
+            if (row.side_taken.toLowerCase() === "yes") yesVolume = row.total_qty;
+            
+
+            if (row.side_taken.toLocaleLowerCase() === "no") noVolume = row.total_qty;
+        }
+        
+
         const wsData: wsData = {
             event: "order-placed",
             data: {
+                noSide: noVolume,
+                yesSide: yesVolume,
                 marketId: createOrder[0].marketId,
                 sideTaken: createOrder[0].sideTaken,
                 qty: createOrder[0].qty,
@@ -121,7 +146,7 @@ const placeOrder = async (req: Request, res: any) => {
         }
 
 
-        return res.status(200).json({success: true, message: "Order placed", orderId:createOrder[0].orderId})
+        return res.status(200).json({success: true, message: "Order placed", orderId:createOrder[0].orderId, no: noVolume, yes: yesVolume}, )
     } catch (error) {
         console.log(error);
         return res.status(500).json({success: false, message: "Internal server error"})

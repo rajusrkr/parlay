@@ -49,7 +49,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                     ws.clientRole = decode.clientRole
 
                     console.log(`[WS] Authenticated as: ${ws.clientRole}`);
-                    ws.send(JSON.stringify({type: "auth_success", role: ws.clientRole}))
+                    ws.send(JSON.stringify({event: "auth_success", role: ws.clientRole}))
                     clients.set(ws, ws.clientRole!)
                     logConnectedClients()
                     return
