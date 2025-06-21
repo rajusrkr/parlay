@@ -20,6 +20,8 @@ export const usersTable = pgTable("users", {
 
 export const CurrentMarketStatus = pgEnum("current_status", ["NOT_STARTED", "OPEN", "SETTLED", "CANCELLED"])
 
+// market table => totalYesQty, totalNoQty
+
 export const marketTable = pgTable("markets", {
     id: serial("id").primaryKey(),
     marketId: varchar("market_id", {length: 36}).notNull().unique(),
@@ -30,14 +32,16 @@ export const marketTable = pgTable("markets", {
     marketEnds: timestamp("market_ends").notNull(),
     currentStatus: CurrentMarketStatus().default("NOT_STARTED"),
     winnerSide: varchar("winner_side", {length: 20}),
-    marketCreatedBy: varchar("market_created_by", {length: 36}).references(() => adminsTable.adminId).notNull(),
+    totalYesQty: integer("total_yes_qty").notNull().default(0),
+    totalNoQty: integer("total_No_qty").notNull().default(0),
+    marketCreatedBy: varchar("market_created_by", {length: 36}).references(() => adminsTable.adminId, {onDelete: "cascade"}).notNull(),
     createdOn: timestamp("created_on").defaultNow(),
     updatedOn: timestamp().$onUpdate(() => new Date())
 })
 // i need two table one is for price and another is for order
 export const priceData = pgTable("priceData", {
     id: serial("id").primaryKey(),
-    marketId: varchar("marketId", {length: 36}).references(() => marketTable.marketId),
+    marketId: varchar("marketId", {length: 36}).references(() => marketTable.marketId, {onDelete: "cascade"}),
     yesSidePrice: integer("yes_price").notNull(),
     noSidePrice: integer("no_price").notNull(),
     createdOn: timestamp("created_on").defaultNow(),
@@ -51,11 +55,11 @@ export const priceData = pgTable("priceData", {
 export const orderTable = pgTable("orders", {
     id: serial("id").primaryKey(),
     orderId: varchar("order_id", {length: 36}).notNull(),
-    marketId: varchar("market_id", {length: 36}).references(() => marketTable.marketId),
+    marketId: varchar("market_id", {length: 36}).references(() => marketTable.marketId, {onDelete: "cascade"}),
     executionPrice: integer("price").notNull(),
     qty: integer("qty").notNull(),
     sideTaken: varchar("side_taken", {length:3}).notNull(),
-    orderPlacedBy: varchar("order_placed_by", {length: 36}).notNull().references(() => usersTable.userId),
+    orderPlacedBy: varchar("order_placed_by", {length: 36}).notNull().references(() => usersTable.userId, {onDelete: "cascade"}),
     createdOn: timestamp("created_on").defaultNow(),
     updatedOn: timestamp("updated_on").$onUpdate(() => new Date())
 })
