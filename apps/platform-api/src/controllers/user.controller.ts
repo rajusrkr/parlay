@@ -1,7 +1,7 @@
 import { Request } from "express";
 import { RegisterSchema, LoginShema } from "shared/dist/index"
 import { db } from "../db/dbConnection";
-import { orderTable, usersTable } from "../db/schema";
+import { marketTable, orderTable, usersTable } from "../db/schema";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt"
 import { v4 as uuidv4 } from "uuid"
@@ -114,8 +114,6 @@ const placeOrder = async (req: Request, res: any) => {
             `
         );
 
-        console.log("MARKET STATE", marketState);
-
         let yesVolume = 0;
         let noVolume = 0;
 
@@ -154,5 +152,72 @@ const placeOrder = async (req: Request, res: any) => {
 
 }
 
+const verifyUserBeforeOrderPlacement = async (req: Request, res: any) => {
+    const data = req.body;
+    // BODY WILL CONTAIN
+    // - order_side
+    // - order_qty
+    // - userId
+    // - marketId
 
-export { userRegister, userLogin, placeOrder }
+    // here i will do user verification and data checks
+    // after that i will forward details to price-engine
+
+    //@ts-ignore
+    const userId = req.userId
+
+    // perform checks
+    if (data.orderSide.toLowerCase() !== "yes") {
+        return res.status(400).json({success: false, message: "Side selected by user is not valid"})
+    }
+
+
+    // this below three can be check via zod, will implement this later
+    if (typeof data.orderQty !== "number") {
+        return res.status(400).json({success: false, message: "Quantity is invalid"})
+    }
+
+    if (typeof userId !== "string") {
+        return res.status(400).json({success: false, message: "User Id is invalid"})
+    }
+
+    if (typeof data.marketId !== "string") {
+        return res.status(400).json({success: false, message: "Market Id is invalid"})
+    }
+
+    try {
+        const marketDetailsFromMarketId = await db.select().from(marketTable).where(eq(marketTable.marketId, data.marketId))
+
+        if (marketDetailsFromMarketId[0].currentStatus !== "OPEN" || marketDetailsFromMarketId.length === 0) {
+            return res.status(400).json({success: false, message: "This market is not tradeable right now"})
+        };
+
+        // send data to price-engine
+        const wsData: wsData =  {
+            event: "YSBO",
+            data: {
+                orderSide: "yes",
+                orderType: "buy",
+                yesSideBuyQty: data.orderQty,
+                prevYesSideQty: marketDetailsFromMarketId[0].totalYesQty,
+                prevNoSideQty: marketDetailsFromMarketId[0].totalNoQty,
+                marketId: data.marketId,
+                userId: userId
+            }
+        }
+
+        if (ws.readyState === ws.OPEN) {
+            console.log("ran3");
+            
+            ws.send(JSON.stringify({wsData}))
+        } else {
+            console.log("[WS] Not connected");
+        }
+    } catch (error) {
+        console.log( new Date().toLocaleTimeString("en-IN", {timeZone: "Asia/Kolkata"}), error);
+        return res.status(500).json({success: false, message: "Internal server error"})   
+    }
+}
+
+
+export { userRegister, userLogin, placeOrder, verifyUserBeforeOrderPlacement }

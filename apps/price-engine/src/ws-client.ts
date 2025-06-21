@@ -26,7 +26,7 @@ export function connectToWsServer() {
     ws.on("message", (msg) => {
       const data = JSON.parse(msg.toString());
 
-      console.log(`[WS] Message:`, data);
+      
       if (data.event === "order-placed") {
         const totalPool = data.orderDetails.yesSide + data.orderDetails.noSide;
 

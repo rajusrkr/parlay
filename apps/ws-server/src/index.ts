@@ -61,10 +61,13 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                 }
             }
             // FOR SENDING ORDER-PLACED EVENT TO PRICE-ENGINE
-            if (message.wsData.event === "order-placed") {
+            if (message.wsData.event === "YSBO") {
                 console.log(`[WS] order-placed received from ${ws.clientRole}`);
                 
                 const orderPayload = message.wsData.data;
+
+                console.log(orderPayload);
+                return
 
                 // find client with "price-engine role"
                 for(const [client, role] of clients.entries()) {
