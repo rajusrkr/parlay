@@ -84,64 +84,7 @@ const userLogin = async (req: Request, res: any) => {
     }
 }
 
-const placeOrder = async (req: Request, res: any) => {
-    const data = req.body;
-
-    //userId,
-    //@ts-ignore
-    const userId = req.userId
-
-    try {
-        const createOrder = await db.insert(orderTable).values({
-            orderId: uuidv4(),
-            marketId: data.marketId,
-            sideTaken: data.side,
-            qty: data.qty,
-            executionPrice: data.price,
-            orderPlacedBy: userId
-        }).returning()
-
-        if (createOrder.length === 0) {
-            return res.status(400).json({success: false, message: "unable to place order"})
-        }
-
-        // get latest market states
-        const marketState = await db.execute<{side_taken: string; total_qty: number}>(
-            sql`
-            SELECT side_taken, SUM(qty)::int as total_qty
-            FROM orders
-            WHERE market_id = ${createOrder[0].marketId}
-            GROUP BY side_taken;
-            `
-        );
-
-        let yesVolume = 0;
-        let noVolume = 0;
-
-        for (const row of marketState.rows) {
-            if (row.side_taken.toLowerCase() === "yes") yesVolume = row.total_qty;
-            
-
-            if (row.side_taken.toLocaleLowerCase() === "no") noVolume = row.total_qty;
-        }
-        
-
-        // if (ws.readyState === ws.OPEN) {
-        //     ws.send(JSON.stringify({wsData}))
-        // } else {
-        //     console.warn("[WS] Not connected")
-        // }
-
-
-        return res.status(200).json({success: true, message: "Order placed", orderId:createOrder[0].orderId, no: noVolume, yes: yesVolume}, )
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({success: false, message: "Internal server error"})
-    }
-
-}
-
-const verifyUserBeforeOrderPlacement = async (req: Request, res: any) => {
+const verifyUserAndOrderPlacement = async (req: Request, res: any) => {
     const data = req.body;
     // BODY WILL CONTAIN
     // - order_side
@@ -201,4 +144,4 @@ const verifyUserBeforeOrderPlacement = async (req: Request, res: any) => {
 }
 
 
-export { userRegister, userLogin, placeOrder, verifyUserBeforeOrderPlacement }
+export { userRegister, userLogin, verifyUserAndOrderPlacement }
