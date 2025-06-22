@@ -1,10 +1,11 @@
 import dotenv from "dotenv"
-import { connectToWsServer } from "./ws-client"
+import { authAndConnectToWsServer } from "./ws/handle-auth"
+
 
 dotenv.config()
 
 async function start(){
-    await connectToWsServer()
+    await authAndConnectToWsServer()
 }
 
 start()

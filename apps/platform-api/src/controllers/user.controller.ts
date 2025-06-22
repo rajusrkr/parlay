@@ -6,8 +6,9 @@ import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt"
 import { v4 as uuidv4 } from "uuid"
 import jwt from "jsonwebtoken"
-import { ws } from "../ws-client";
-import {wsData} from "shared/dist/index"
+// import { sendToWsServer, ws } from "../ws-client";
+import {wsSend} from "shared/dist/index"
+import { sendOrderToWsServer } from "../ws/send-order";
 
 
 const userRegister = async (req: Request, res: any) => {
@@ -125,23 +126,11 @@ const placeOrder = async (req: Request, res: any) => {
         }
         
 
-        const wsData: wsData = {
-            event: "order-placed",
-            data: {
-                noSide: noVolume,
-                yesSide: yesVolume,
-                marketId: createOrder[0].marketId,
-                sideTaken: createOrder[0].sideTaken,
-                qty: createOrder[0].qty,
-                executionPrice: createOrder[0].executionPrice
-            }
-        }
-
-        if (ws.readyState === ws.OPEN) {
-            ws.send(JSON.stringify({wsData}))
-        } else {
-            console.warn("[WS] Not connected")
-        }
+        // if (ws.readyState === ws.OPEN) {
+        //     ws.send(JSON.stringify({wsData}))
+        // } else {
+        //     console.warn("[WS] Not connected")
+        // }
 
 
         return res.status(200).json({success: true, message: "Order placed", orderId:createOrder[0].orderId, no: noVolume, yes: yesVolume}, )
@@ -166,10 +155,6 @@ const verifyUserBeforeOrderPlacement = async (req: Request, res: any) => {
     //@ts-ignore
     const userId = req.userId
 
-    // perform checks
-    if (data.orderSide.toLowerCase() !== "yes") {
-        return res.status(400).json({success: false, message: "Side selected by user is not valid"})
-    }
 
 
     // this below three can be check via zod, will implement this later
@@ -193,25 +178,21 @@ const verifyUserBeforeOrderPlacement = async (req: Request, res: any) => {
         };
 
         // send data to price-engine
-        const wsData: wsData =  {
-            event: "YSBO",
-            data: {
-                orderSide: "yes",
-                orderType: "buy",
+        try {
+            const response = await sendOrderToWsServer({sentEvent: "YSBO", data: {
+                orderSide: data.orderSide,
+                orderType: "sell",
                 yesSideBuyQty: data.orderQty,
                 prevYesSideQty: marketDetailsFromMarketId[0].totalYesQty,
                 prevNoSideQty: marketDetailsFromMarketId[0].totalNoQty,
                 marketId: data.marketId,
                 userId: userId
-            }
-        }
+            }})
 
-        if (ws.readyState === ws.OPEN) {
-            console.log("ran3");
+            return res.status(200).json({response})
             
-            ws.send(JSON.stringify({wsData}))
-        } else {
-            console.log("[WS] Not connected");
+        } catch (error) {
+            console.log(error);
         }
     } catch (error) {
         console.log( new Date().toLocaleTimeString("en-IN", {timeZone: "Asia/Kolkata"}), error);

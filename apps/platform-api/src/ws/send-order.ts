@@ -13,8 +13,6 @@ export function sendOrderToWsServer(wsData: wsSend): Promise<any>{
         ws.send(JSON.stringify({wsData}))
         const message = await handleWsMessage()
 
-        console.log("message", message);
-
         resolve(message)
         
     })

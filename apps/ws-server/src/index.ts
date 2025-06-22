@@ -1,6 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken"
 import dotnenv from "dotenv"
+import {wsMessage} from "shared/dist/index"
 
 dotnenv.config()
 
@@ -15,13 +16,10 @@ const clients = new Map<ExtendedWebsocket, string>();
 const wss = new WebSocketServer({port: 8001})
 
 const JWT_SECRET = process.env.JWT_SECRET;
-
 console.log(`[WS] server running on port 8001`);
 
-wss.on("connection", (ws: ExtendedWebsocket) => {
-    console.log(`[WS] New client connected`);
-    
 
+wss.on("connection", (ws: ExtendedWebsocket) => {
     ws.on("error", (error) => {
         console.error(`[WS] Error:`, error)
     })
@@ -36,9 +34,8 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
     ws.on("message", (data) => {
         try {
             const message = JSON.parse(data.toString())
-
-            // FOR AUTH
-            if (message.wsData.event === "handShake") {
+            // for client authentication
+            if (message.wsData.sentEvent === "handShake") {
                 try {
                     const decode: any = jwt.verify(message.wsData.data.token, JWT_SECRET!)
                     
@@ -49,7 +46,9 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                     ws.clientRole = decode.clientRole
 
                     console.log(`[WS] Authenticated as: ${ws.clientRole}`);
-                    ws.send(JSON.stringify({event: "auth_success", role: ws.clientRole}))
+
+                    const wsMessageData: wsMessage = {messageEvent: "auth-success", data: {role: ws.clientRole}}
+                    ws.send(JSON.stringify({wsMessageData}))
                     clients.set(ws, ws.clientRole!)
                     logConnectedClients()
                     return
@@ -60,22 +59,21 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                     return
                 }
             }
-            // FOR SENDING ORDER-PLACED EVENT TO PRICE-ENGINE
-            if (message.wsData.event === "YSBO") {
+
+            // receive the order events send them to price engine accordingly
+            if (message.wsData.sentEvent === "YSBO") {
                 console.log(`[WS] order-placed received from ${ws.clientRole}`);
                 
-                const orderPayload = message.wsData.data;
-
-                console.log(orderPayload);
-                return
-
-                // find client with "price-engine role"
-                for(const [client, role] of clients.entries()) {
-                    if (role === "price-engine" && client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify({
-                            event: "order-placed",
-                            orderDetails: orderPayload
-                        }))
+                const payload = message.wsData.data
+                console.log(payload);
+                
+                for(const [client, role] of clients.entries()){
+                    if (role === "platform-api" && client.readyState === WebSocket.OPEN) {
+                       client.send(JSON.stringify({
+                             event: "order-received",
+                             details: payload
+                            })
+                        )
                     }
                 }
             }
@@ -87,7 +85,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                 return
             }
         } catch (error) {
-            
+            console.log(error);
         }
     })
 })
@@ -102,5 +100,4 @@ function logConnectedClients(){
     })
 
     console.log(`[WS] Total: ${clients.size} clients are connected`);
-    
 }
