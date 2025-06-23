@@ -32,8 +32,8 @@ export const marketTable = pgTable("markets", {
     marketEnds: timestamp("market_ends").notNull(),
     currentStatus: CurrentMarketStatus().default("NOT_STARTED"),
     winnerSide: varchar("winner_side", {length: 20}),
-    totalYesQty: integer("total_yes_qty").notNull().default(0),
-    totalNoQty: integer("total_No_qty").notNull().default(0),
+    totalYesQty: integer("total_yes_qty").notNull().default(500000),
+    totalNoQty: integer("total_No_qty").notNull().default(500000),
     marketCreatedBy: varchar("market_created_by", {length: 36}).references(() => adminsTable.adminId, {onDelete: "cascade"}).notNull(),
     createdOn: timestamp("created_on").defaultNow(),
     updatedOn: timestamp().$onUpdate(() => new Date())
@@ -42,14 +42,14 @@ export const marketTable = pgTable("markets", {
 export const priceData = pgTable("priceData", {
     id: serial("id").primaryKey(),
     marketId: varchar("marketId", {length: 36}).references(() => marketTable.marketId, {onDelete: "cascade"}),
-    yesSidePrice: integer("yes_price").notNull(),
-    noSidePrice: integer("no_price").notNull(),
+    yesSidePrice: decimal("yes_price", {precision: 19, scale: 4}).notNull(),
+    noSidePrice: decimal("no_price", {precision: 19, scale: 4}).notNull(),
     createdOn: timestamp("created_on").defaultNow(),
     updatedOn: timestamp("updated_on").$onUpdate(() => new Date())
 }, (table) => ({
-    yesPriceCheck: check('yes_check', sql`${table.yesSidePrice} >=1 AND ${table.yesSidePrice} <=99`),
-    noPriceCheck: check('no_check', sql`${table.noSidePrice} >=1 AND ${table.noSidePrice} <=99`),
-    bothSidePriceCombined: check('both_side_combined', sql`${table.yesSidePrice} + ${table.noSidePrice} <=100`)
+    yesPriceCheck: check('yes_check', sql`${table.yesSidePrice} >=0.00 AND ${table.yesSidePrice} <=1.00`),
+    noPriceCheck: check('no_check', sql`${table.noSidePrice} >=0.00 AND ${table.noSidePrice} <=1.00`),
+    bothSidePriceCombined: check('both_side_combined', sql`${table.yesSidePrice} + ${table.noSidePrice} <=1.00`)
 }))
 
 export const orderTable = pgTable("orders", {
