@@ -122,10 +122,10 @@ const verifyUserAndOrderPlacement = async (req: Request, res: any) => {
 
         // send data to price-engine
         try {
-            const response = await sendOrderToWsServer({sentEvent: "YSBO", data: {
+            const response = await sendOrderToWsServer({sentEvent: "new-order", data: {
                 orderSide: data.orderSide,
-                orderType: "sell",
-                yesSideBuyQty: data.orderQty,
+                orderType: data.orderType,
+                userOrderQty: data.orderQty,
                 prevYesSideQty: marketDetailsFromMarketId[0].totalYesQty,
                 prevNoSideQty: marketDetailsFromMarketId[0].totalNoQty,
                 marketId: data.marketId,

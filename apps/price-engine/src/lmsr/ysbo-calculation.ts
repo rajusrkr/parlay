@@ -3,8 +3,8 @@ export function YSBOCalculations({totalYesQty, totalNoQty, userQty, b}: {totalYe
     const expNo = Math.exp(totalNoQty / b);
 
     // this is the price of yes share before this order
-    const priceBerforeOrder = expYes / ( expYes + expNo );
-    console.log("priceBerforeOrder", priceBerforeOrder);
+    const priceBeforeOrder = expYes / ( expYes + expNo );
+    console.log("priceBeforeOrder", priceBeforeOrder);
     
     // this is the current market cost/ money in a market
     const totalCostBeforeOrder = b * Math.log((Math.exp(totalYesQty / b)) + (Math.exp(totalNoQty / b))) // 500693.14
@@ -24,11 +24,6 @@ export function YSBOCalculations({totalYesQty, totalNoQty, userQty, b}: {totalYe
     // this is the price after the order
     const priceAfterOrder = newExpYes / (newExpYes + expNo);
     console.log("priceAfterOrder",priceAfterOrder);
-    
-    
-
-
-
 
     return totalCostBeforeOrder
 }

@@ -6,6 +6,6 @@ const router  = Router()
 
 router.post("/auth/register", userRegister)
 router.post("/auth/login", userLogin)
-router.post("/pre-order", userJwt, verifyUserAndOrderPlacement)
+router.post("/handle-order", userJwt, verifyUserAndOrderPlacement)
 
 export default router

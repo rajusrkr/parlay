@@ -166,8 +166,8 @@ const editMarketStatus = async (req: Request, res: any) => {
         if (updateMarket[0].currentStatus === "OPEN") {
             await db.insert(priceData).values({
                 marketId: marketId!.toString(),
-                noSidePrice: 50,
-                yesSidePrice: 50
+                noSidePrice: "0.5",
+                yesSidePrice: "0.5"
             })
 
             return res.status(200).json({success: true, message: "Market status changed to OPEN and price data created"})
