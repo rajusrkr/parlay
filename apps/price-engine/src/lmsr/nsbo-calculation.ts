@@ -1,15 +1,16 @@
+import {BuyOrderUpdates} from "shared/dist/index"
 export function NSBOCalculation({totalYesQty, totalNoQty, userQty, b} : {totalYesQty: number, totalNoQty: number, userQty: number, b: number}){
     const expYes = Math.exp(totalYesQty / b);
     const expNo = Math.exp(totalNoQty / b);
 
-    // price before order
-    const priceBeforeOrder = expNo / (expNo + expYes);
-    console.log("priceBeforeOrder", priceBeforeOrder);
+    // no price before order
+    const noPriceBeforeOrder = parseFloat((expNo / (expNo + expYes)).toFixed(2));
 
+    // yes price before order
+    const yesPriceBeforeOrder = parseFloat((expYes / (expYes + expNo)).toFixed(2));
 
     // total cost before order
-    const totalCostBeforeOrder = b * Math.log((Math.exp(totalYesQty / b)) + (Math.exp(totalNoQty / b)));
-    console.log("totalCostBeforeOrder", totalCostBeforeOrder);
+    const costBeforeOrder = parseFloat((b * Math.log((expYes) + (expNo))).toFixed(2));
     
     // adding user qty
     const addUserQty = totalNoQty + userQty;
@@ -17,12 +18,36 @@ export function NSBOCalculation({totalYesQty, totalNoQty, userQty, b} : {totalYe
     // new expNo
     const newExpNo = Math.exp(addUserQty / b);
 
-    // price after order
-    const priceAfterOrder = newExpNo / (newExpNo + expYes);
-    console.log("priceAfterOrder", priceAfterOrder);
+    // no price after order
+    const noPriceAfterOrder = parseFloat((newExpNo / (newExpNo + expYes)).toFixed(2));
+
+    // yes price after order
+    const yesPriceAftereOrder = parseFloat((expYes / (newExpNo + expYes)).toFixed(2));
 
     // cost after order
-    const totalCostAfterOrder = b * Math.log((Math.exp(totalYesQty / b)) + (Math.exp(addUserQty / b)));
-    console.log("totalCostAfterOrder", totalCostAfterOrder);
-    
+    const costAfterOrder = parseFloat((b * Math.log((expYes) + (newExpNo))).toFixed(2));
+
+    // cost to user
+    const costToUser = parseFloat((costAfterOrder - costBeforeOrder).toFixed(2));
+
+    const updates: BuyOrderUpdates = {
+        yesPriceBeforeOrder,
+        yesPriceAftereOrder,
+        noPriceBeforeOrder,
+        noPriceAfterOrder,
+        costBeforeOrder,
+        costAfterOrder,
+        costToUser
+    }
+
+    return updates
 }
+
+/*
+- priceBeforeOrder
+- totalCostBeforeOrder
+- totalCostAfterOrder
+- costToUser
+- priceAfterOrder
+
+*/
