@@ -20,33 +20,35 @@ console.log(`[WS] server running on port 8001`);
 
 
 wss.on("connection", (ws: ExtendedWebsocket) => {
-    ws.on("error", (error) => {
-        console.error(`[WS] Error:`, error)
-    })
+    return new Promise((resolve, reject) => {
 
-    ws.on("close", () => {
-        console.log(`[WS] client disconnected: ${ws.clientRole}`);
-        clients.delete(ws)
-        logConnectedClients()
-    })
-
-    // handling incoming messges
-    ws.on("message", (data) => {
-        try {
-            const message = JSON.parse(data.toString())
-            // for client authentication
-            if (message.wsData.sentEvent === "handShake") {
-                try {
-                    const decode: any = jwt.verify(message.wsData.data.token, JWT_SECRET!)
-                    
+        ws.on("error", (error) => {
+            console.error(`[WS] Error:`, error)
+        })
+        
+        ws.on("close", () => {
+            console.log(`[WS] client disconnected: ${ws.clientRole}`);
+            clients.delete(ws)
+            logConnectedClients()
+        })
+        
+        // handling incoming messges
+        ws.on("message", (data) => {
+            try {
+                const message = JSON.parse(data.toString())
+                // for client authentication
+                if (message.wsData.sentEvent === "handShake") {
+                    try {
+                        const decode: any = jwt.verify(message.wsData.data.token, JWT_SECRET!)
+                        
                     if (typeof decode !== "object" || !decode.clientRole) {
                         throw new Error("Invalid token payload")
                     }
-
+                    
                     ws.clientRole = decode.clientRole
-
+                    
                     console.log(`[WS] Authenticated as: ${ws.clientRole}`);
-
+                    
                     const wsMessageData: wsMessage = {messageEvent: "auth-success", data: {role: ws.clientRole}}
                     ws.send(JSON.stringify({wsMessageData}))
                     clients.set(ws, ws.clientRole!)
@@ -59,29 +61,37 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                     return
                 }
             }
-
+            
             // receive the order events send them to price engine accordingly
             if (message.wsData.sentEvent === "new-order") {
                 console.log(`[ws-server] order-placed received from ${ws.clientRole}`);
                 
                 const payload = message.wsData.data
-
+                
                 // for buy order in yes side
-                    const wsMessageData: wsMessage = {messageEvent: "new-order", data: payload}
-
-                    for(const [client, role] of clients.entries()){
-                        if (role === "price-engine" && client.readyState === WebSocket.OPEN) {
-                            client.send(JSON.stringify({ wsMessageData }))
-                        }
+                const wsMessageData: wsMessage = {messageEvent: "new-order", data: payload}
+                
+                for(const [client, role] of clients.entries()){
+                    if (role === "price-engine" && client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({ wsMessageData }))
                     }
+                }
             }
-
+            
             // receive price-update
             if (message.wsData.sentEvent === "price-update") {
                 console.log(message);
+
+                for(const [client, role] of clients.entries()){
+                const wsMessageData: wsMessage = {messageEvent: "new-order", data: message}
+
+                    if (role === "platform-api" && client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({wsMessageData}))
+                    }
+                }
                 
             }
-
+            
             if (!ws.clientRole) {
                 ws.send(JSON.stringify({type: "unauthorized"}))
                 ws.close()
@@ -92,6 +102,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             console.log(error);
         }
     })
+})
 })
 
 

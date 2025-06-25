@@ -132,6 +132,9 @@ const verifyUserAndOrderPlacement = async (req: Request, res: any) => {
                 userId: userId
             }})
 
+            console.log("response", response);
+            
+
             return res.status(200).json({response})
             
         } catch (error) {

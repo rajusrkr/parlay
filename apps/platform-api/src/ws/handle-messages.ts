@@ -5,7 +5,7 @@ export function handleWsMessage(): Promise<any>{
     return new Promise((resolve, reject) => {
         ws.on("message", (msg) => {
             const receivedData = JSON.parse(msg.toString())
-            console.log(receivedData);
+            console.log(receivedData.wsMessageData);
             resolve(receivedData)
         })
 

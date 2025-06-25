@@ -30,6 +30,9 @@ export function handleWsMessage(): Promise<any>{
                     const wsData: wsSend = {sentEvent: "price-update", data: {priceUpdate}} 
                 
                     ws.send(JSON.stringify({wsData}))
+
+                    resolve(wsData)
+                    return
                 }
 
                 if (data.orderSide === "yes" && data.orderType === "sell") {
@@ -42,6 +45,8 @@ export function handleWsMessage(): Promise<any>{
                     const wsData: wsSend = {sentEvent: "price-update", data: {priceUpdate}} 
                 
                     ws.send(JSON.stringify({wsData}))
+                    resolve(wsData)
+                    return
                 }
 
                 if (data.orderSide === "no" && data.orderType === "buy") {
@@ -57,6 +62,8 @@ export function handleWsMessage(): Promise<any>{
                     const wsData: wsSend = {sentEvent: "price-update", data: {priceUpdate}} 
                 
                     ws.send(JSON.stringify({wsData}))
+                    resolve(wsData)
+                    return
                 }
 
                 if (data.orderSide === "no" && data.orderType === "sell") {
@@ -69,10 +76,11 @@ export function handleWsMessage(): Promise<any>{
                     const wsData: wsSend = {sentEvent: "price-update", data: {priceUpdate}} 
                 
                     ws.send(JSON.stringify({wsData}))
+                    resolve(wsData)
+                    return
                 }
             }
             
-            resolve(receivedData)
         })
 
     })
