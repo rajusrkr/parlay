@@ -5,7 +5,8 @@ interface BuyOrderUpdates {
     noPriceAfterOrder: number,
     costBeforeOrder: number,
     costAfterOrder: number,
-    costToUser: number
+    costToUser: number,
+    requestId: string
 }
 
 interface SellOrderUpdates {
@@ -15,7 +16,8 @@ interface SellOrderUpdates {
     noPriceAfterOrder: number,
     costBeforeOrder: number,
     costAfterOrder: number,
-    costToUser: number
+    returnToUser: number,
+    requestId: string
 }
 
 export { BuyOrderUpdates, SellOrderUpdates }

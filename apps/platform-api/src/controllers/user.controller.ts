@@ -84,67 +84,6 @@ const userLogin = async (req: Request, res: any) => {
     }
 }
 
-const verifyUserAndOrderPlacement = async (req: Request, res: any) => {
-    const data = req.body;
-    // BODY WILL CONTAIN
-    // - order_side
-    // - order_qty
-    // - userId
-    // - marketId
-
-    // here i will do user verification and data checks
-    // after that i will forward details to price-engine
-
-    //@ts-ignore
-    const userId = req.userId
 
 
-
-    // this below three can be check via zod, will implement this later
-    if (typeof data.orderQty !== "number") {
-        return res.status(400).json({success: false, message: "Quantity is invalid"})
-    }
-
-    if (typeof userId !== "string") {
-        return res.status(400).json({success: false, message: "User Id is invalid"})
-    }
-
-    if (typeof data.marketId !== "string") {
-        return res.status(400).json({success: false, message: "Market Id is invalid"})
-    }
-
-    try {
-        const marketDetailsFromMarketId = await db.select().from(marketTable).where(eq(marketTable.marketId, data.marketId))
-
-        if (marketDetailsFromMarketId[0].currentStatus !== "OPEN" || marketDetailsFromMarketId.length === 0) {
-            return res.status(400).json({success: false, message: "This market is not tradeable right now"})
-        };
-
-        // send data to price-engine
-        try {
-            const response = await sendOrderToWsServer({sentEvent: "new-order", data: {
-                orderSide: data.orderSide,
-                orderType: data.orderType,
-                userOrderQty: data.orderQty,
-                prevYesSideQty: marketDetailsFromMarketId[0].totalYesQty,
-                prevNoSideQty: marketDetailsFromMarketId[0].totalNoQty,
-                marketId: data.marketId,
-                userId: userId
-            }})
-
-            console.log("response", response);
-            
-
-            return res.status(200).json({response})
-            
-        } catch (error) {
-            console.log(error);
-        }
-    } catch (error) {
-        console.log( new Date().toLocaleTimeString("en-IN", {timeZone: "Asia/Kolkata"}), error);
-        return res.status(500).json({success: false, message: "Internal server error"})   
-    }
-}
-
-
-export { userRegister, userLogin, verifyUserAndOrderPlacement }
+export { userRegister, userLogin }

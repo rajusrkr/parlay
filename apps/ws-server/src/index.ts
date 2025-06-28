@@ -65,8 +65,8 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             // receive the order events send them to price engine accordingly
             if (message.wsData.sentEvent === "new-order") {
                 console.log(`[ws-server] order-placed received from ${ws.clientRole}`);
-                
-                const payload = message.wsData.data
+
+                    const payload = message.wsData.data;
                 
                 // for buy order in yes side
                 const wsMessageData: wsMessage = {messageEvent: "new-order", data: payload}
@@ -80,10 +80,11 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             
             // receive price-update
             if (message.wsData.sentEvent === "price-update") {
-                console.log(message);
+
+                const priceUpdates = message.wsData.data.priceUpdate
 
                 for(const [client, role] of clients.entries()){
-                const wsMessageData: wsMessage = {messageEvent: "new-order", data: message}
+                const wsMessageData: wsMessage = {messageEvent: "price-update", data: priceUpdates}
 
                     if (role === "platform-api" && client.readyState === WebSocket.OPEN) {
                         client.send(JSON.stringify({wsMessageData}))

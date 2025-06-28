@@ -1,5 +1,5 @@
 import {SellOrderUpdates} from "shared/dist/index"
-export function NSSOCalculation({totalYesQty, totalNoQty, userQty, b}:{totalYesQty: number, totalNoQty: number, userQty: number, b: number}){
+export function NSSOCalculation({totalYesQty, totalNoQty, userQty, b, requestId}:{totalYesQty: number, totalNoQty: number, userQty: number, b: number, requestId: string}){
     const expYes = Math.exp(totalYesQty / b);
     const expNo = Math.exp(totalNoQty / b);
 
@@ -38,7 +38,8 @@ export function NSSOCalculation({totalYesQty, totalNoQty, userQty, b}:{totalYesQ
         noPriceAfterOrder,
         costBeforeOrder,
         costAfterOrder,
-        returnToUser
+        returnToUser,
+        requestId
     }
 
     return updates

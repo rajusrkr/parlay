@@ -1,5 +1,5 @@
 import {BuyOrderUpdates} from "shared/dist/index"
-export function NSBOCalculation({totalYesQty, totalNoQty, userQty, b} : {totalYesQty: number, totalNoQty: number, userQty: number, b: number}){
+export function NSBOCalculation({totalYesQty, totalNoQty, userQty, b, requestId} : {totalYesQty: number, totalNoQty: number, userQty: number, b: number, requestId: string}){
     const expYes = Math.exp(totalYesQty / b);
     const expNo = Math.exp(totalNoQty / b);
 
@@ -37,17 +37,9 @@ export function NSBOCalculation({totalYesQty, totalNoQty, userQty, b} : {totalYe
         noPriceAfterOrder,
         costBeforeOrder,
         costAfterOrder,
-        costToUser
+        costToUser,
+        requestId
     }
 
     return updates
 }
-
-/*
-- priceBeforeOrder
-- totalCostBeforeOrder
-- totalCostAfterOrder
-- costToUser
-- priceAfterOrder
-
-*/

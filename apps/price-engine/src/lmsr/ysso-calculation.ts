@@ -1,6 +1,6 @@
 import {SellOrderUpdates} from "shared/dist/index"
 
-export function YSSOCalculations({totalNoQty, totalYesQty, userQty, b}: {totalYesQty: number, totalNoQty: number, userQty: number, b: number}){
+export function YSSOCalculations({totalNoQty, totalYesQty, userQty, b, requestId}: {totalYesQty: number, totalNoQty: number, userQty: number, b: number, requestId: string}){
     const expYes = Math.exp(totalYesQty / b);
     const expNo = Math.exp(totalNoQty / b);
 
@@ -40,7 +40,8 @@ export function YSSOCalculations({totalNoQty, totalYesQty, userQty, b}: {totalYe
         noPriceAfterOrder,
         costBeforeOrder,
         costAfterOrder,
-        returnToUser
+        returnToUser,
+        requestId
     }
 
     return update
