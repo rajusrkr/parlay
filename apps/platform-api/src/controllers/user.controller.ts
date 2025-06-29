@@ -80,6 +80,24 @@ const userLogin = async (req: Request, res: any) => {
     }
 }
 
+const addMoney = async (req: Request, res: any) => {
+    const data = req.body;
+
+    // @ts-ignore
+    const userId = req.userId
+
+    try {
+        const deposit = await db.update(usersTable).set({
+            userWalletBalance: data.amount.toString()
+        }).where(eq(usersTable.userId, userId)).returning()
+
+        return res.status(200).json({success: true, message: "Money deposited", newBalance: deposit[0].userWalletBalance})
+    } catch (error) {
+        console.error(error)
+        return res.status(500).json({success: false, message: "Internal server error"})
+    }
+}
 
 
-export { userRegister, userLogin }
+
+export { userRegister, userLogin, addMoney }

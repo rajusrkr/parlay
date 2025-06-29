@@ -1,5 +1,5 @@
 import { ws } from "../ws-client";
-import { pendingRequests } from "../controllers/order.controller"
+import { pendingRequests } from "../controllers/order.controller";
 import { db } from "../db/dbConnection";
 import { marketTable, orderTable, priceData, usersTable } from "../db/schema";
 import { eq } from "drizzle-orm";
@@ -7,18 +7,18 @@ import { eq } from "drizzle-orm";
 export function handleWsMessage() {
   ws.on("message", async (msg) => {
     const parsed = JSON.parse(msg.toString());
-    const {eventName, data} = parsed.wsMessageData
-    
-    // if auth response 
+    const { eventName, data } = parsed.wsMessageData;
+
+    // if auth response
     if (eventName === "auth-success") {
       console.log(`[AUTH]: ${eventName}, and role ${data.role}`);
-      return 
+      return;
     }
 
     if (eventName === "price-update") {
       console.log(`[PRICE UPDATE RECEIVED]`);
 
-      const pending = pendingRequests.get(data.requestId)
+      const pending = pendingRequests.get(data.requestId);
 
       if (!pending) return;
 
@@ -45,83 +45,165 @@ export function handleWsMessage() {
 
         // yes side buy order
         if (pending.orderSide === "yes" && pending.orderType === "buy") {
-          await db.transaction(async (tx) => {
-            const [account] = await tx.select().from(usersTable).where(eq(usersTable.userId, pending.userId))
+          try {
+            await db.transaction(async (tx) => {
+              const [account] = await tx
+                .select()
+                .from(usersTable)
+                .where(eq(usersTable.userId, pending.userId));
 
-            if (Number(account.userWalletBalance) < data.costToUser) {
-              tx.rollback()
-            }
+              if (Number(account.userWalletBalance) < data.costToUser) {
+                tx.rollback();
+              }
 
-            const dbBalance = Number(account.userWalletBalance);
-            const cost = data.costToUser;
-            const newBalance = dbBalance - cost
-            
-            // here i need to deduct the balance => done
-            // create the order in the orders table => done
-            // update market qty => done
-            // update the price data
-            
-            await tx.update(usersTable).set({
-              userWalletBalance: newBalance.toString()
-            }).where(eq(usersTable.userId, pending.userId))
-            
+              const dbBalance = Number(account.userWalletBalance);
+              const cost = data.costToUser;
+              const newBalance = dbBalance - cost;
 
-            await tx.insert(orderTable).values({
-              executionPrice: (data.costToUser / pending.userOrderQty).toString(),
-              orderId: data.requestId,
-              orderPlacedBy: pending.userId,
-              qty: pending.userOrderQty,
-              sideTaken: pending.orderSide,
-              orderType: pending.orderType,
-              marketId: pending.marketId
-            })
+              // here i need to deduct the balance => done
+              // create the order in the orders table => done
+              // update market qty => done
+              // update the price data => done
 
+              await tx
+                .update(usersTable)
+                .set({
+                  userWalletBalance: newBalance.toString(),
+                })
+                .where(eq(usersTable.userId, pending.userId));
 
-            const userQty = pending.userOrderQty
+              await tx.insert(orderTable).values({
+                executionPrice: (
+                  data.costToUser / pending.userOrderQty
+                ).toString(),
+                orderId: data.requestId,
+                orderPlacedBy: pending.userId,
+                qty: pending.userOrderQty,
+                sideTaken: pending.orderSide,
+                orderType: pending.orderType,
+                marketId: pending.marketId,
+              });
 
-            const [market] = await tx.select().from(marketTable).where(eq(marketTable.marketId, pending.marketId))
+              const userQty = pending.userOrderQty;
 
-            const newTotalQty = userQty + market.totalYesQty
-            await tx.update(marketTable).set({
-              totalYesQty: newTotalQty
-            }).where(eq(marketTable.marketId, pending.marketId))
+              const [market] = await tx
+                .select()
+                .from(marketTable)
+                .where(eq(marketTable.marketId, pending.marketId));
 
-            await tx.insert(priceData).values({
-              noSidePrice: data.noPriceAfterOrder,
-              yesSidePrice: data.yesPriceAftereOrder,
-              marketId: pending.marketId
-            })
-          })
+              const newTotalQty = userQty + market.totalYesQty;
+              await tx
+                .update(marketTable)
+                .set({
+                  totalYesQty: newTotalQty,
+                })
+                .where(eq(marketTable.marketId, pending.marketId));
 
-          pending.res.status(200).json({success: true, message: "Order has been placed successfully"})
+              await tx.insert(priceData).values({
+                noSidePrice: data.noPriceAfterOrder,
+                yesSidePrice: data.yesPriceAftereOrder,
+                marketId: pending.marketId,
+              });
+            });
+
+            pending.res.status(200).json({
+              success: true,
+              message: "Order has been placed successfully",
+            });
+          } catch (error) {
+            pending.res.status(500).json({
+              success: false,
+              message:
+                "Unable to perform the transactions, Internal server error",
+            });
+          }
         }
 
         // yes side sell order
         if (pending.orderSide === "yes" && pending.orderType === "sell") {
           /*
-          first check if the yes side order exists in user orders
-          if not exists return error
+          first check if the yes side order exists in users order => done
+          if not exists return error => done
           else
-          add the amount to user wallet
-
-          
-
+          get the amount and add that amount to users =>
+          minus the totalqtyYesSide from market Table => done
+          add entry to the orders table
           */
 
-          console.log(data);
-          
+          try {
+            await db.transaction(async (tx) => {
+              const order = await tx
+                .select()
+                .from(orderTable)
+                .where(eq(orderTable.orderPlacedBy, pending.userId));
+              if (order.length === 0) {
+                tx.rollback();
+              }
+
+              const userAccount = await db
+                .select()
+                .from(usersTable)
+                .where(eq(usersTable.userId, pending.userId));
+              const market = await db
+                .select()
+                .from(marketTable)
+                .where(eq(marketTable.marketId, pending.marketId));
+
+              const userBalance = Number(userAccount[0].userWalletBalance);
+              const returnBalance = data.returnToUser;
+              const newBalance = userBalance + returnBalance;
+
+              const marketYesQty = market[0].totalYesQty;
+              const userQty = pending.userOrderQty;
+              const newQty = marketYesQty - userQty;
+
+              await tx
+                .update(usersTable)
+                .set({
+                  userWalletBalance: newBalance.toString(),
+                })
+                .where(eq(usersTable.userId, pending.userId));
+
+              await tx
+                .update(marketTable)
+                .set({
+                  totalYesQty: newQty,
+                })
+                .where(eq(marketTable.marketId, pending.marketId));
+
+              await tx.insert(orderTable).values({
+                executionPrice: (
+                  data.returnToUser / pending.userOrderQty
+                ).toString(),
+                orderId: data.requestId,
+                orderPlacedBy: pending.userId,
+                qty: pending.userOrderQty,
+                sideTaken: pending.orderSide,
+                orderType: pending.orderType,
+                marketId: pending.marketId,
+              });
+            });
+
+            pending.res.status(200).json({
+              success: true,
+              message: "Order has been placed",
+            });
+          } catch (error) {
+            console.error(error);
+            pending.res.status(500).json({
+              success: false,
+              message: "Unable to perform transactions, Internal server error",
+            });
+          }
         }
-
-
-        
-
       } catch (error) {
-        console.error(`DB update failed after WS response`, error)  
-        pending.res.status(500).json({success: false, message: "Internal server error"})
+        console.error(`DB update failed after WS response`, error);
+        pending.res
+          .status(500)
+          .json({ success: false, message: "Internal server error" });
       } finally {
-        pendingRequests.delete(data.requestId)
+        pendingRequests.delete(data.requestId);
       }
     }
-    
   });
 }

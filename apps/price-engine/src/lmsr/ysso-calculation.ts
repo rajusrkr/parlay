@@ -31,7 +31,7 @@ export function YSSOCalculations({totalNoQty, totalYesQty, userQty, b, requestId
     const costAfterOrder = parseFloat((b * Math.log((newExpYes) + (expNo))).toFixed(2))
     
     // return to user
-    const returnToUser = parseFloat((costAfterOrder - costBeforeOrder).toFixed(2))
+    const returnToUser = parseFloat((costBeforeOrder - costAfterOrder).toFixed(2))
  
     const update: SellOrderUpdates = {
         yesPriceBeforeOrder,
