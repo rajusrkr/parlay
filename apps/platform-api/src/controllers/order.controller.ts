@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 // create a new map
 export const pendingRequests = new Map<
   string,
-  { res: Response; userId: string; marketId: string; wsResponse: any }
+  { res: Response; userId: string; marketId: string; orderSide: string; orderType: string; userOrderQty:number; wsResponse: any }
 >();
 
 const handleOrder = async (req: Request, res: any) => {
@@ -40,12 +40,16 @@ const handleOrder = async (req: Request, res: any) => {
       res,
       userId,
       marketId: data.marketId,
+      orderSide: data.orderSide,
+      orderType: data.orderType,
+      userOrderQty: data.orderQty,
       wsResponse: null,
     });
 
     // THIS IS THE PLACE WHERE I AM SENDING THE ORDER TO WS-SERVER
     sendOrderToWsServer({
       eventName: "new-order",
+      requestId,
       data: {
         orderSide: data.orderSide,
         orderType: data.orderType,

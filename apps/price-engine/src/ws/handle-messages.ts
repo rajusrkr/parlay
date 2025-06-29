@@ -18,13 +18,15 @@ export function handleWsMessage(): Promise<any>{
             if (parsed.wsMessageData.eventName === "new-order") {
 
                 const data = parsed.wsMessageData.data
+                const requestId = parsed.wsMessageData.requestId
+                
 
                 if (data.orderSide === "yes" && data.orderType === "buy") {
                     // place here the yes side buy order func
-                    const priceUpdate = YSBOCalculations({totalYesQty: data.prevYesSideQty, totalNoQty: data.prevNoSideQty, b: 1000, userQty: data.userOrderQty, requestId: data.requestId})
+                    const priceUpdate = YSBOCalculations({totalYesQty: data.prevYesSideQty, totalNoQty: data.prevNoSideQty, b: 1000, userQty: data.userOrderQty, requestId: requestId})
                     
                     const wsData: wsPacket = {eventName: "price-update", data: {priceUpdate}} 
-                
+
                     ws.send(JSON.stringify({wsData}))
 
                     resolve(wsData)
@@ -33,7 +35,7 @@ export function handleWsMessage(): Promise<any>{
 
                 if (data.orderSide === "yes" && data.orderType === "sell") {
                     // place the yes side sell func
-                    const priceUpdate = YSSOCalculations({totalYesQty: data.prevYesSideQty, totalNoQty: data.prevNoSideQty, b: 1000, userQty: data.userOrderQty, requestId: data.requestId})
+                    const priceUpdate = YSSOCalculations({totalYesQty: data.prevYesSideQty, totalNoQty: data.prevNoSideQty, b: 1000, userQty: data.userOrderQty, requestId: requestId})
                     
                     const wsData: wsPacket = {eventName: "price-update", data: {priceUpdate}} 
                 
@@ -43,9 +45,7 @@ export function handleWsMessage(): Promise<any>{
                 }
 
                 if (data.orderSide === "no" && data.orderType === "buy") {
-                    // place the no side sell func
-
-                    const priceUpdate = NSBOCalculation({totalYesQty: data.prevYesSideQty, totalNoQty: data.prevNoSideQty, b: 1000, userQty: data.userOrderQty, requestId: data.requestId})
+                    const priceUpdate = NSBOCalculation({totalYesQty: data.prevYesSideQty, totalNoQty: data.prevNoSideQty, b: 1000, userQty: data.userOrderQty, requestId: requestId})
                     
                     const wsData: wsPacket = {eventName: "price-update", data: {priceUpdate}} 
                 
@@ -55,9 +55,8 @@ export function handleWsMessage(): Promise<any>{
                 }
 
                 if (data.orderSide === "no" && data.orderType === "sell") {
-                    // place no side sell func
 
-                    const priceUpdate = NSSOCalculation({totalYesQty: data.prevYesSideQty, totalNoQty: data.prevNoSideQty, b: 1000, userQty: data.userOrderQty, requestId: data.requestId})
+                    const priceUpdate = NSSOCalculation({totalYesQty: data.prevYesSideQty, totalNoQty: data.prevNoSideQty, b: 1000, userQty: data.userOrderQty, requestId: requestId})
                     
                     const wsData: wsPacket = {eventName: "price-update", data: {priceUpdate}} 
                 

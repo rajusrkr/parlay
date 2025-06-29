@@ -35,7 +35,8 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
         // handling incoming messges
         ws.on("message", (data) => {
             try {
-                const message = JSON.parse(data.toString())
+                const message = JSON.parse(data.toString());
+                
                 // for client authentication
                 if (message.wsData.eventName === "handShake") {
                     try {
@@ -66,10 +67,8 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             if (message.wsData.eventName === "new-order") {
                 console.log(`[ws-server] order-placed received from ${ws.clientRole}`);
 
-                    const payload = message.wsData.data;
-                
                 // for buy order in yes side
-                const wsMessageData: wsPacket = {eventName: "new-order", data: payload}
+                const wsMessageData: wsPacket = {eventName: "new-order", requestId: message.wsData.requestId, data: message.wsData.data}
                 
                 for(const [client, role] of clients.entries()){
                     if (role === "price-engine" && client.readyState === WebSocket.OPEN) {

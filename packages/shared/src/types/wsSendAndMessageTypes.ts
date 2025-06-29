@@ -1,6 +1,6 @@
 interface wsPacket {
     eventName: string,
-    requesId?: string,
+    requestId?: string,
     data: any
 }
 
