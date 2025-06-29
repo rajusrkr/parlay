@@ -4,15 +4,15 @@ import { pendingRequests } from "../controllers/order.controller"
 export function handleWsMessage() {
   ws.on("message", (msg) => {
     const parsed = JSON.parse(msg.toString());
-    const {messageEvent, data} = parsed.wsMessageData
+    const {eventName, data} = parsed.wsMessageData
     
     // if auth response 
-    if (messageEvent === "auth-success") {
-      console.log(`[AUTH]: ${messageEvent}, and role ${data.role}`);
+    if (eventName === "auth-success") {
+      console.log(`[AUTH]: ${eventName}, and role ${data.role}`);
       return 
     }
 
-    if (messageEvent === "price-update") {
+    if (eventName === "price-update") {
       console.log(`[PRICE UPDATE]`);
       console.log(data);
     }

@@ -3,27 +3,27 @@ import { NSSOCalculation } from "../lmsr/nsso.calculation";
 import { YSBOCalculations } from "../lmsr/ysbo-calculation";
 import { YSSOCalculations } from "../lmsr/ysso-calculation";
 import { ws } from "../ws-client";
-import {wsSend} from "shared/dist/index"
+import {wsPacket} from "shared/dist/index"
 
 export function handleWsMessage(): Promise<any>{
     return new Promise((resolve, reject) => {
         ws.on("message", (msg) => {
-            const receivedData = JSON.parse(msg.toString())
+            const parsed = JSON.parse(msg.toString())
             
             // for auth message
-             if (receivedData.wsMessageData.messageEvent === "auth-success") {
+             if (parsed.wsMessageData.eventName === "auth-success") {
                 console.log(`Connection established with ws-server`);
             }
             // for new order received
-            if (receivedData.wsMessageData.messageEvent === "new-order") {
+            if (parsed.wsMessageData.eventName === "new-order") {
 
-                const data = receivedData.wsMessageData.data
+                const data = parsed.wsMessageData.data
 
                 if (data.orderSide === "yes" && data.orderType === "buy") {
                     // place here the yes side buy order func
                     const priceUpdate = YSBOCalculations({totalYesQty: data.prevYesSideQty, totalNoQty: data.prevNoSideQty, b: 1000, userQty: data.userOrderQty, requestId: data.requestId})
                     
-                    const wsData: wsSend = {sentEvent: "price-update", data: {priceUpdate}} 
+                    const wsData: wsPacket = {eventName: "price-update", data: {priceUpdate}} 
                 
                     ws.send(JSON.stringify({wsData}))
 
@@ -35,7 +35,7 @@ export function handleWsMessage(): Promise<any>{
                     // place the yes side sell func
                     const priceUpdate = YSSOCalculations({totalYesQty: data.prevYesSideQty, totalNoQty: data.prevNoSideQty, b: 1000, userQty: data.userOrderQty, requestId: data.requestId})
                     
-                    const wsData: wsSend = {sentEvent: "price-update", data: {priceUpdate}} 
+                    const wsData: wsPacket = {eventName: "price-update", data: {priceUpdate}} 
                 
                     ws.send(JSON.stringify({wsData}))
                     resolve(wsData)
@@ -47,7 +47,7 @@ export function handleWsMessage(): Promise<any>{
 
                     const priceUpdate = NSBOCalculation({totalYesQty: data.prevYesSideQty, totalNoQty: data.prevNoSideQty, b: 1000, userQty: data.userOrderQty, requestId: data.requestId})
                     
-                    const wsData: wsSend = {sentEvent: "price-update", data: {priceUpdate}} 
+                    const wsData: wsPacket = {eventName: "price-update", data: {priceUpdate}} 
                 
                     ws.send(JSON.stringify({wsData}))
                     resolve(wsData)
@@ -59,7 +59,7 @@ export function handleWsMessage(): Promise<any>{
 
                     const priceUpdate = NSSOCalculation({totalYesQty: data.prevYesSideQty, totalNoQty: data.prevNoSideQty, b: 1000, userQty: data.userOrderQty, requestId: data.requestId})
                     
-                    const wsData: wsSend = {sentEvent: "price-update", data: {priceUpdate}} 
+                    const wsData: wsPacket = {eventName: "price-update", data: {priceUpdate}} 
                 
                     ws.send(JSON.stringify({wsData}))
                     resolve(wsData)

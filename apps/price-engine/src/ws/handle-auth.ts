@@ -1,12 +1,12 @@
 import jwt from "jsonwebtoken"
-import { wsSend } from "shared/dist/index"
+import { wsPacket } from "shared/dist/index"
 import { ws } from "../ws-client"
 export function authAndConnectToWsServer(){
     return new Promise<void>((resolve, reject) => {
         // auth token with role
         const token = jwt.sign({clientRole: "price-engine"},`${process.env.JWT_SECRET}`)
         
-        const wsData: wsSend = {sentEvent: "handShake", data: {token}}
+        const wsData: wsPacket = {eventName: "handShake", data: {token}}
 
         ws.on("open", () => {
             ws.send(JSON.stringify({ wsData }))

@@ -1,11 +1,7 @@
-interface wsSend {
-    sentEvent: string,
-    data: {}
+interface wsPacket {
+    eventName: string,
+    requesId?: string,
+    data: any
 }
 
-interface wsMessage {
-    messageEvent: string,
-    data: {}
-}
-
-export { wsSend, wsMessage }
+export { wsPacket }

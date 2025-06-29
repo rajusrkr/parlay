@@ -1,7 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken"
 import dotnenv from "dotenv"
-import {wsMessage} from "shared/dist/index"
+import {wsPacket} from "shared/dist/index"
 
 dotnenv.config()
 
@@ -37,7 +37,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             try {
                 const message = JSON.parse(data.toString())
                 // for client authentication
-                if (message.wsData.sentEvent === "handShake") {
+                if (message.wsData.eventName === "handShake") {
                     try {
                         const decode: any = jwt.verify(message.wsData.data.token, JWT_SECRET!)
                         
@@ -49,7 +49,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                     
                     console.log(`[WS] Authenticated as: ${ws.clientRole}`);
                     
-                    const wsMessageData: wsMessage = {messageEvent: "auth-success", data: {role: ws.clientRole}}
+                    const wsMessageData: wsPacket = {eventName: "auth-success", data: {role: ws.clientRole}}
                     ws.send(JSON.stringify({wsMessageData}))
                     clients.set(ws, ws.clientRole!)
                     logConnectedClients()
@@ -63,13 +63,13 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             }
             
             // receive the order events send them to price engine accordingly
-            if (message.wsData.sentEvent === "new-order") {
+            if (message.wsData.eventName === "new-order") {
                 console.log(`[ws-server] order-placed received from ${ws.clientRole}`);
 
                     const payload = message.wsData.data;
                 
                 // for buy order in yes side
-                const wsMessageData: wsMessage = {messageEvent: "new-order", data: payload}
+                const wsMessageData: wsPacket = {eventName: "new-order", data: payload}
                 
                 for(const [client, role] of clients.entries()){
                     if (role === "price-engine" && client.readyState === WebSocket.OPEN) {
@@ -79,12 +79,12 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             }
             
             // receive price-update
-            if (message.wsData.sentEvent === "price-update") {
+            if (message.wsData.eventName === "price-update") {
 
                 const priceUpdates = message.wsData.data.priceUpdate
 
                 for(const [client, role] of clients.entries()){
-                const wsMessageData: wsMessage = {messageEvent: "price-update", data: priceUpdates}
+                const wsMessageData: wsPacket = {eventName: "price-update", data: priceUpdates}
 
                     if (role === "platform-api" && client.readyState === WebSocket.OPEN) {
                         client.send(JSON.stringify({wsMessageData}))

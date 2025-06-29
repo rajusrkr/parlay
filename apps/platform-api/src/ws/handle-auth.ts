@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken"
-import { wsSend } from "shared/dist/index"
+import { wsPacket } from "shared/dist/index"
 import { ws } from "../ws-client"
 import { handleWsMessage } from "./handle-messages"
 export function authAndConnectToWsServer(){
@@ -7,7 +7,7 @@ export function authAndConnectToWsServer(){
         // auth token with role
         const token = jwt.sign({clientRole: "platform-api"},`${process.env.JWT_SECRET}`)
         
-        const wsData: wsSend = {sentEvent: "handShake", data: {token}}
+        const wsData: wsPacket = {eventName: "handShake", data: {token}}
 
         ws.on("open", () => {
             ws.send(JSON.stringify({ wsData }))

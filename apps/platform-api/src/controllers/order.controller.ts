@@ -44,8 +44,8 @@ const handleOrder = async (req: Request, res: any) => {
     });
 
     // THIS IS THE PLACE WHERE I AM SENDING THE ORDER TO WS-SERVER
-    await sendOrderToWsServer({
-      sentEvent: "new-order",
+    sendOrderToWsServer({
+      eventName: "new-order",
       data: {
         orderSide: data.orderSide,
         orderType: data.orderType,

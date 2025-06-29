@@ -6,10 +6,6 @@ import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt"
 import { v4 as uuidv4 } from "uuid"
 import jwt from "jsonwebtoken"
-// import { sendToWsServer, ws } from "../ws-client";
-import {wsSend} from "shared/dist/index"
-import { sendOrderToWsServer } from "../ws/send-order";
-
 
 const userRegister = async (req: Request, res: any) => {
     const data = req.body;
