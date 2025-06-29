@@ -1,4 +1,4 @@
-import { Request } from "express";
+import { Request, Response } from "express";
 import { db } from "../db/dbConnection";
 import { marketTable } from "../db/schema";
 import { and, eq } from "drizzle-orm";

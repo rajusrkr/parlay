@@ -56,9 +56,10 @@ export const orderTable = pgTable("orders", {
     id: serial("id").primaryKey(),
     orderId: varchar("order_id", {length: 36}).notNull(),
     marketId: varchar("market_id", {length: 36}).references(() => marketTable.marketId, {onDelete: "cascade"}),
-    executionPrice: integer("price").notNull(),
+    executionPrice: decimal("price", {precision: 19, scale: 4}).notNull(),
     qty: integer("qty").notNull(),
     sideTaken: varchar("side_taken", {length:3}).notNull(),
+    orderType: varchar("order_type", {length: 36}),
     orderPlacedBy: varchar("order_placed_by", {length: 36}).notNull().references(() => usersTable.userId, {onDelete: "cascade"}),
     createdOn: timestamp("created_on").defaultNow(),
     updatedOn: timestamp("updated_on").$onUpdate(() => new Date())
