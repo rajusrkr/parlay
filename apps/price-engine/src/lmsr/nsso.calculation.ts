@@ -29,7 +29,7 @@ export function NSSOCalculation({totalYesQty, totalNoQty, userQty, b, requestId}
     const costAfterOrder = parseFloat((b * Math.log(( newExpNo) + (expYes))).toFixed(2));
  
     // returnToUser to user
-    const returnToUser = parseFloat((costAfterOrder - costBeforeOrder).toFixed(2))
+    const returnToUser = parseFloat((costBeforeOrder - costAfterOrder).toFixed(2))
     
     const updates: SellOrderUpdates = {
         yesPriceBeforeOrder,
