@@ -1,6 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router";
 import Home from "./pages/home";
-import OpenMarkets from "./pages/open-markets";
+import OpenMarkets from "./pages/markets";
 
 const routes = createBrowserRouter([
   {
@@ -12,7 +12,7 @@ const routes = createBrowserRouter([
     )
   }, 
   {
-    path: "/open-markets",
+    path: "/markets",
     element: (
       <>
       <OpenMarkets />

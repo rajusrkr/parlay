@@ -7,12 +7,14 @@ const getAllMarket = async (req: Request, res: any) => {
         const getAllMarkets = await db.select({
             marketId: marketTable.marketId,
             marketTitle: marketTable.marketTitle,
-            yesSide: marketTable.yesSide,
-            noSide: marketTable.noSide,
             marketStarts: marketTable.marketStarts,
             marketEnds: marketTable.marketEnds,
             currentStatus: marketTable.currentStatus,
-            winnerSide: marketTable.winnerSide
+            winnerSide: marketTable.winnerSide,
+            priceData: {
+                yesSide: marketTable.lastUpdatedYesPrice,
+                noSide: marketTable.lastUpdatedNoPrice
+            }
         }).from(marketTable)
 
         if (getAllMarket.length === 0) {

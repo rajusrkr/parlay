@@ -34,6 +34,8 @@ export const marketTable = pgTable("markets", {
     winnerSide: varchar("winner_side", {length: 20}),
     totalYesQty: integer("total_yes_qty").notNull().default(500000),
     totalNoQty: integer("total_No_qty").notNull().default(500000),
+    lastUpdatedYesPrice: decimal("last_updated_yes_price", {precision: 19, scale: 4}),
+    lastUpdatedNoPrice: decimal("last_updated_no_price", {precision: 19, scale: 4}),
     marketCreatedBy: varchar("market_created_by", {length: 36}).references(() => adminsTable.adminId, {onDelete: "cascade"}).notNull(),
     createdOn: timestamp("created_on").defaultNow(),
     updatedOn: timestamp().$onUpdate(() => new Date())
@@ -61,6 +63,8 @@ export const orderTable = pgTable("orders", {
     sideTaken: varchar("side_taken", {length:3}).notNull(),
     orderType: varchar("order_type", {length: 36}),
     orderPlacedBy: varchar("order_placed_by", {length: 36}).notNull().references(() => usersTable.userId, {onDelete: "cascade"}),
+    yesPriceAfterOrder: decimal("yes_price_after_order", {precision: 19, scale: 4}),
+    noPriceAfterOrder: decimal("no_price_after_order", {precision: 19, scale: 4}),
     createdOn: timestamp("created_on").defaultNow(),
     updatedOn: timestamp("updated_on").$onUpdate(() => new Date())
 })
