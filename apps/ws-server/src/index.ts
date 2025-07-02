@@ -1,118 +1,173 @@
 import { WebSocketServer, WebSocket } from "ws";
-import jwt from "jsonwebtoken"
-import dotnenv from "dotenv"
-import {wsPacket} from "shared/dist/index"
+import jwt from "jsonwebtoken";
+import dotnenv from "dotenv";
+import { wsPacket } from "shared/dist/index";
 
-dotnenv.config()
+dotnenv.config();
 
 interface ExtendedWebsocket extends WebSocket {
-    isAlive?: boolean;
-    clientRole?: string
+  isAlive?: boolean;
+  clientRole?: string;
 }
 
 const clients = new Map<ExtendedWebsocket, string>();
 
-
-const wss = new WebSocketServer({port: 8001})
+const wss = new WebSocketServer({ port: 8001 });
 
 const JWT_SECRET = process.env.JWT_SECRET;
 console.log(`[WS] server running on port 8001`);
 
-
 wss.on("connection", (ws: ExtendedWebsocket) => {
-    return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
+    ws.on("error", (error) => {
+      console.error(`[WS] Error:`, error);
+    });
 
-        ws.on("error", (error) => {
-            console.error(`[WS] Error:`, error)
-        })
-        
-        ws.on("close", () => {
-            console.log(`[WS] client disconnected: ${ws.clientRole}`);
-            clients.delete(ws)
-            logConnectedClients()
-        })
-        
-        // handling incoming messges
-        ws.on("message", (data) => {
-            try {
-                const message = JSON.parse(data.toString());
-                
-                // for client authentication
-                if (message.wsData.eventName === "handShake") {
-                    try {
-                        const decode: any = jwt.verify(message.wsData.data.token, JWT_SECRET!)
-                        
-                    if (typeof decode !== "object" || !decode.clientRole) {
-                        throw new Error("Invalid token payload")
-                    }
-                    
-                    ws.clientRole = decode.clientRole
-                    
-                    console.log(`[WS] Authenticated as: ${ws.clientRole}`);
-                    
-                    const wsMessageData: wsPacket = {eventName: "auth-success", data: {role: ws.clientRole}}
-                    ws.send(JSON.stringify({wsMessageData}))
-                    clients.set(ws, ws.clientRole!)
-                    logConnectedClients()
-                    return
-                } catch (error) {
-                    console.log(error);
-                    ws.send(JSON.stringify({type: "auth_failed", error: "Invalid token"}))
-                    ws.close()
-                    return
-                }
+    ws.on("close", () => {
+      console.log(`[WS] client disconnected: ${ws.clientRole}`);
+      clients.delete(ws);
+      logConnectedClients();
+    });
+
+    // handling incoming messges
+    ws.on("message", (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+
+        if (message.eventName === "confirm-price-update") {
+          console.log("message for confirm price", message);
+
+          for (const [client, role] of clients) {
+            if (
+              role === "client-connection" &&
+              client.readyState === WebSocket.OPEN
+            ) {
+              console.log("sending");
+
+              console.log(role);
+
+              console.log(message);
+              
+
+              client.send(
+                JSON.stringify({
+                  yes: message.yesPrice,
+                  no: message.noPrice,
+                  marketId: message.marketId
+                })
+              );
             }
-            
-            // receive the order events send them to price engine accordingly
-            if (message.wsData.eventName === "new-order") {
-                console.log(`[ws-server] order-placed received from ${ws.clientRole}`);
+          }
 
-                // for buy order in yes side
-                const wsMessageData: wsPacket = {eventName: "new-order", requestId: message.wsData.requestId, data: message.wsData.data}
-                
-                for(const [client, role] of clients.entries()){
-                    if (role === "price-engine" && client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify({ wsMessageData }))
-                    }
-                }
-            }
-            
-            // receive price-update
-            if (message.wsData.eventName === "price-update") {
-
-                const priceUpdates = message.wsData.data.priceUpdate
-
-                for(const [client, role] of clients.entries()){
-                const wsMessageData: wsPacket = {eventName: "price-update", data: priceUpdates}
-
-                    if (role === "platform-api" && client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify({wsMessageData}))
-                    }
-                }
-                
-            }
-            
-            if (!ws.clientRole) {
-                ws.send(JSON.stringify({type: "unauthorized"}))
-                ws.close()
-                logConnectedClients()
-                return
-            }
-        } catch (error) {
-            console.log(error);
+          return;
         }
-    })
-})
-})
 
+        if (message.wsData.eventName === "client-connection") {
+          console.log("hey client");
 
+          ws.send(JSON.stringify({ message: "jhey" }));
 
-function logConnectedClients(){
-    console.log('[WS] Connected clients');
-    clients.forEach((role, client) => {
-        console.log(`-Role: ${role}, Alive: ${client.readyState === client.OPEN}`);
-        
-    })
+          clients.set(ws, "client-connection");
 
-    console.log(`[WS] Total: ${clients.size} clients are connected`);
+          logConnectedClients();
+
+          return;
+        }
+
+        // for client authentication
+        if (message.wsData.eventName === "handShake") {
+          try {
+            const decode: any = jwt.verify(
+              message.wsData.data.token,
+              JWT_SECRET!
+            );
+
+            if (typeof decode !== "object" || !decode.clientRole) {
+              throw new Error("Invalid token payload");
+            }
+
+            ws.clientRole = decode.clientRole;
+
+            console.log(`[WS] Authenticated as: ${ws.clientRole}`);
+
+            const wsMessageData: wsPacket = {
+              eventName: "auth-success",
+              data: { role: ws.clientRole },
+            };
+            ws.send(JSON.stringify({ wsMessageData }));
+            clients.set(ws, ws.clientRole!);
+            logConnectedClients();
+            return;
+          } catch (error) {
+            console.log(error);
+            ws.send(
+              JSON.stringify({ type: "auth_failed", error: "Invalid token" })
+            );
+            ws.close();
+            return;
+          }
+        }
+
+        // receive the order events send them to price engine accordingly
+        if (message.wsData.eventName === "new-order") {
+          console.log(
+            `[ws-server] order-placed received from ${ws.clientRole}`
+          );
+
+          // for buy order in yes side
+          const wsMessageData: wsPacket = {
+            eventName: "new-order",
+            requestId: message.wsData.requestId,
+            data: message.wsData.data,
+          };
+
+          for (const [client, role] of clients.entries()) {
+            if (
+              role === "price-engine" &&
+              client.readyState === WebSocket.OPEN
+            ) {
+              client.send(JSON.stringify({ wsMessageData }));
+            }
+          }
+        }
+
+        // receive price-update
+        if (message.wsData.eventName === "price-update") {
+          const priceUpdates = message.wsData.data.priceUpdate;
+
+          for (const [client, role] of clients.entries()) {
+            const wsMessageData: wsPacket = {
+              eventName: "price-update",
+              data: priceUpdates,
+            };
+
+            if (
+              role === "platform-api" &&
+              client.readyState === WebSocket.OPEN
+            ) {
+              client.send(JSON.stringify({ wsMessageData }));
+            }
+          }
+        }
+
+        if (!ws.clientRole) {
+          ws.send(JSON.stringify({ type: "unauthorized" }));
+          ws.close();
+          logConnectedClients();
+          return;
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
+  });
+});
+
+function logConnectedClients() {
+  console.log("[WS] Connected clients");
+  clients.forEach((role, client) => {
+    console.log(`-Role: ${role}, Alive: ${client.readyState === client.OPEN}`);
+  });
+
+  console.log(`[WS] Total: ${clients.size} clients are connected`);
 }

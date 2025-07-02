@@ -21,6 +21,7 @@ interface MarketStates {
     markets: Market[],
 
     fetchMarkets: () => Promise<void>
+    handleWsPriceChange: ({marketId, yesPrice, noPrice}:{marketId: string, yesPrice: string, noPrice: string}) => void
     
 }
 
@@ -45,7 +46,26 @@ const useMarketStore = create(persist<MarketStates>((set) => ({
             console.log(error);
             set({isError: true, erroMessage: "Client side error"})
         }
+    },
+
+    handleWsPriceChange: ({marketId, noPrice, yesPrice}) => {
+       set((prev) => ({
+        markets: prev.markets.map((market) => {
+            if (market.marketId === marketId) {
+                return {
+                    ...market,
+                    priceData: {
+                        ...market.priceData,
+                        noSide: noPrice,
+                        yesSide: yesPrice
+                    }
+                }
+            }
+            return market
+        })
+       }))
     }
+
 
 
 }), {name: "market-store"}))

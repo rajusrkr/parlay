@@ -114,6 +114,17 @@ export function handleWsMessage() {
               });
             });
 
+            // send repsne to client
+            ws.send(
+              JSON.stringify({
+                eventName: "confirm-price-update",
+                message: "hey there new price",
+                yesPrice: data.yesPriceAftereOrder,
+                noPrice: data.noPriceAfterOrder,
+                marketId: pending.marketId,
+              })
+            );
+
             pending.res.status(200).json({
               success: true,
               message: "Order has been placed successfully",
@@ -195,6 +206,16 @@ export function handleWsMessage() {
                 noPriceAfterOrder: data.noPriceAfterOrder,
               });
             });
+
+            ws.send(
+              JSON.stringify({
+                eventName: "confirm-price-update",
+                message: "hey there new price",
+                yesPrice: data.yesPriceAftereOrder,
+                noPrice: data.noPriceAfterOrder,
+                marketId: pending.marketId,
+              })
+            );
 
             pending.res.status(200).json({
               success: true,
@@ -282,20 +303,27 @@ export function handleWsMessage() {
                 marketId: pending.marketId,
               });
 
+              ws.send(
+                JSON.stringify({
+                  eventName: "confirm-price-update",
+                  message: "hey there new price",
+                  yesPrice: data.yesPriceAftereOrder,
+                  noPrice: data.noPriceAfterOrder,
+                  marketId: pending.marketId,
+                })
+              );
+
               pending.res
                 .status(200)
                 .json({ success: true, message: "Order has been placed" });
             });
           } catch (error) {
             console.error(error);
-            pending.res
-              .status(errorStatusCode!)
-              .json({
-                success: false,
-                message:
-                  "Unable to perform transactions, Internal server error",
-                reason: errosMessage,
-              });
+            pending.res.status(errorStatusCode!).json({
+              success: false,
+              message: "Unable to perform transactions, Internal server error",
+              reason: errosMessage,
+            });
           }
         }
 
@@ -363,19 +391,26 @@ export function handleWsMessage() {
                 yesSidePrice: data.yesPriceAftereOrder,
               });
 
+              ws.send(
+                JSON.stringify({
+                  eventName: "confirm-price-update",
+                  message: "hey there new price",
+                  yesPrice: data.yesPriceAftereOrder,
+                  noPrice: data.noPriceAfterOrder,
+                  marketId: pending.marketId,
+                })
+              );
+
               pending.res
                 .status(200)
                 .json({ success: true, message: "Order has been placed" });
             });
           } catch (error) {
             console.error(error);
-            pending.res
-              .status(500)
-              .json({
-                success: false,
-                message:
-                  "Unable to perform transactions. Internal server error",
-              });
+            pending.res.status(500).json({
+              success: false,
+              message: "Unable to perform transactions. Internal server error",
+            });
           }
         }
       } catch (error) {
