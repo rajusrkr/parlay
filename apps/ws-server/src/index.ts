@@ -53,7 +53,8 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                 JSON.stringify({
                   yes: message.yesPrice,
                   no: message.noPrice,
-                  marketId: message.marketId
+                  marketId: message.marketId,
+                  time: message.time
                 })
               );
             }
@@ -65,7 +66,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
         if (message.wsData.eventName === "client-connection") {
           console.log("hey client");
 
-          ws.send(JSON.stringify({ message: "jhey" }));
+          ws.send(JSON.stringify({ message: "hey" }));
 
           clients.set(ws, "client-connection");
 

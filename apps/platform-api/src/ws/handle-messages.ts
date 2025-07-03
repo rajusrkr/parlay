@@ -57,7 +57,7 @@ export function handleWsMessage() {
                 .where(eq(usersTable.userId, pending.userId));
 
               if (Number(account.userWalletBalance) < data.costToUser) {
-                tx.rollback();
+                throw new Error("Insifficient balance");
               }
 
               const dbBalance = Number(account.userWalletBalance);
@@ -76,19 +76,22 @@ export function handleWsMessage() {
                 })
                 .where(eq(usersTable.userId, pending.userId));
 
-              await tx.insert(orderTable).values({
-                executionPrice: (
-                  data.costToUser / pending.userOrderQty
-                ).toString(),
-                orderId: data.requestId,
-                orderPlacedBy: pending.userId,
-                qty: pending.userOrderQty,
-                sideTaken: pending.orderSide,
-                orderType: pending.orderType,
-                marketId: pending.marketId,
-                yesPriceAfterOrder: data.yesPriceAftereOrder,
-                noPriceAfterOrder: data.noPriceAfterOrder,
-              });
+              const order = await tx
+                .insert(orderTable)
+                .values({
+                  executionPrice: (
+                    data.costToUser / pending.userOrderQty
+                  ).toString(),
+                  orderId: data.requestId,
+                  orderPlacedBy: pending.userId,
+                  qty: pending.userOrderQty,
+                  sideTaken: pending.orderSide,
+                  orderType: pending.orderType,
+                  marketId: pending.marketId,
+                  yesPriceAfterOrder: data.yesPriceAftereOrder,
+                  noPriceAfterOrder: data.noPriceAfterOrder,
+                })
+                .returning();
 
               const userQty = pending.userOrderQty;
 
@@ -112,19 +115,18 @@ export function handleWsMessage() {
                 yesSidePrice: data.yesPriceAftereOrder,
                 marketId: pending.marketId,
               });
+              // send repsne to client
+              ws.send(
+                JSON.stringify({
+                  eventName: "confirm-price-update",
+                  message: "hey there new price",
+                  yesPrice: data.yesPriceAftereOrder,
+                  noPrice: data.noPriceAfterOrder,
+                  marketId: pending.marketId,
+                  time: order[0].createdOn,
+                })
+              );
             });
-
-            // send repsne to client
-            ws.send(
-              JSON.stringify({
-                eventName: "confirm-price-update",
-                message: "hey there new price",
-                yesPrice: data.yesPriceAftereOrder,
-                noPrice: data.noPriceAfterOrder,
-                marketId: pending.marketId,
-              })
-            );
-
             pending.res.status(200).json({
               success: true,
               message: "Order has been placed successfully",
@@ -192,30 +194,33 @@ export function handleWsMessage() {
                 })
                 .where(eq(marketTable.marketId, pending.marketId));
 
-              await tx.insert(orderTable).values({
-                executionPrice: (
-                  data.returnToUser / pending.userOrderQty
-                ).toString(),
-                orderId: data.requestId,
-                orderPlacedBy: pending.userId,
-                qty: pending.userOrderQty,
-                sideTaken: pending.orderSide,
-                orderType: pending.orderType,
-                marketId: pending.marketId,
-                yesPriceAfterOrder: data.yesPriceAftereOrder,
-                noPriceAfterOrder: data.noPriceAfterOrder,
-              });
+              const createOrder = await tx
+                .insert(orderTable)
+                .values({
+                  executionPrice: (
+                    data.returnToUser / pending.userOrderQty
+                  ).toString(),
+                  orderId: data.requestId,
+                  orderPlacedBy: pending.userId,
+                  qty: pending.userOrderQty,
+                  sideTaken: pending.orderSide,
+                  orderType: pending.orderType,
+                  marketId: pending.marketId,
+                  yesPriceAfterOrder: data.yesPriceAftereOrder,
+                  noPriceAfterOrder: data.noPriceAfterOrder,
+                })
+                .returning();
+              ws.send(
+                JSON.stringify({
+                  eventName: "confirm-price-update",
+                  message: "hey there new price",
+                  yesPrice: data.yesPriceAftereOrder,
+                  noPrice: data.noPriceAfterOrder,
+                  marketId: pending.marketId,
+                  time: createOrder[0].createdOn,
+                })
+              );
             });
-
-            ws.send(
-              JSON.stringify({
-                eventName: "confirm-price-update",
-                message: "hey there new price",
-                yesPrice: data.yesPriceAftereOrder,
-                noPrice: data.noPriceAfterOrder,
-                marketId: pending.marketId,
-              })
-            );
 
             pending.res.status(200).json({
               success: true,
@@ -283,19 +288,22 @@ export function handleWsMessage() {
                 })
                 .where(eq(marketTable.marketId, pending.marketId));
 
-              await tx.insert(orderTable).values({
-                orderId: data.requestId,
-                qty: pending.userOrderQty,
-                sideTaken: pending.orderSide,
-                orderType: pending.orderType,
-                executionPrice: (
-                  data.costToUser / pending.userOrderQty
-                ).toString(),
-                orderPlacedBy: pending.userId,
-                marketId: pending.marketId,
-                yesPriceAfterOrder: data.yesPriceAftereOrder,
-                noPriceAfterOrder: data.noPriceAfterOrder,
-              });
+              const order = await tx
+                .insert(orderTable)
+                .values({
+                  orderId: data.requestId,
+                  qty: pending.userOrderQty,
+                  sideTaken: pending.orderSide,
+                  orderType: pending.orderType,
+                  executionPrice: (
+                    data.costToUser / pending.userOrderQty
+                  ).toString(),
+                  orderPlacedBy: pending.userId,
+                  marketId: pending.marketId,
+                  yesPriceAfterOrder: data.yesPriceAftereOrder,
+                  noPriceAfterOrder: data.noPriceAfterOrder,
+                })
+                .returning();
 
               await tx.insert(priceData).values({
                 noSidePrice: data.noPriceAfterOrder,
@@ -310,13 +318,13 @@ export function handleWsMessage() {
                   yesPrice: data.yesPriceAftereOrder,
                   noPrice: data.noPriceAfterOrder,
                   marketId: pending.marketId,
+                  time: order[0].createdOn,
                 })
               );
-
-              pending.res
-                .status(200)
-                .json({ success: true, message: "Order has been placed" });
             });
+            pending.res
+              .status(200)
+              .json({ success: true, message: "Order has been placed" });
           } catch (error) {
             console.error(error);
             pending.res.status(errorStatusCode!).json({
@@ -371,19 +379,22 @@ export function handleWsMessage() {
                 })
                 .where(eq(marketTable.marketId, pending.marketId));
 
-              await tx.insert(orderTable).values({
-                orderId: data.requestId,
-                sideTaken: pending.orderSide,
-                orderType: pending.orderType,
-                qty: pending.userOrderQty,
-                executionPrice: (
-                  data.returnToUser / pending.userOrderQty
-                ).toString(),
-                orderPlacedBy: pending.userId,
-                marketId: pending.marketId,
-                yesPriceAfterOrder: data.yesPriceAftereOrder,
-                noPriceAfterOrder: data.noPriceAfterOrder,
-              });
+              const order = await tx
+                .insert(orderTable)
+                .values({
+                  orderId: data.requestId,
+                  sideTaken: pending.orderSide,
+                  orderType: pending.orderType,
+                  qty: pending.userOrderQty,
+                  executionPrice: (
+                    data.returnToUser / pending.userOrderQty
+                  ).toString(),
+                  orderPlacedBy: pending.userId,
+                  marketId: pending.marketId,
+                  yesPriceAfterOrder: data.yesPriceAftereOrder,
+                  noPriceAfterOrder: data.noPriceAfterOrder,
+                })
+                .returning();
 
               await tx.update(priceData).set({
                 marketId: pending.marketId,
@@ -398,13 +409,13 @@ export function handleWsMessage() {
                   yesPrice: data.yesPriceAftereOrder,
                   noPrice: data.noPriceAfterOrder,
                   marketId: pending.marketId,
+                  time: order[0].createdOn,
                 })
               );
-
-              pending.res
-                .status(200)
-                .json({ success: true, message: "Order has been placed" });
             });
+            pending.res
+              .status(200)
+              .json({ success: true, message: "Order has been placed" });
           } catch (error) {
             console.error(error);
             pending.res.status(500).json({
