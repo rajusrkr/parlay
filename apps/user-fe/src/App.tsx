@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router";
 import Home from "./pages/home";
 import OpenMarkets from "./pages/markets";
+import MyChart from "./pages/market-by-id";
 
 const routes = createBrowserRouter([
   {
@@ -12,10 +13,18 @@ const routes = createBrowserRouter([
     )
   }, 
   {
-    path: "/markets",
+    path: "/market",
     element: (
       <>
       <OpenMarkets />
+      </>
+    )
+  },
+  {
+    path: "/market/:id",
+    element: (
+      <>
+        <MyChart />
       </>
     )
   }

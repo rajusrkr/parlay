@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <div>
       <Button>Login</Button>
-      <Button onClick={() => redirect("/markets")}>Open Markets</Button>
+      <Button onClick={() => redirect("/market")}>Open Markets</Button>
     </div>
   );
 }
