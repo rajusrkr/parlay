@@ -1,21 +1,17 @@
-import { useEffect, useRef, useState } from "react";
-import { AreaSeries, createChart, type Time } from "lightweight-charts";
+import { useEffect, useRef } from "react";
+import {
+  AreaSeries,
+  createChart,
+  type IChartApi,
+  type ISeriesApi,
+  type Time,
+} from "lightweight-charts";
 
 export default function AreaChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
-
-  const [data, setData] = useState<{ time: Time; value: number }[]>([
-    { value: 0, time: 1642425322 as Time },
-    { value: 0.08, time: 1642511722 as Time },
-    { value: 0.1, time: 1642598122 as Time },
-    { value: 0.2, time: 1642684522 as Time },
-    { value: 0.3, time: 1642770922 as Time },
-    { value: 0.43, time: 1642857322 as Time },
-    { value: 0.41, time: 1642943722 as Time },
-    { value: 0.43, time: 1643030122 as Time },
-    { value: 0.56, time: 1643116522 as Time },
-    { value: 0.59, time: 1643202922 as Time },
-  ]);
+  const chartRef = useRef<IChartApi | null>(null);
+  const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -28,6 +24,7 @@ export default function AreaChart() {
     };
 
     const chart = createChart(chartContainerRef.current, chartOptions);
+    chartRef.current = chart;
 
     const areaSeries = chart.addSeries(AreaSeries, {
       lineColor: "#2962FF",
@@ -35,13 +32,36 @@ export default function AreaChart() {
       bottomColor: "rgba(41,98,255,0.28)",
     });
 
-    areaSeries.setData(data);
+    seriesRef.current = areaSeries;
 
+    const initialData = [
+      { value: 0, time: 1642425322 as Time },
+      { value: 8, time: 1642511722 as Time },
+      { value: 10, time: 1642598122 as Time },
+      { value: 30, time: 1642684522 as Time },
+    ];
+
+    areaSeries.setData(initialData);
     chart.timeScale().fitContent();
+
+    // ws data
+
+const ws = new WebSocket("ws://localhost:8001")
+
+wsRef.current = ws
+
+// ws.onmessage  = (event) => {
+//   try {
+//     const
+//   } catch (error) {
+    
+//   }
+// }
+
 
     // clean
     return () => chart.remove();
-  }, [data]);
+  }, []);
 
   return (
     <div ref={chartContainerRef} style={{ width: "100%", height: "800px" }} />

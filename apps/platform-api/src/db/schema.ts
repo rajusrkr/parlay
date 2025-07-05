@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, decimal, integer, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, decimal, integer, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const AccountRoleEnum = pgEnum("role", ["USER", "ADMIN"])
 export const CurrencyCode = pgEnum("currency_code", ["INR", "USD"])
@@ -46,8 +46,7 @@ export const priceData = pgTable("priceData", {
     marketId: varchar("marketId", {length: 36}).references(() => marketTable.marketId, {onDelete: "cascade"}),
     yesSidePrice: decimal("yes_price", {precision: 19, scale: 4}).notNull(),
     noSidePrice: decimal("no_price", {precision: 19, scale: 4}).notNull(),
-    createdOn: timestamp("created_on").defaultNow(),
-    updatedOn: timestamp("updated_on").$onUpdate(() => new Date())
+    priceUpdatedOn: bigint("price_updated_on", {mode: "number"}).default(Math.floor(Date.now() / 1000))
 }, (table) => ({
     yesPriceCheck: check('yes_check', sql`${table.yesSidePrice} >=0.00 AND ${table.yesSidePrice} <=1.00`),
     noPriceCheck: check('no_check', sql`${table.noSidePrice} >=0.00 AND ${table.noSidePrice} <=1.00`),

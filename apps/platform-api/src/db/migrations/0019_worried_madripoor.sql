@@ -1,0 +1,1 @@
+ALTER TABLE "priceData" ADD COLUMN "price_updated_on" bigint DEFAULT 1751661629;

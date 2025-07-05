@@ -127,6 +127,20 @@
       "when": 1751364320581,
       "tag": "0017_lively_iron_lad",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1751661547350,
+      "tag": "0018_melted_steel_serpent",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1751661629941,
+      "tag": "0019_worried_madripoor",
+      "breakpoints": true
     }
   ]
 }

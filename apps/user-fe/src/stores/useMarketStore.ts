@@ -1,73 +1,82 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+interface Price {
+  yes: { time: number; value: number };
+  no: { time: number; value: number };
+}
+
+
 interface Market {
-    marketId: string,
-    marketTitle: string,
-    marketStarts: string,
-    marketEnds: string,
-    currentStatus: string,
-    winnerSide: string | null,
-    priceData: {
-        yesSide: string | null,
-        noSide: string | null
-    }
+  marketId: string;
+  marketTitle: string;
+  marketStarts: string;
+  marketEnds: string;
+  currentStatus: string;
+  winnerSide: string | null;
+  prices: Price[];
 }
 
 interface MarketStates {
-    isError: boolean,
-    erroMessage: string | null,
+  isError: boolean;
+  erroMessage: string | null;
 
-    markets: Market[],
+  markets: Market[];
 
-    fetchMarkets: () => Promise<void>
-    handleWsPriceChange: ({marketId, yesPrice, noPrice}:{marketId: string, yesPrice: string, noPrice: string}) => void
-    
+  fetchMarkets: () => Promise<void>;
+  handlePriceChange: ({ marketId }: { marketId: string }) => void;
 }
 
-const useMarketStore = create(persist<MarketStates>((set) => ({
-    isError: false,
-    erroMessage: null,
+const useMarketStore = create(
+  persist<MarketStates>(
+    (set) => ({
+      isError: false,
+      erroMessage: null,
 
-    markets: [],
+      markets: [],
 
-    fetchMarkets: async () => {
+      fetchMarkets: async () => {
         try {
-            const sendReq = await fetch("http://localhost:8000/api/v0/market/get-markets")
+          const sendReq = await fetch(
+            "http://localhost:8000/api/v0/market/get-markets"
+          );
 
-            const res = await sendReq.json()
+          const res = await sendReq.json();
 
-            if (res.success) {
-                set({markets: res.markets})
-            } else {
-                set({isError: true, erroMessage: res.message})
-            }
+          if (res.success) {
+            set({ markets: res.markets });
+          } else {
+            set({ isError: true, erroMessage: res.message });
+          }
         } catch (error) {
-            console.log(error);
-            set({isError: true, erroMessage: "Client side error"})
+          console.log(error);
+          set({ isError: true, erroMessage: "Client side error" });
         }
-    },
+      },
 
-    handleWsPriceChange: ({marketId, noPrice, yesPrice}) => {
-       set((prev) => ({
-        markets: prev.markets.map((market) => {
+      handlePriceChange: ({ marketId }) => {
+        set((prev) => ({
+          markets: prev.markets.map((market) => {
             if (market.marketId === marketId) {
-                return {
-                    ...market,
-                    priceData: {
-                        ...market.priceData,
-                        noSide: noPrice,
-                        yesSide: yesPrice
-                    }
-                }
+              return {
+                ...market,
+                prices: [
+                  ...market.prices,
+                  {
+                    yes: { time: 123, value: 123 },
+                    no: { time: 123, value: 123 },
+                  },
+                ],
+              };
             }
-            return market
-        })
-       }))
-    }
 
+            return market;
+          }),
+        }));
+      },
+    }),
+    { name: "market-store" }
+  )
+);
 
-
-}), {name: "market-store"}))
-
-export {useMarketStore}
+export { useMarketStore };

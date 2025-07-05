@@ -18,149 +18,132 @@ const JWT_SECRET = process.env.JWT_SECRET;
 console.log(`[WS] server running on port 8001`);
 
 wss.on("connection", (ws: ExtendedWebsocket) => {
-  return new Promise((resolve, reject) => {
-    ws.on("error", (error) => {
-      console.error(`[WS] Error:`, error);
-    });
+  ws.on("error", (error) => {
+    console.error(`[WS] Error:`, error);
+  });
 
-    ws.on("close", () => {
-      console.log(`[WS] client disconnected: ${ws.clientRole}`);
-      clients.delete(ws);
-      logConnectedClients();
-    });
+  ws.on("close", () => {
+    console.log(`[WS] client disconnected: ${ws.clientRole}`);
+    clients.delete(ws);
+    logConnectedClients();
+  });
 
-    // handling incoming messges
-    ws.on("message", (data) => {
-      try {
-        const message = JSON.parse(data.toString());
+  // handling incoming messges
+  ws.on("message", (data) => {
+    try {
+      const message = JSON.parse(data.toString());
 
-        if (message.eventName === "confirm-price-update") {
-          console.log("message for confirm price", message);
+      if (message.eventName === "confirm-price-update") {
+        console.log("message for confirm price", message);
 
-          for (const [client, role] of clients) {
-            if (
-              role === "client-connection" &&
-              client.readyState === WebSocket.OPEN
-            ) {
-              console.log("sending");
-
-              console.log(role);
-
-              console.log(message);
-              
-
-              client.send(
-                JSON.stringify({
-                  yes: message.yesPrice,
-                  no: message.noPrice,
-                  marketId: message.marketId,
-                  time: message.time
-                })
-              );
-            }
-          }
-
-          return;
-        }
-
-        if (message.wsData.eventName === "client-connection") {
-          console.log("hey client");
-
-          ws.send(JSON.stringify({ message: "hey" }));
-
-          clients.set(ws, "client-connection");
-
-          logConnectedClients();
-
-          return;
-        }
-
-        // for client authentication
-        if (message.wsData.eventName === "handShake") {
-          try {
-            const decode: any = jwt.verify(
-              message.wsData.data.token,
-              JWT_SECRET!
+        for (const [client, role] of clients) {
+          if (
+            role === "client-connection" &&
+            client.readyState === WebSocket.OPEN
+          ) {
+            client.send(
+              JSON.stringify({
+                yes: message.yesPrice,
+                no: message.noPrice,
+                marketId: message.marketId,
+                time: message.time,
+              })
             );
-
-            if (typeof decode !== "object" || !decode.clientRole) {
-              throw new Error("Invalid token payload");
-            }
-
-            ws.clientRole = decode.clientRole;
-
-            console.log(`[WS] Authenticated as: ${ws.clientRole}`);
-
-            const wsMessageData: wsPacket = {
-              eventName: "auth-success",
-              data: { role: ws.clientRole },
-            };
-            ws.send(JSON.stringify({ wsMessageData }));
-            clients.set(ws, ws.clientRole!);
-            logConnectedClients();
-            return;
-          } catch (error) {
-            console.log(error);
-            ws.send(
-              JSON.stringify({ type: "auth_failed", error: "Invalid token" })
-            );
-            ws.close();
-            return;
           }
         }
 
-        // receive the order events send them to price engine accordingly
-        if (message.wsData.eventName === "new-order") {
-          console.log(
-            `[ws-server] order-placed received from ${ws.clientRole}`
+        return;
+      }
+
+      if (message.wsData.eventName === "client-connection") {
+        console.log("hey client");
+
+        ws.send(JSON.stringify({ message: "hey" }));
+
+        clients.set(ws, "client-connection");
+
+        logConnectedClients();
+
+        return;
+      }
+
+      // for client authentication
+      if (message.wsData.eventName === "handShake") {
+        try {
+          const decode: any = jwt.verify(
+            message.wsData.data.token,
+            JWT_SECRET!
           );
 
-          // for buy order in yes side
+          if (typeof decode !== "object" || !decode.clientRole) {
+            throw new Error("Invalid token payload");
+          }
+
+          ws.clientRole = decode.clientRole;
+
+          console.log(`[WS] Authenticated as: ${ws.clientRole}`);
+
           const wsMessageData: wsPacket = {
-            eventName: "new-order",
-            requestId: message.wsData.requestId,
-            data: message.wsData.data,
+            eventName: "auth-success",
+            data: { role: ws.clientRole },
           };
-
-          for (const [client, role] of clients.entries()) {
-            if (
-              role === "price-engine" &&
-              client.readyState === WebSocket.OPEN
-            ) {
-              client.send(JSON.stringify({ wsMessageData }));
-            }
-          }
-        }
-
-        // receive price-update
-        if (message.wsData.eventName === "price-update") {
-          const priceUpdates = message.wsData.data.priceUpdate;
-
-          for (const [client, role] of clients.entries()) {
-            const wsMessageData: wsPacket = {
-              eventName: "price-update",
-              data: priceUpdates,
-            };
-
-            if (
-              role === "platform-api" &&
-              client.readyState === WebSocket.OPEN
-            ) {
-              client.send(JSON.stringify({ wsMessageData }));
-            }
-          }
-        }
-
-        if (!ws.clientRole) {
-          ws.send(JSON.stringify({ type: "unauthorized" }));
-          ws.close();
+          ws.send(JSON.stringify({ wsMessageData }));
+          clients.set(ws, ws.clientRole!);
           logConnectedClients();
           return;
+        } catch (error) {
+          console.log(error);
+          ws.send(
+            JSON.stringify({ type: "auth_failed", error: "Invalid token" })
+          );
+          ws.close();
+          return;
         }
-      } catch (error) {
-        console.log(error);
       }
-    });
+
+      // receive the order events send them to price engine accordingly
+      if (message.wsData.eventName === "new-order") {
+        console.log(`[ws-server] order-placed received from ${ws.clientRole}`);
+
+        // for buy order in yes side
+        const wsMessageData: wsPacket = {
+          eventName: "new-order",
+          requestId: message.wsData.requestId,
+          data: message.wsData.data,
+        };
+
+        for (const [client, role] of clients.entries()) {
+          if (role === "price-engine" && client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ wsMessageData }));
+          }
+        }
+      }
+
+      // receive price-update
+      if (message.wsData.eventName === "price-update") {
+        const priceUpdates = message.wsData.data.priceUpdate;
+
+        for (const [client, role] of clients.entries()) {
+          const wsMessageData: wsPacket = {
+            eventName: "price-update",
+            data: priceUpdates,
+          };
+
+          if (role === "platform-api" && client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ wsMessageData }));
+          }
+        }
+      }
+
+      if (!ws.clientRole) {
+        ws.send(JSON.stringify({ type: "unauthorized" }));
+        ws.close();
+        logConnectedClients();
+        return;
+      }
+    } catch (error) {
+      console.log(error);
+    }
   });
 });
 

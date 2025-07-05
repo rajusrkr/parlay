@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Link } from "react-router";
 
 export default function Markets() {
-  const { fetchMarkets, markets, handleWsPriceChange } = useMarketStore();
+  const { fetchMarkets, markets } = useMarketStore();
 
   const ws = new WebSocket("ws://localhost:8001");
 
@@ -12,11 +12,7 @@ export default function Markets() {
     const data = JSON.parse(msg.data);
     console.log(data);
     
-    handleWsPriceChange({
-      marketId: data.marketId,
-      noPrice: data.no,
-      yesPrice: data.yes,
-    });
+
   };
 
   useEffect(() => {
@@ -46,8 +42,7 @@ export default function Markets() {
           </Link>
           <CardContent>
             <p>Market Status: {market.currentStatus}</p>
-            <p>No side price: {market.priceData.noSide}</p>
-            <p>Yes side price: {market.priceData.yesSide}</p>
+           
           </CardContent>
         </Card>
       ))}
