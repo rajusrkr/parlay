@@ -4,14 +4,18 @@ import { useEffect } from "react";
 import { Link } from "react-router";
 
 export default function Markets() {
-  const { fetchMarkets, markets } = useMarketStore();
+  const { fetchMarkets, markets, handlePriceChange } = useMarketStore();
 
   const ws = new WebSocket("ws://localhost:8001");
 
   ws.onmessage = (msg) => {
     const data = JSON.parse(msg.data);
     console.log(data);
-    
+
+    const {yes, no, marketId, time} = data
+
+
+    handlePriceChange({marketId, noPrice: no, time, yesPrice: yes})
 
   };
 

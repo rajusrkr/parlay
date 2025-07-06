@@ -76,7 +76,7 @@ export function handleWsMessage() {
                 })
                 .where(eq(usersTable.userId, pending.userId));
 
-              const order = await tx
+              await tx
                 .insert(orderTable)
                 .values({
                   executionPrice: (
@@ -91,7 +91,6 @@ export function handleWsMessage() {
                   yesPriceAfterOrder: data.yesPriceAftereOrder,
                   noPriceAfterOrder: data.noPriceAfterOrder,
                 })
-                .returning();
 
               const userQty = pending.userOrderQty;
 
@@ -110,21 +109,21 @@ export function handleWsMessage() {
                 })
                 .where(eq(marketTable.marketId, pending.marketId));
 
-              await tx.insert(priceData).values({
+              const priceDataUpdate = await tx.insert(priceData).values({
                 noSidePrice: data.noPriceAfterOrder,
                 yesSidePrice: data.yesPriceAftereOrder,
                 marketId: pending.marketId,
                 priceUpdatedOn: Math.floor(Date.now() / 1000)
-              });
+              }).returning()
               // send repsne to client
               ws.send(
                 JSON.stringify({
                   eventName: "confirm-price-update",
                   message: "hey there new price",
-                  yesPrice: data.yesPriceAftereOrder,
-                  noPrice: data.noPriceAfterOrder,
-                  marketId: pending.marketId,
-                  time: order[0].createdOn,
+                  yesPrice: priceDataUpdate[0].yesSidePrice,
+                  noPrice: priceDataUpdate[0].noSidePrice,
+                  marketId: priceDataUpdate[0].marketId,
+                  time: priceDataUpdate[0].priceUpdatedOn,
                 })
               );
             });
@@ -196,7 +195,7 @@ export function handleWsMessage() {
                 })
                 .where(eq(marketTable.marketId, pending.marketId));
 
-              const createOrder = await tx
+              await tx
                 .insert(orderTable)
                 .values({
                   executionPrice: (
@@ -211,23 +210,22 @@ export function handleWsMessage() {
                   yesPriceAfterOrder: data.yesPriceAftereOrder,
                   noPriceAfterOrder: data.noPriceAfterOrder,
                 })
-                .returning();
+              
 
-
-                await tx.insert(priceData).values({
+              const priceDataUpdate = await tx.insert(priceData).values({
                   noSidePrice: data.noPriceAfterOrder,
                   yesSidePrice: data.yesPriceAftereOrder,
                   marketId: pending.marketId,
                   priceUpdatedOn: Math.floor(Date.now() / 1000)
-                })
+                }).returning()
               ws.send(
                 JSON.stringify({
                   eventName: "confirm-price-update",
                   message: "hey there new price",
-                  yesPrice: data.yesPriceAftereOrder,
-                  noPrice: data.noPriceAfterOrder,
-                  marketId: pending.marketId,
-                  time: createOrder[0].createdOn,
+                  yesPrice: priceDataUpdate[0].yesSidePrice,
+                  noPrice: priceDataUpdate[0].noSidePrice,
+                  marketId: priceDataUpdate[0].marketId,
+                  time: priceDataUpdate[0].priceUpdatedOn,
                 })
               );
             });
@@ -298,7 +296,7 @@ export function handleWsMessage() {
                 })
                 .where(eq(marketTable.marketId, pending.marketId));
 
-              const order = await tx
+              await tx
                 .insert(orderTable)
                 .values({
                   orderId: data.requestId,
@@ -313,23 +311,22 @@ export function handleWsMessage() {
                   yesPriceAfterOrder: data.yesPriceAftereOrder,
                   noPriceAfterOrder: data.noPriceAfterOrder,
                 })
-                .returning();
-
-              await tx.insert(priceData).values({
+            
+            const priceDataUpdate = await tx.insert(priceData).values({
                 noSidePrice: data.noPriceAfterOrder,
                 yesSidePrice: data.yesPriceAftereOrder,
                 marketId: pending.marketId,
                 priceUpdatedOn: Math.floor(Date.now() / 1000)
-              });
+              }).returning()
 
               ws.send(
                 JSON.stringify({
                   eventName: "confirm-price-update",
                   message: "hey there new price",
-                  yesPrice: data.yesPriceAftereOrder,
-                  noPrice: data.noPriceAfterOrder,
-                  marketId: pending.marketId,
-                  time: order[0].createdOn,
+                  yesPrice: priceDataUpdate[0].yesSidePrice,
+                  noPrice: priceDataUpdate[0].noSidePrice,
+                  marketId: priceDataUpdate[0].marketId,
+                  time: priceDataUpdate[0].priceUpdatedOn,
                 })
               );
             });
@@ -390,7 +387,7 @@ export function handleWsMessage() {
                 })
                 .where(eq(marketTable.marketId, pending.marketId));
 
-              const order = await tx
+              await tx
                 .insert(orderTable)
                 .values({
                   orderId: data.requestId,
@@ -405,23 +402,23 @@ export function handleWsMessage() {
                   yesPriceAfterOrder: data.yesPriceAftereOrder,
                   noPriceAfterOrder: data.noPriceAfterOrder,
                 })
-                .returning();
+            
 
-              await tx.insert(priceData).values({
+            const priceDataUpdate = await tx.insert(priceData).values({
                 marketId: pending.marketId,
                 noSidePrice: data.noPriceAfterOrder,
                 yesSidePrice: data.yesPriceAftereOrder,
                 priceUpdatedOn: Math.floor(Date.now() / 1000)
-              });
+              }).returning()
 
               ws.send(
                 JSON.stringify({
                   eventName: "confirm-price-update",
                   message: "hey there new price",
-                  yesPrice: data.yesPriceAftereOrder,
-                  noPrice: data.noPriceAfterOrder,
-                  marketId: pending.marketId,
-                  time: order[0].createdOn,
+                  yesPrice: priceDataUpdate[0].yesSidePrice,
+                  noPrice: priceDataUpdate[0].noSidePrice,
+                  marketId: priceDataUpdate[0].marketId,
+                  time: priceDataUpdate[0].priceUpdatedOn,
                 })
               );
             });

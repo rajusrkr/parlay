@@ -24,7 +24,7 @@ interface MarketStates {
   markets: Market[];
 
   fetchMarkets: () => Promise<void>;
-  // handlePriceChange: ({ marketId }: { marketId: string }) => void;
+  handlePriceChange: ({ marketId, noPrice, yesPrice, time }: { marketId: string, time: number, yesPrice: number, noPrice: number }) => void;
 }
 
 const useMarketStore = create(
@@ -54,26 +54,26 @@ const useMarketStore = create(
         }
       },
 
-      // handlePriceChange: ({ marketId }) => {
-      //   set((prev) => ({
-      //     markets: prev.markets.map((market) => {
-      //       if (market.marketId === marketId) {
-      //         return {
-      //           ...market,
-      //           prices: [
-      //             ...market.prices,
-      //             {
-      //               yes: { time: 123, value: 123 },
-      //               no: { time: 123, value: 123 },
-      //             },
-      //           ],
-      //         };
-      //       }
+      handlePriceChange: ({ marketId, noPrice, time, yesPrice }) => {
+        set((prev) => ({
+          markets: prev.markets.map((market) => {
+            if (market.marketId === marketId) {
+              return {
+                ...market,
+                prices: [
+                  ...market.prices,
+                  {
+                    yes: { time: time, value: yesPrice },
+                    no: { time: time, value: noPrice },
+                  },
+                ],
+              };
+            }
 
-      //       return market;
-      //     }),
-      //   }));
-      // },
+            return market;
+          }),
+        }));
+      },
     }),
     { name: "market-store" }
   )

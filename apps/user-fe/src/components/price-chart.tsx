@@ -7,6 +7,7 @@ import {
   type Time,
 } from "lightweight-charts";
 import { useMarketStore } from "@/stores/useMarketStore";
+import {useParams} from "react-router"
 
 export default function AreaChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -14,8 +15,12 @@ export default function AreaChart() {
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
+  const paramsId = useParams().id;
 
-  const {markets} = useMarketStore()
+
+
+
+  const { markets } = useMarketStore();
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -38,38 +43,25 @@ export default function AreaChart() {
 
     seriesRef.current = areaSeries;
 
-    // const initialData = [
-    //   { value: markets[0].prices[0].yes.value, time: markets[0].prices[0].yes.time as Time },
-    // ];
 
-    const data = markets[0].prices.map((price) => ({
-      value: price.yes.value,
-      time: price.yes.time as Time
-    }))
+  // flat map and filter
+  const priceData = markets.filter((market) => market.marketId === paramsId).flatMap((filteredMarket) => filteredMarket.prices.map((price) => ({
+    time: price.yes.time as Time,
+    value: price.yes.value
+  })))
+   
 
-
-
-    areaSeries.setData(data);
+    areaSeries.setData(priceData);
     chart.timeScale().fitContent();
 
     // ws data
 
-const ws = new WebSocket("ws://localhost:8001")
+    const ws = new WebSocket("ws://localhost:8001");
+    wsRef.current = ws;
 
-wsRef.current = ws
-
-// ws.onmessage  = (event) => {
-//   try {
-//     const
-//   } catch (error) {
-    
-//   }
-// }
-
-
-    // clean
+    // clean up
     return () => chart.remove();
-  }, []);
+  }, [markets]);
 
   return (
     <div ref={chartContainerRef} style={{ width: "100%", height: "800px" }} />
