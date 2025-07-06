@@ -20,11 +20,11 @@ interface Market {
 interface MarketStates {
   isError: boolean;
   erroMessage: string | null;
-
+  
   markets: Market[];
 
   fetchMarkets: () => Promise<void>;
-  handlePriceChange: ({ marketId }: { marketId: string }) => void;
+  // handlePriceChange: ({ marketId }: { marketId: string }) => void;
 }
 
 const useMarketStore = create(
@@ -54,26 +54,26 @@ const useMarketStore = create(
         }
       },
 
-      handlePriceChange: ({ marketId }) => {
-        set((prev) => ({
-          markets: prev.markets.map((market) => {
-            if (market.marketId === marketId) {
-              return {
-                ...market,
-                prices: [
-                  ...market.prices,
-                  {
-                    yes: { time: 123, value: 123 },
-                    no: { time: 123, value: 123 },
-                  },
-                ],
-              };
-            }
+      // handlePriceChange: ({ marketId }) => {
+      //   set((prev) => ({
+      //     markets: prev.markets.map((market) => {
+      //       if (market.marketId === marketId) {
+      //         return {
+      //           ...market,
+      //           prices: [
+      //             ...market.prices,
+      //             {
+      //               yes: { time: 123, value: 123 },
+      //               no: { time: 123, value: 123 },
+      //             },
+      //           ],
+      //         };
+      //       }
 
-            return market;
-          }),
-        }));
-      },
+      //       return market;
+      //     }),
+      //   }));
+      // },
     }),
     { name: "market-store" }
   )

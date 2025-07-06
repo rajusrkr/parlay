@@ -114,6 +114,7 @@ export function handleWsMessage() {
                 noSidePrice: data.noPriceAfterOrder,
                 yesSidePrice: data.yesPriceAftereOrder,
                 marketId: pending.marketId,
+                priceUpdatedOn: Math.floor(Date.now() / 1000)
               });
               // send repsne to client
               ws.send(
@@ -132,6 +133,7 @@ export function handleWsMessage() {
               message: "Order has been placed successfully",
             });
           } catch (error) {
+            console.log(error);
             pending.res.status(500).json({
               success: false,
               message:
@@ -210,6 +212,14 @@ export function handleWsMessage() {
                   noPriceAfterOrder: data.noPriceAfterOrder,
                 })
                 .returning();
+
+
+                await tx.insert(priceData).values({
+                  noSidePrice: data.noPriceAfterOrder,
+                  yesSidePrice: data.yesPriceAftereOrder,
+                  marketId: pending.marketId,
+                  priceUpdatedOn: Math.floor(Date.now() / 1000)
+                })
               ws.send(
                 JSON.stringify({
                   eventName: "confirm-price-update",
@@ -309,6 +319,7 @@ export function handleWsMessage() {
                 noSidePrice: data.noPriceAfterOrder,
                 yesSidePrice: data.yesPriceAftereOrder,
                 marketId: pending.marketId,
+                priceUpdatedOn: Math.floor(Date.now() / 1000)
               });
 
               ws.send(
@@ -396,10 +407,11 @@ export function handleWsMessage() {
                 })
                 .returning();
 
-              await tx.update(priceData).set({
+              await tx.insert(priceData).values({
                 marketId: pending.marketId,
                 noSidePrice: data.noPriceAfterOrder,
                 yesSidePrice: data.yesPriceAftereOrder,
+                priceUpdatedOn: Math.floor(Date.now() / 1000)
               });
 
               ws.send(

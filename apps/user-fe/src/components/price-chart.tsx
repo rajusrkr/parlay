@@ -6,12 +6,16 @@ import {
   type ISeriesApi,
   type Time,
 } from "lightweight-charts";
+import { useMarketStore } from "@/stores/useMarketStore";
 
 export default function AreaChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+
+
+  const {markets} = useMarketStore()
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -34,14 +38,18 @@ export default function AreaChart() {
 
     seriesRef.current = areaSeries;
 
-    const initialData = [
-      { value: 0, time: 1642425322 as Time },
-      { value: 8, time: 1642511722 as Time },
-      { value: 10, time: 1642598122 as Time },
-      { value: 30, time: 1642684522 as Time },
-    ];
+    // const initialData = [
+    //   { value: markets[0].prices[0].yes.value, time: markets[0].prices[0].yes.time as Time },
+    // ];
 
-    areaSeries.setData(initialData);
+    const data = markets[0].prices.map((price) => ({
+      value: price.yes.value,
+      time: price.yes.time as Time
+    }))
+
+
+
+    areaSeries.setData(data);
     chart.timeScale().fitContent();
 
     // ws data
