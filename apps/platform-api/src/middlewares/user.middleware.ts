@@ -2,8 +2,8 @@ import { NextFunction, Request } from "express";
 import jwt from "jsonwebtoken"
 
 function userJwt(req: Request, res: any, next: NextFunction){
-    const token = req.headers["authorization"] ?? "";
-
+    const token = req.cookies.auth_session;
+    
     if (!token) {
         return res.status(400).json({success: false, message: "No auth token available, login again"})
     }

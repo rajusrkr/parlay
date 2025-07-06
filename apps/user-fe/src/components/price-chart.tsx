@@ -7,7 +7,8 @@ import {
   type Time,
 } from "lightweight-charts";
 import { useMarketStore } from "@/stores/useMarketStore";
-import {useParams} from "react-router"
+import { useParams } from "react-router";
+import PlaceOrderBtn from "./place-order-btn";
 
 export default function AreaChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -16,9 +17,6 @@ export default function AreaChart() {
   const wsRef = useRef<WebSocket | null>(null);
 
   const paramsId = useParams().id;
-
-
-
 
   const { markets } = useMarketStore();
 
@@ -43,13 +41,15 @@ export default function AreaChart() {
 
     seriesRef.current = areaSeries;
 
-
-  // flat map and filter
-  const priceData = markets.filter((market) => market.marketId === paramsId).flatMap((filteredMarket) => filteredMarket.prices.map((price) => ({
-    time: price.yes.time as Time,
-    value: price.yes.value
-  })))
-   
+    // flat map and filter
+    const priceData = markets
+      .filter((market) => market.marketId === paramsId)
+      .flatMap((filteredMarket) =>
+        filteredMarket.prices.map((price) => ({
+          time: price.yes.time as Time,
+          value: Number(price.yes.value),
+        }))
+      );
 
     areaSeries.setData(priceData);
     chart.timeScale().fitContent();
@@ -64,6 +64,17 @@ export default function AreaChart() {
   }, [markets]);
 
   return (
+    <div>
+
     <div ref={chartContainerRef} style={{ width: "100%", height: "800px" }} />
+
+
+    <div className="p-2 flex gap-2">
+      {/* Buy button */}
+      <PlaceOrderBtn marketId={paramsId!} orderQty={100}  orderSide="yes" orderType="buy" buttonTitle="Buy"/>
+      {/* Sell button */}
+      <PlaceOrderBtn buttonTitle="Sell" marketId={paramsId!} orderQty={150} orderSide="yes" orderType="sell"/>
+    </div>
+    </div>
   );
 }
