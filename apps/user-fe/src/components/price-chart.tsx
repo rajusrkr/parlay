@@ -41,15 +41,20 @@ export default function AreaChart() {
 
     seriesRef.current = areaSeries;
 
-    // flat map and filter
-    const priceData = markets
+    // map data
+    const map = new Map<number, {time: Time; value: number}>()
+    // setting data into map
+    markets
       .filter((market) => market.marketId === paramsId)
-      .flatMap((filteredMarket) =>
-        filteredMarket.prices.map((price) => ({
-          time: price.yes.time as Time,
-          value: Number(price.yes.value),
-        }))
-      );
+      .flatMap((market) => market.prices)
+      .forEach((price) => {
+        const time = price.yes.time as Time;
+        const value = Number(price.yes.value);
+        map.set(Number(time), {time, value})
+      })
+
+      // sorting map data in ascending format
+      const priceData = Array.from(map.values()).sort((a, b) => Number(a.time) - Number(b.time))
 
     areaSeries.setData(priceData);
     chart.timeScale().fitContent();

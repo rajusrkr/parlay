@@ -28,7 +28,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
     logConnectedClients();
   });
 
-  // handling incoming messges
+  // Handling incoming messges
   ws.on("message", (data) => {
     try {
       const message = JSON.parse(data.toString());
@@ -67,7 +67,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
         return;
       }
 
-      // for client authentication
+      // For client authentication
       if (message.wsData.eventName === "handShake") {
         try {
           const decode: any = jwt.verify(
@@ -101,11 +101,11 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
         }
       }
 
-      // receive the order events send them to price engine accordingly
+      // Receive the order events send them to price engine accordingly
       if (message.wsData.eventName === "new-order") {
         console.log(`[ws-server] order-placed received from ${ws.clientRole}`);
 
-        // for buy order in yes side
+        // For buy order in yes side
         const wsMessageData: wsPacket = {
           eventName: "new-order",
           requestId: message.wsData.requestId,
@@ -119,7 +119,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
         }
       }
 
-      // receive price-update
+      // Receive price-update
       if (message.wsData.eventName === "price-update") {
         const priceUpdates = message.wsData.data.priceUpdate;
 
