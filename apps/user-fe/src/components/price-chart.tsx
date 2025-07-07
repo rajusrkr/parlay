@@ -8,7 +8,7 @@ import {
 } from "lightweight-charts";
 import { useMarketStore } from "@/stores/useMarketStore";
 import { useParams } from "react-router";
-import PlaceOrderBtn from "./place-order-btn";
+import PlaceOrderForm from "./place-order-form";
 
 export default function AreaChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -69,16 +69,19 @@ export default function AreaChart() {
   }, [markets]);
 
   return (
-    <div>
+    <div className="flex">
 
     <div ref={chartContainerRef} style={{ width: "100%", height: "800px" }} />
 
 
-    <div className="p-2 flex gap-2">
+    <div className="p-2 flex gap-2 w-96">
       {/* Buy button */}
-      <PlaceOrderBtn marketId={paramsId!} orderQty={100}  orderSide="yes" orderType="buy" buttonTitle="Buy"/>
+      {/* <PlaceOrderBtn marketId={paramsId!} orderQty={100}  orderSide="yes" orderType="buy" buttonTitle="Buy"/> */}
       {/* Sell button */}
-      <PlaceOrderBtn buttonTitle="Sell" marketId={paramsId!} orderQty={150} orderSide="yes" orderType="sell"/>
+      {/* <PlaceOrderBtn buttonTitle="Sell" marketId={paramsId!} orderQty={150} orderSide="yes" orderType="sell"/> */}
+
+
+      <PlaceOrderForm />
     </div>
     </div>
   );
