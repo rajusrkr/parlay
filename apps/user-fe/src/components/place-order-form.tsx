@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -12,10 +12,13 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { useParams } from "react-router";
+import { useuserStore } from "@/stores/useUserStore";
 
 export default function PlaceOrderForm() {
   const [noQty, setNoQty] = useState<number>(0);
   const [yesQty, setYesQty] = useState<number>(0);
+
+  const { fetchPositions } = useuserStore();
 
   const paramsId = useParams().id;
 
@@ -53,6 +56,12 @@ export default function PlaceOrderForm() {
       console.log(error);
     }
   };
+
+  useEffect(() => {
+    (async () => {
+      await fetchPositions();
+    })();
+  }, []);
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-6">
@@ -141,13 +150,15 @@ export default function PlaceOrderForm() {
 
       <div>
         <div>
-            <h4 className="font-bold">All positions</h4>
+          <h4 className="font-bold">All positions</h4>
         </div>
         <Card>
-            <CardHeader>
-                <CardTitle>Positions</CardTitle>
-                <CardDescription>All positions taken by you will appear here</CardDescription>
-            </CardHeader>
+          <CardHeader>
+            <CardTitle>Positions</CardTitle>
+            <CardDescription>
+              All positions taken by you will appear here
+            </CardDescription>
+          </CardHeader>
         </Card>
       </div>
     </div>

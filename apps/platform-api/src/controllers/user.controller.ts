@@ -157,4 +157,22 @@ const addMoney = async (req: Request, res: any) => {
   }
 };
 
-export { userRegister, userLogin, addMoney };
+const getAllPositions =  async (req: Request, res: any) => {
+  // @ts-ignore
+  const userId = req.userId;
+
+  try {
+    const positions = await db.select().from(orderTable).where(eq(orderTable.orderPlacedBy, userId))
+
+    if (positions.length === 0) {
+      return res.status(400).json({success: false, message: "No position available"})
+    }
+
+    return res.status(200).json({success: true, message: "positions fetched", positions})
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({success: false, message: "Internal server error"})
+  }
+}
+
+export { userRegister, userLogin, addMoney, getAllPositions };
