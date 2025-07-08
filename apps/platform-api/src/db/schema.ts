@@ -1,9 +1,10 @@
-import { sql } from "drizzle-orm";
+import { ne, sql } from "drizzle-orm";
 import { bigint, boolean, check, decimal, integer, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const AccountRoleEnum = pgEnum("role", ["USER", "ADMIN"])
 export const CurrencyCode = pgEnum("currency_code", ["INR", "USD"])
 
+// This table contains user details and wallet balance
 export const usersTable = pgTable("users", {
     id: serial("id").primaryKey(),
     name: varchar("name", {length: 26}).notNull(),
@@ -18,10 +19,10 @@ export const usersTable = pgTable("users", {
     updatedOn: timestamp("updated_on)").$onUpdate(() => new Date())
 })
 
+// enum for market status
 export const CurrentMarketStatus = pgEnum("current_status", ["NOT_STARTED", "OPEN", "SETTLED", "CANCELLED"])
 
-// market table => totalYesQty, totalNoQty
-
+// This table contains all information about a market
 export const marketTable = pgTable("markets", {
     id: serial("id").primaryKey(),
     marketId: varchar("market_id", {length: 36}).notNull().unique(),
@@ -40,7 +41,7 @@ export const marketTable = pgTable("markets", {
     createdOn: timestamp("created_on").defaultNow(),
     updatedOn: timestamp().$onUpdate(() => new Date())
 })
-// i need two table one is for price and another is for order
+// This table is to record price changes
 export const priceData = pgTable("priceData", {
     id: serial("id").primaryKey(),
     marketId: varchar("marketId", {length: 36}).references(() => marketTable.marketId, {onDelete: "cascade"}),
@@ -53,6 +54,7 @@ export const priceData = pgTable("priceData", {
     bothSidePriceCombined: check('both_side_combined', sql`${table.yesSidePrice} + ${table.noSidePrice} <=1.00`)
 }))
 
+// This table is to recprd orders
 export const orderTable = pgTable("orders", {
     id: serial("id").primaryKey(),
     orderId: varchar("order_id", {length: 36}).notNull(),
@@ -68,8 +70,7 @@ export const orderTable = pgTable("orders", {
     updatedOn: timestamp("updated_on").$onUpdate(() => new Date())
 })
 
-
-// ADMIN
+// This is admin table
 export const adminsTable = pgTable("admins", {
     id: serial("id").primaryKey(),
     name: varchar("name", {length: 26}).notNull(),
@@ -80,4 +81,15 @@ export const adminsTable = pgTable("admins", {
     role: AccountRoleEnum().default("ADMIN"),
     createdOn: timestamp("created_on").defaultNow(),
     updatedOn: timestamp("updated_on)").$onUpdate(() => new Date())
+})
+
+// This table I will use to cobine sameside order for a user 
+export const combinedOrders = pgTable("combine_order", {
+    id: serial("id").primaryKey(),
+    userId: varchar("user_id", {length: 36}).references(() => usersTable.userId).notNull(),
+    marketId: varchar("market_id", {length: 36}).references(() => marketTable.marketId).notNull(),
+    side: varchar("side", {length: 4}).notNull(),
+    avgPrice: decimal("avg_price", {precision: 19, scale: 4}).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").$onUpdate(() => new Date())
 })
