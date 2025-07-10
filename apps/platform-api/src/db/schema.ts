@@ -89,7 +89,19 @@ export const combinedOrders = pgTable("combine_order", {
     userId: varchar("user_id", {length: 36}).references(() => usersTable.userId).notNull(),
     marketId: varchar("market_id", {length: 36}).references(() => marketTable.marketId).notNull(),
     side: varchar("side", {length: 4}).notNull(),
+    totalQty: integer("total_qty").notNull(),
     avgPrice: decimal("avg_price", {precision: 19, scale: 4}).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").$onUpdate(() => new Date())
 })
+
+
+/**
+ * qty 105
+ * avg 0.60
+ * 
+ * newQty 80
+ * deduction => 25 cost = 90
+ * 105 * 0.60 => 300 => 210/80
+ * 
+ */

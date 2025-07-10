@@ -169,6 +169,13 @@
       "when": 1751971756843,
       "tag": "0023_living_celestials",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1752005371625,
+      "tag": "0024_tricky_vargas",
+      "breakpoints": true
     }
   ]
 }
