@@ -36,9 +36,9 @@ export function NSSOCalculation({totalYesQty, totalNoQty, userQty, b, requestId}
         yesPriceAftereOrder,
         noPriceBeforeOrder,
         noPriceAfterOrder,
-        costBeforeOrder,
-        costAfterOrder,
-        returnToUser,
+        costBeforeOrder: Math.round(costBeforeOrder),
+        costAfterOrder: Math.round(costAfterOrder),
+        returnToUser: Math.round(returnToUser),
         requestId
     }
 

@@ -135,8 +135,8 @@ export default function PlaceOrderForm() {
                   onClick={() =>
                     handleOrderPlacement({
                       orderQty: noQty,
-                      orderSide: "no",
-                      orderType: "buy",
+                      orderSide: "yes",
+                      orderType: "sell",
                     })
                   }
                 >

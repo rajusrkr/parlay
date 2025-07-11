@@ -36,9 +36,9 @@ export function YSBOCalculations({totalYesQty, totalNoQty, userQty, b, requestId
         yesPriceAftereOrder,
         noPriceBeforeOrder,
         noPriceAfterOrder,
-        costBeforeOrder,
-        costAfterOrder,
-        costToUser,
+        costBeforeOrder: Math.round(costBeforeOrder),
+        costAfterOrder: Math.round(costAfterOrder),
+        costToUser: Math.round(costToUser),
         requestId
     }
 

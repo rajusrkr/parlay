@@ -13,10 +13,10 @@ export const usersTable = pgTable("users", {
     isAccountVerified: boolean("is_account_verified").default(true),
     userId: varchar("user_id", {length: 36}).notNull().unique(),
     role: AccountRoleEnum().default("USER"),
-    userWalletBalance: decimal("user_wallet_balance", {precision: 19, scale:4}).default("1000.0000"),
+    walletBalance: integer("wallet_balance").default(1000),
     currencyCode: CurrencyCode().default("INR"),
-    createdOn: timestamp("created_on").defaultNow(),
-    updatedOn: timestamp("updated_on)").$onUpdate(() => new Date())
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").$onUpdate(() => new Date())
 })
 
 // enum for market status
@@ -87,21 +87,10 @@ export const adminsTable = pgTable("admins", {
 export const combinedOrders = pgTable("combine_order", {
     id: serial("id").primaryKey(),
     userId: varchar("user_id", {length: 36}).references(() => usersTable.userId).notNull(),
-    marketId: varchar("market_id", {length: 36}).references(() => marketTable.marketId).notNull(),
+    marketId: varchar("market_id", {length: 36}).references(() => marketTable.marketId, {onDelete: "cascade"}).notNull(),
     side: varchar("side", {length: 4}).notNull(),
     totalQty: integer("total_qty").notNull(),
     avgPrice: decimal("avg_price", {precision: 19, scale: 4}).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").$onUpdate(() => new Date())
 })
-
-
-/**
- * qty 105
- * avg 0.60
- * 
- * newQty 80
- * deduction => 25 cost = 90
- * 105 * 0.60 => 300 => 210/80
- * 
- */

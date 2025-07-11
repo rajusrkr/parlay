@@ -38,9 +38,9 @@ export function YSSOCalculations({totalNoQty, totalYesQty, userQty, b, requestId
         yesPriceAftereOrder,
         noPriceBeforeOrder,
         noPriceAfterOrder,
-        costBeforeOrder,
-        costAfterOrder,
-        returnToUser,
+        costBeforeOrder: Math.round(costBeforeOrder),
+        costAfterOrder: Math.round(costAfterOrder),
+        returnToUser: Math.round(returnToUser),
         requestId
     }
 

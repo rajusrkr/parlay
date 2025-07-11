@@ -137,7 +137,7 @@ const addMoney = async (req: Request, res: any) => {
     const deposit = await db
       .update(usersTable)
       .set({
-        userWalletBalance: data.amount.toString(),
+        walletBalance: Math.round(data.amount),
       })
       .where(eq(usersTable.userId, userId))
       .returning();
@@ -147,7 +147,7 @@ const addMoney = async (req: Request, res: any) => {
       .json({
         success: true,
         message: "Money deposited",
-        newBalance: deposit[0].userWalletBalance,
+        newBalance: deposit[0].walletBalance,
       });
   } catch (error) {
     console.error(error);
