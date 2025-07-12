@@ -1,8 +1,8 @@
 import { Request } from "express";
 import { RegisterSchema, LoginShema } from "shared/dist/index";
 import { db } from "../db/dbConnection";
-import { marketTable, orderTable, usersTable } from "../db/schema";
-import { eq, sql } from "drizzle-orm";
+import { combinedOrders, usersTable } from "../db/schema";
+import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
@@ -162,7 +162,7 @@ const getAllPositions =  async (req: Request, res: any) => {
   const userId = req.userId;
 
   try {
-    const positions = await db.select().from(orderTable).where(eq(orderTable.orderPlacedBy, userId))
+    const positions = await db.select().from(combinedOrders).where(eq(combinedOrders.userId, userId))
 
     if (positions.length === 0) {
       return res.status(400).json({success: false, message: "No position available"})
@@ -176,3 +176,4 @@ const getAllPositions =  async (req: Request, res: any) => {
 }
 
 export { userRegister, userLogin, addMoney, getAllPositions };
+ 
