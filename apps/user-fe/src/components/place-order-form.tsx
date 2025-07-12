@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -12,13 +12,11 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { useParams } from "react-router";
-import { useuserStore } from "@/stores/useUserStore";
 
 export default function PlaceOrderForm() {
   const [noQty, setNoQty] = useState<number>(0);
   const [yesQty, setYesQty] = useState<number>(0);
 
-  const { fetchPositions } = useuserStore();
 
   const paramsId = useParams().id;
 
@@ -57,21 +55,15 @@ export default function PlaceOrderForm() {
     }
   };
 
-  useEffect(() => {
-    (async () => {
-      await fetchPositions();
-    })();
-  }, []);
-
   return (
     <div className="flex w-full max-w-sm flex-col gap-6">
       <div>
         <Tabs defaultValue="yes">
           <TabsList>
-            <TabsTrigger value="yes" className="hover:cursor-pointer">
+            <TabsTrigger value="yes" className="hover:cursor-pointer" onClick={() => setNoQty(0)}>
               Yes Side
             </TabsTrigger>
-            <TabsTrigger value="no" className="hover:cursor-pointer">
+            <TabsTrigger value="no" className="hover:cursor-pointer" onClick={() => setYesQty(0)}>
               No Side
             </TabsTrigger>
           </TabsList>
@@ -135,8 +127,8 @@ export default function PlaceOrderForm() {
                   onClick={() =>
                     handleOrderPlacement({
                       orderQty: noQty,
-                      orderSide: "yes",
-                      orderType: "sell",
+                      orderSide: "no",
+                      orderType: "buy",
                     })
                   }
                 >
@@ -146,20 +138,6 @@ export default function PlaceOrderForm() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-
-      <div>
-        <div>
-          <h4 className="font-bold">All positions</h4>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Positions</CardTitle>
-            <CardDescription>
-              All positions taken by you will appear here
-            </CardDescription>
-          </CardHeader>
-        </Card>
       </div>
     </div>
   );
