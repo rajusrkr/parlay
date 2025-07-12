@@ -1,0 +1,1 @@
+ALTER TABLE "combine_order" ALTER COLUMN "avg_price" SET DATA TYPE numeric(19, 2);
