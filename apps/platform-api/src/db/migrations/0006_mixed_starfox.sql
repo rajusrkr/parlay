@@ -1,1 +1,0 @@
-ALTER TABLE "markets" ADD CONSTRAINT "markets_market_title_unique" UNIQUE("market_title");

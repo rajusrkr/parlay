@@ -1,1 +1,0 @@
-ALTER TABLE "priceData" ALTER COLUMN "price_updated_on" SET DATA TYPE bigint;

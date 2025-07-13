@@ -1,1 +1,0 @@
-ALTER TABLE "combine_order" ADD COLUMN "total_qty" integer NOT NULL;
