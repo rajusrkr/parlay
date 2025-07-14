@@ -13,6 +13,8 @@ import { and, eq } from "drizzle-orm";
 export function handleWsMessage() {
   ws.on("message", async (msg) => {
     const parsed = JSON.parse(msg.toString());
+    console.log(parsed);
+    
     const { eventName, data } = parsed.wsMessageData;
 
     let errosMessage;
@@ -155,7 +157,7 @@ export function handleWsMessage() {
 
                 ws.send(
                   JSON.stringify({
-                    eventName: "confirm-price-update",
+                    eventName: "CONFIRM_PRICE_UPDATE",
                     message: "hey there new price",
                     yesPrice: priceDataUpdate[0].yesSidePrice,
                     noPrice: priceDataUpdate[0].noSidePrice,

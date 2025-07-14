@@ -1,6 +1,6 @@
-import { wsPacket } from "shared/dist/index";
+import { WsPayload } from "shared/dist/index";
 import { ws } from "../ws-client";
 
-export function sendOrderToWsServer(wsData: wsPacket) {
-  ws.send(JSON.stringify({ wsData }));
+export function sendOrderToWsServer(wsData: WsPayload) {
+  ws.send(JSON.stringify( wsData ));
 }

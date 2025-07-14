@@ -1,22 +1,18 @@
 import jwt from "jsonwebtoken"
-import { wsPacket } from "shared/dist/index"
+import { WsPayload } from "shared/dist/index"
 import { ws } from "../ws-client"
 import { handleWsMessage } from "./handle-messages"
+
 export function authAndConnectToWsServer(){
-    return new Promise<void>((resolve, reject) => {
-        // auth token with role
-        const token = jwt.sign({clientRole: "platform-api"},`${process.env.JWT_SECRET}`)
+    // auth token with role
+    const token = jwt.sign({clientRole: "PLATFORM_API"},`${process.env.JWT_SECRET}`)
         
-        const wsData: wsPacket = {eventName: "handShake", data: {token}}
+    const wsData: WsPayload = {eventType: "handShake", data: {authToken: token}}
 
-        ws.on("open", () => {
-            ws.send(JSON.stringify({ wsData }))
-            console.log(`[Platform Api] connecting to ws-server`);
-            resolve()
-        })
-
-        handleWsMessage()
-
-        ws.on("error", reject)
+    ws.on("open", () => {
+        ws.send(JSON.stringify( wsData ))
+        console.log(`[PLATFORM_API]: connecting to ws-server`);
     })
+
+    handleWsMessage()
 }

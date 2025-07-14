@@ -4,3 +4,6 @@ export * from "./schemas/market.schema"
 
 export * from "./types/wsSendAndMessageTypes"
 export * from "./types/lmsr-updates"
+
+
+export const wsPort = 8001;

@@ -1,7 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken";
 import dotnenv from "dotenv";
-import { wsPacket } from "shared/dist/index";
+import { wsPacket, WsPayload, wsPort } from "shared/dist/index";
 
 dotnenv.config();
 
@@ -12,10 +12,10 @@ interface ExtendedWebsocket extends WebSocket {
 
 const clients = new Map<ExtendedWebsocket, string>();
 
-const wss = new WebSocketServer({ port: 8001 });
+const wss = new WebSocketServer({ port: wsPort });
 
 const JWT_SECRET = process.env.JWT_SECRET;
-console.log(`[WS] server running on port 8001`);
+console.log(`[WS] server running on port ${wsPort}`);
 
 wss.on("connection", (ws: ExtendedWebsocket) => {
   ws.on("error", (error) => {
@@ -30,24 +30,28 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
 
   // Handling incoming messges
   ws.on("message", (data) => {
+
     try {
       const message = JSON.parse(data.toString());
 
-      if (message.eventName === "confirm-price-update") {
-        console.log("message for confirm price", message);
+      console.log(message);
+      
+
+        if (message.eventType === "CONFIRM_PRICE_UPDATE") {
+          console.log("CONFIRM_PRICE_UPDATE", message);
 
         for (const [client, role] of clients) {
-          if (
-            role === "client-connection" &&
-            client.readyState === WebSocket.OPEN
-          ) {
-            client.send(
-              JSON.stringify({
+          if (role === "USER_FE" && client.readyState === WebSocket.OPEN) {
+            const wsData: WsPayload = {eventType: "priceUpdate", data: {
+              marketId: message.marketId,
+              time: message.time,
+              price: {
                 yes: message.yesPrice,
-                no: message.noPrice,
-                marketId: message.marketId,
-                time: message.time,
-              })
+                no: message.noPrice
+              }
+            }}
+            client.send(
+              JSON.stringify(wsData)
             );
           }
         }
@@ -55,12 +59,12 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
         return;
       }
 
-      if (message.wsData.eventName === "client-connection") {
+      if (message.eventType === "clientHandShake") {
         console.log("hey client");
 
         ws.send(JSON.stringify({ message: "hey" }));
 
-        clients.set(ws, "client-connection");
+        clients.set(ws, message.data.authToken);
 
         logConnectedClients();
 
@@ -68,10 +72,10 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
       }
 
       // For client authentication
-      if (message.wsData.eventName === "handShake") {
+      if (message.eventType === "handShake") {
         try {
           const decode: any = jwt.verify(
-            message.wsData.data.token,
+            message.data.authToken,
             JWT_SECRET!
           );
 
@@ -102,14 +106,14 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
       }
 
       // Receive the order events send them to price engine accordingly
-      if (message.wsData.eventName === "new-order") {
+      if (message.eventType === "newOrder") {
         console.log(`[ws-server] order-placed received from ${ws.clientRole}`);
 
         // For buy order in yes side
-        const wsMessageData: wsPacket = {
-          eventName: "new-order",
-          requestId: message.wsData.requestId,
-          data: message.wsData.data,
+        const wsMessageData: WsPayload = {
+          eventType: "newOrder",
+          requestId: message.requestId,
+          data: message.data,
         };
 
         for (const [client, role] of clients.entries()) {
@@ -120,8 +124,8 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
       }
 
       // Receive price-update
-      if (message.wsData.eventName === "price-update") {
-        const priceUpdates = message.wsData.data.priceUpdate;
+      if (message.eventType === "price-update") {
+        const priceUpdates = message.data.priceUpdate;
 
         for (const [client, role] of clients.entries()) {
           const wsMessageData: wsPacket = {

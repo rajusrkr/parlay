@@ -1,19 +1,15 @@
 import jwt from "jsonwebtoken"
-import { wsPacket } from "shared/dist/index"
+import { WsPayload } from "shared/dist/index"
 import { ws } from "../ws-client"
 export function authAndConnectToWsServer(){
-    return new Promise<void>((resolve, reject) => {
         // auth token with role
-        const token = jwt.sign({clientRole: "price-engine"},`${process.env.JWT_SECRET}`)
+        const token = jwt.sign({clientRole: "PRICE_ENGINE"},`${process.env.JWT_SECRET}`)
         
-        const wsData: wsPacket = {eventName: "handShake", data: {token}}
+        const wsData: WsPayload = {eventType: "handShake", data: {authToken: token}}
 
         ws.on("open", () => {
-            ws.send(JSON.stringify({ wsData }))
+            ws.send(JSON.stringify( wsData ))
             console.log(`[Platform Api] connecting to ws-server`);
-            resolve()
         })
 
-        ws.on("error", reject)
-    })
 }
