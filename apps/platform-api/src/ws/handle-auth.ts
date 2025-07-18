@@ -5,12 +5,11 @@ import { handleWsMessage } from "./handle-messages"
 
 export function authAndConnectToWsServer(){
     // auth token with role
-    const token = jwt.sign({clientRole: "PLATFORM_API"},`${process.env.JWT_SECRET}`)
-        
-    const wsData: WsPayload = {eventType: "handShake", data: {authToken: token}}
+    const token = jwt.sign({role: "platformApi"},`${process.env.JWT_SECRET}`)
 
     ws.on("open", () => {
-        ws.send(JSON.stringify( wsData ))
+        const message: WsPayload = {eventType: "handShake", data: {authToken: token}} 
+        ws.send(JSON.stringify( message ))
         console.log(`[PLATFORM_API]: connecting to ws-server`);
     })
 

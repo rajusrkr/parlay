@@ -35,6 +35,8 @@ interface WsPayload {
     returnToUser?: number;
     costToUser?: number;
     requestId?: string;
+    // other
+    message?: string;
   };
 }
 

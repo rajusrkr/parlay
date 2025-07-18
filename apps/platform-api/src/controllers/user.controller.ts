@@ -104,21 +104,31 @@ const userLogin = async (req: Request, res: any) => {
         .json({ success: false, message: "Wrong credentials" });
     }
 
-    // sign jwt
-    const signJWT = jwt.sign(
+    // signin jwt
+    const signInJWT = jwt.sign(
       { userId: findUser[0].userId },
       `${process.env.JWT_SECRET}`
     );
 
-    return res
-      .cookie("auth_session", signJWT, { 
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-        httpOnly: true,
-        secure: true,
-        sameSite: "strict"
+// ws auth cookie
+
+const socketKey = jwt.sign({role: "userFe"}, `${process.env.JWT_SECRET}`)
+
+    res.cookie("socket-identity", socketKey, {
+      maxAge: 7 * 24 * 60 * 1000,
+      secure: true,
+      sameSite: "strict"
     })
-      .status(200)
-      .json({ success: true, message: "Signin success" });
+
+    res.cookie("auth_session", signInJWT, { 
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict"
+    })
+
+
+    return res.status(200).json({ success: true, message: "Signin success" });
   } catch (error) {
     console.log(error);
     return res
