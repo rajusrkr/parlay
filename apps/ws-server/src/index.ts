@@ -212,7 +212,36 @@ const wss = new WebSocketServer({port: wsPort})
 console.log(`WS-SERVER is listening on port ${wsPort}`);
 
 
+// Heartbeat interval
+
+const heartbeat_interval = 15000;
+
+const heartbeatInterval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+        const client = ws as ExtendedWebsocket;
+
+        if (!client.isAlive) {
+            console.log('Terminating inactive client:', client.clientRole);
+            connectedClients.delete(client)
+            return client.terminate();
+        }
+
+        client.isAlive = false;
+        ws.ping()
+    })
+}, heartbeat_interval)
+
 wss.on("connection", (ws: ExtendedWebsocket) => {
+    // setting is alive true
+    ws.isAlive = true;
+
+    // handle pong
+    ws.on("pong", () => {
+        ws.isAlive = true;
+        console.log("pong received from:", ws.clientRole,"🟢");
+    })
+
+
     // error handle
     ws.on("error", (err) => {
         console.error('Error ocuured', err)
@@ -220,7 +249,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
 
     // connection close handle
     ws.on("close", () => {
-        console.log('Client disconnected', ws.clientRole);
+        console.log('Client disconnected', ws.clientRole, "🔴");
         // remove the client
         connectedClients.delete(ws)
     })
@@ -242,7 +271,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                     // setting role
                     ws.clientRole = decode.role;
 
-                    console.log(`Client: ${ws.clientRole}, has been authorized`);
+                    console.log(`Client: ${ws.clientRole}, has been authorized 🔐`);
 
                     // Message
                     const message: WsPayload = {
@@ -268,6 +297,10 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
 
 })
 
+// clear interval
+wss.on("close", () => {
+    clearInterval(heartbeatInterval)
+})
 
 // Get connected clients
 function getConnectedClients(){

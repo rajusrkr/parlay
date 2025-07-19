@@ -1,5 +1,5 @@
 import { app } from "./app";
-import { authAndConnectToWsServer } from "./ws/handle-auth";
+import { authAndConnectToWsServer } from "./ws/wsAuth&Connection";
 
 
 const PORT = process.env.PORT || 8000

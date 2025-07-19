@@ -574,4 +574,10 @@ export function handleWsMessage() {
       }
     }
   });
+
+
+  ws.on("ping", () => {
+    console.log("Received ping, sending pong...🚀");
+    
+  })
 }

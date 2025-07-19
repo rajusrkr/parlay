@@ -137,5 +137,10 @@ export function handleWsMessage(): Promise<any> {
         }
       }
     });
+
+    ws.on("ping", () => {
+      console.log("Received ping, sending pong...🚀");
+    })
   });
 }
+

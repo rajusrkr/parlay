@@ -1,5 +1,5 @@
 import dotenv from "dotenv"
-import { authAndConnectToWsServer } from "./ws/handle-auth"
+import { authAndConnectToWsServer } from "./ws/wsAuth&Connection"
 
 
 dotenv.config()
