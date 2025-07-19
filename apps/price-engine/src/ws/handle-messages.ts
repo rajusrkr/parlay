@@ -2,22 +2,22 @@ import { NSBOCalculation } from "../lmsr/nsbo-calculation";
 import { NSSOCalculation } from "../lmsr/nsso.calculation";
 import { YSBOCalculations } from "../lmsr/ysbo-calculation";
 import { YSSOCalculations } from "../lmsr/ysso-calculation";
-import { ws } from "../ws-client";
 import { BuyOrderUpdates, SellOrderUpdates, WsPayload } from "shared/dist/index";
+import { ws } from "../ws-client";
 
 export function handleWsMessage(): Promise<any> {
   return new Promise((resolve, reject) => {
     ws.on("message", (msg) => {
       const parsed = JSON.parse(msg.toString());
-      console.log(parsed);
-      
+      const {eventType, data} = parsed
 
       // for auth message
-      if (parsed.wsMessageData.eventName === "auth-success") {
-        console.log(`Connection established with ws-server`);
+      if (eventType === "authAck") {
+       console.log('Event type:', eventType); 
+       console.log('Message:', data.message);
       }
       // for new order received
-      if (parsed.wsMessageData.eventName === "new-order") {
+      if (eventType === "new-order") {
         const data = parsed.wsMessageData.data;
         const requestId = parsed.wsMessageData.requestId;
 

@@ -111,11 +111,10 @@ const userLogin = async (req: Request, res: any) => {
     );
 
 // ws auth cookie
-
 const socketKey = jwt.sign({role: "userFe"}, `${process.env.JWT_SECRET}`)
 
     res.cookie("socket-identity", socketKey, {
-      maxAge: 7 * 24 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
       secure: true,
       sameSite: "strict"
     })

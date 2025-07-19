@@ -13,21 +13,20 @@ import { and, eq } from "drizzle-orm";
 export function handleWsMessage() {
   ws.on("message", async (msg) => {
     const parsed = JSON.parse(msg.toString());
-    console.log(parsed);
     
-    const { eventName, data } = parsed.wsMessageData;
+    const { eventType, data } = parsed;
 
     let errosMessage;
     let errorStatusCode;
 
     // if auth response
-    if (eventName === "auth-success") {
-      console.log(`[AUTH]: ${eventName}, and role ${data.role}`);
-      return;
+    if (eventType === "authAck") {
+     console.log('Event type:', eventType); 
+     console.log('Message:', data.message);
     }
 
     // if price update
-    if (eventName === "price-update") {
+    if (eventType === "price-update") {
       console.log(`[PRICE UPDATE RECEIVED]`);
 
       const pending = pendingRequests.get(data.requestId);

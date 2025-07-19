@@ -280,8 +280,8 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                            message: `Hey ${ws.clientRole} Auth success, bi-directional data transform can be perform now` 
                         }
                     }
-                    // WILL SEND MESSAGE LATER
-                    // ws.send(JSON.stringify(message));
+                    // send back response
+                    ws.send(JSON.stringify(message));
                     connectedClients.set(ws, ws.clientRole!)
 
                     console.log(getConnectedClients().join("\n"));
