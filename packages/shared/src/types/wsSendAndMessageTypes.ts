@@ -40,4 +40,16 @@ interface WsPayload {
   };
 }
 
-export { wsPacket, WsPayload };
+interface FinalPriceUpdate {
+  eventType: string,
+  marketId: string,
+  data: {
+    yesPrice: string,
+    noPrice: string,
+    userTotalQty: number,
+    avgPrice: string,
+    time: number
+  }
+}
+
+export { wsPacket, WsPayload, FinalPriceUpdate };
