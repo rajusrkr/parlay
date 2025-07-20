@@ -1,41 +1,24 @@
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { useWebsocket } from "@/hooks/useWebSocket";
 import { useMarketStore } from "@/stores/useMarketStore";
 import { useEffect } from "react";
 import { Link } from "react-router";
 
 export default function Markets() {
-  const { fetchMarkets, markets, handlePriceChange } = useMarketStore();
-
-  const ws = new WebSocket("ws://localhost:8001");
-
-  ws.onmessage = (msg) => {
-    const data = JSON.parse(msg.data);
-    console.log(data);
-
-    const {yes, no, marketId, time} = data
-
-
-    handlePriceChange({marketId, noPrice: no, time, yesPrice: yes})
-
-  };
+  const { fetchMarkets, markets } = useMarketStore();
+  const {isConnected, connect, disconnect} = useWebsocket()
 
   useEffect(() => {
     (async () => {
       await fetchMarkets();
     })();
 
-    const connectToWs = () => {
-      console.log("wss");
 
-      const wsData = { eventName: "client-connection" };
 
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ wsData }));
-      };
-    };
+    connect()
 
-    connectToWs();
-  }, []);
+    return () => {disconnect()}
+  }, [connect, disconnect]);
 
   return (
     <div className="w-80 flex flex-col space-y-4 px-10">
@@ -46,10 +29,12 @@ export default function Markets() {
           </Link>
           <CardContent>
             <p>Market Status: {market.currentStatus}</p>
-           
           </CardContent>
         </Card>
       ))}
+      <div>
+        {isConnected ? "Connected 🟢" : "Not connected🔴"}
+      </div>
     </div>
   );
 }

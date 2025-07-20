@@ -16,7 +16,6 @@ export default function AreaChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
 
   const { fetchPositions } = useuserStore();
 
@@ -70,10 +69,6 @@ export default function AreaChart() {
 
     areaSeries.setData(priceData);
     chart.timeScale().fitContent();
-
-    // ws data
-    const ws = new WebSocket("ws://localhost:8001");
-    wsRef.current = ws;
 
     // clean up
     return () => chart.remove();
