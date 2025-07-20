@@ -1,197 +1,3 @@
-// import { WebSocketServer, WebSocket } from "ws";
-// import jwt from "jsonwebtoken";
-// import dotnenv from "dotenv";
-// import { wsPacket, WsPayload, wsPort } from "shared/dist/index";
-
-// dotnenv.config();
-
-// interface ExtendedWebsocket extends WebSocket {
-//   isAlive?: boolean;
-//   clientRole?: string;
-// }
-
-// const clients = new Map<ExtendedWebsocket, string>();
-
-// const wss = new WebSocketServer({ port: wsPort });
-
-// const JWT_SECRET = process.env.JWT_SECRET;
-// console.log(`[WS] server running on port ${wsPort}`);
-
-// wss.on("connection", (ws: ExtendedWebsocket) => {
-//   ws.on("error", (error) => {
-//     console.error(`[WS] Error:`, error);
-//   });
-
-//   ws.on("close", () => {
-//     console.log(`[WS] client disconnected: ${ws.clientRole}`);
-//     clients.delete(ws);
-//     logConnectedClients();
-//   });
-
-//   // Handling incoming messges
-//   ws.on("message", (data) => {
-
-//     try {
-//       const message = JSON.parse(data.toString());
-
-//       console.log(message);
-      
-
-//         if (message.eventType === "CONFIRM_PRICE_UPDATE") {
-//           console.log("CONFIRM_PRICE_UPDATE", message);
-
-//         for (const [client, role] of clients) {
-//           if (role === "USER_FE" && client.readyState === WebSocket.OPEN) {
-//             const wsData: WsPayload = {eventType: "priceUpdate", data: {
-//               marketId: message.marketId,
-//               time: message.time,
-//               price: {
-//                 yes: message.yesPrice,
-//                 no: message.noPrice
-//               }
-//             }}
-//             client.send(
-//               JSON.stringify(wsData)
-//             );
-//           }
-//         }
-
-//         return;
-//       }
-
-//       if (message.eventType === "clientHandShake") {
-//         console.log("user fe connecting...");
-        
-//         ws.send(JSON.stringify({ message: "hey" }));
-
-//         clients.set(ws, message.data.authToken);
-
-//         logConnectedClients();
-
-//         return;
-//       }
-
-//       // For client authentication
-//       if (message.eventType === "handShake") {
-//         try {
-//           const decode: any = jwt.verify(
-//             message.data.authToken,
-//             JWT_SECRET!
-//           );
-
-//           if (typeof decode !== "object" || !decode.clientRole) {
-//             throw new Error("Invalid token payload");
-//           }
-
-//           ws.clientRole = decode.clientRole;
-
-//           console.log(`[WS] Authenticated as: ${ws.clientRole}`);
-
-//           const wsMessageData: wsPacket = {
-//             eventName: "auth-success",
-//             data: { role: ws.clientRole },
-//           };
-//           ws.send(JSON.stringify({ wsMessageData }));
-//           clients.set(ws, ws.clientRole!);
-//           logConnectedClients();
-//           return;
-//         } catch (error) {
-//           console.log(error);
-//           ws.send(
-//             JSON.stringify({ type: "auth_failed", error: "Invalid token" })
-//           );
-//           ws.close();
-//           return;
-//         }
-//       }
-
-//       // Receive the order events send them to price engine accordingly
-//       if (message.eventType === "newOrder") {
-//         console.log(`[ws-server] order-placed received from ${ws.clientRole}`);
-
-//         // For buy order in yes side
-//         const wsMessageData: WsPayload = {
-//           eventType: "newOrder",
-//           requestId: message.requestId,
-//           data: message.data,
-//         };
-
-//         for (const [client, role] of clients.entries()) {
-//           if (role === "price-engine" && client.readyState === WebSocket.OPEN) {
-//             client.send(JSON.stringify({ wsMessageData }));
-//           }
-//         }
-//       }
-
-//       // Receive price-update
-//       if (message.eventType === "price-update") {
-//         const priceUpdates = message.data.priceUpdate;
-
-//         for (const [client, role] of clients.entries()) {
-//           const wsMessageData: wsPacket = {
-//             eventName: "price-update",
-//             data: priceUpdates,
-//           };
-
-//           if (role === "platform-api" && client.readyState === WebSocket.OPEN) {
-//             client.send(JSON.stringify({ wsMessageData }));
-//           }
-//         }
-//       }
-
-//       if (!ws.clientRole) {
-//         ws.send(JSON.stringify({ type: "unauthorized" }));
-//         ws.close();
-//         logConnectedClients();
-//         return;
-//       }
-//     } catch (error) {
-//       console.log(error);
-//     }
-//   });
-// });
-
-// function logConnectedClients() {
-//   console.log("[WS] Connected clients");
-//   clients.forEach((role, client) => {
-//     console.log(`-Role: ${role}, Alive: ${client.readyState === client.OPEN}`);
-//   });
-
-//   console.log(`[WS] Total: ${clients.size} clients are connected`);
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { wsPort, WsPayload } from "shared/dist/index";
 import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken"
@@ -218,6 +24,7 @@ const heartbeat_interval = 15000;
 
 const heartbeatInterval = setInterval(() => {
     wss.clients.forEach((ws) => {
+
         const client = ws as ExtendedWebsocket;
 
         if (!client.isAlive) {
@@ -245,12 +52,13 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
     // error handle
     ws.on("error", (err) => {
         console.error('Error ocuured', err)
+        // will decide later if need to remove the client or not
     })
 
     // connection close handle
     ws.on("close", () => {
         console.log('Client disconnected', ws.clientRole, "🔴");
-        // remove the client
+        // remove the client on close
         connectedClients.delete(ws)
     })
 
@@ -258,12 +66,14 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
     ws.on("message", (msg) => {
         try {
             const parsedMessage = JSON.parse(msg.toString())
+            const {eventType, data, requestId} = parsedMessage
 
-            // handle handShakes
-            if (parsedMessage.eventType === "handShake") {
-
-                try {
-                    const decode: any = jwt.verify(parsedMessage.data.authToken, JWT_SECRET!)
+            // Switch case implemntation
+            switch(eventType){
+                // handle handShakes
+                case "handShake":
+                    try {
+                    const decode: any = jwt.verify(data.authToken, JWT_SECRET!)
                   
                     if (typeof decode !== "object" || !decode.role) {
                         throw new Error("Invalid auth token provided, unable to do handshake")
@@ -274,21 +84,68 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
                     console.log(`Client: ${ws.clientRole}, has been authorized 🔐`);
 
                     // Message
-                    const message: WsPayload = {
+                    const authMessage: WsPayload = {
                         eventType: "authAck",
                         data: {
                            message: `Hey ${ws.clientRole} Auth success, bi-directional data transform can be perform now` 
                         }
                     }
                     // send back response
-                    ws.send(JSON.stringify(message));
+                    ws.send(JSON.stringify(authMessage));
                     connectedClients.set(ws, ws.clientRole!)
 
-                    console.log(getConnectedClients().join("\n"));
+                    console.log(getConnectedClients().join("\n"));                
+                    } catch (error) {
+                        throw new Error(`Error occured on place of performing hand shake ${error}`);
+                    }
+                break;
+
+                // handle new order
+                case "newOrder":
+                    console.log('New order received from:', ws.clientRole);
+
+                    // data to send price engine
+                    const orderMessage: WsPayload = {
+                        eventType: "newOrder",
+                        requestId,
+                        data
+                    };
+
+                    for (const [client, clientRole] of connectedClients.entries()){
+                        if (clientRole === "priceEngine" && client.readyState === WebSocket.OPEN) {
+                            client.send(JSON.stringify( orderMessage ));
+                        }
+                    }
+                break;
+
+                // Handle price update from price engine
+                case "priceUpdate":
+                    console.log('Price update received from Price Engine');
+
+                    const priceMessage: WsPayload = {eventType: "priceUpdate", data: {}} 
+                    for(const [client, clientRole] of connectedClients.entries()){
+                        if (clientRole === "platformApi" && client.readyState === WebSocket.OPEN) {
+                            ws.send(JSON.stringify( priceMessage ))
+                        }
+                    }
+                break;
+
+                // Handle final price update, price update to ui afte db operation
+                case "finalPriceUpdate":
+                    console.log('Final price uodate received from Platform Api');
                     
-                } catch (error) {
-                    throw new Error(`Error occured on place of performing hand shake ${error}`);
-                }
+                    const finalPriceMessage: WsPayload = {eventType: "finalPriceUpdate", data: {}}
+
+                    for(const [client, clientRole] of connectedClients){
+                        if (clientRole === "userFe" && client.readyState === WebSocket.OPEN) {
+                            ws.send(JSON.stringify( finalPriceMessage ))
+                        }
+                    }
+                break;
+
+                // default
+                default:
+                    console.log("Unknown update received", ws.clientRole);
             }
         } catch (error) {
             throw new Error(`Error occured on or near the place of ws on message event ${error}`);
