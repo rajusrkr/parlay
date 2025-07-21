@@ -1,16 +1,40 @@
+// import { useMarketStore } from "@/stores/useMarketStore";
+import { useMarketStore } from "@/stores/useMarketStore";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const useWebsocket = () => {
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
-  // get socket-identity token
+  const { handlePriceChange } = useMarketStore();
+
+  // get socket-identity token (TODO: implement better cookie fetcj h later)
   const socketIdentity = document.cookie.split("=")[1];
 
   const handleMessage = useCallback((msg: MessageEvent) => {
     try {
-      const message = JSON.parse(msg.data);
-      console.log(message);
+      const parsedMessage = JSON.parse(msg.data);
+
+      const { eventType, marketId, data } = parsedMessage;
+      const { time, noPrice, yesPrice } = data;
+
+      switch (eventType) {
+        case "authAck":
+          console.log("Auth Ack received from ws server");
+          break;
+
+        case "finalPriceUpdate":
+          console.log("Final price update received from ws server");
+          console.log("Market id:", marketId);
+          console.log("Data:", data);
+
+          // Handle price change
+          handlePriceChange({ marketId, time, noPrice, yesPrice });
+          break;
+
+        default:
+          console.log("Unknown event received from ws server");
+      }
     } catch (error) {
       console.log("Error in parsing message", error);
     }
@@ -67,7 +91,7 @@ const useWebsocket = () => {
     return () => disconnect();
   }, [disconnect]);
 
-  return { isConnected, connect, disconnect };
+  return { isConnected, connect, disconnect, handleMessage };
 };
 
 export { useWebsocket };
