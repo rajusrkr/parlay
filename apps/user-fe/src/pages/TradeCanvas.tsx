@@ -8,21 +8,29 @@ import {
 } from "lightweight-charts";
 import { useMarketStore } from "@/stores/useMarketStore";
 import { useParams } from "react-router";
-import PlaceOrderForm from "./place-order-form";
 import { useuserStore } from "@/stores/useUserStore";
-import ShowAllPositions from "./show-all-positions";
+import { useWebsocket } from "@/hooks/useWebSocket";
+import PlaceOrderForm from "@/components/place-order-form";
+import ShowAllPositions from "@/components/show-all-positions";
 
-export default function AreaChart() {
+export default function TradeCanvas() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
 
   const { fetchPositions } = useuserStore();
+  const { connect, disconnect, isConnected } = useWebsocket();
 
   useEffect(() => {
     (async () => {
       await fetchPositions();
     })();
+
+    // Connect to ws server
+    connect();
+    return () => {
+      disconnect;
+    };
   }, []);
 
   const paramsId = useParams().id;
@@ -77,6 +85,7 @@ export default function AreaChart() {
   return (
     <div className="flex">
       <div ref={chartContainerRef} style={{ width: "100%", height: "800px" }} />
+      <div>{isConnected ? "Connected" : "Not Connected"}</div>
       {/* place order cart and show all positions */}
       <div className="p-2 flex flex-col gap-2 w-96">
         <PlaceOrderForm />
