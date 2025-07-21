@@ -48,7 +48,7 @@ const handleOrder = async (req: Request, res: any) => {
 
     // THIS IS THE PLACE WHERE I AM SENDING THE ORDER TO WS-SERVER
     sendOrderToWsServer({
-      eventType: "NEW_ORDER",
+      eventType: "newOrder",
       requestId,
       data: {
         userOrderSide: data.orderSide,

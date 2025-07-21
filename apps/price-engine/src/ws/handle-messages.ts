@@ -8,8 +8,10 @@ import { ws } from "../ws-client";
 export function handleWsMessage(): Promise<any> {
   return new Promise((resolve, reject) => {
     ws.on("message", (msg) => {
-      const parsed = JSON.parse(msg.toString());
-      const {eventType, data} = parsed
+      const parsedMessage = JSON.parse(msg.toString());
+      
+      const {eventType,requestId, data} = parsedMessage
+      const {userOrderSide, userOrderType, userOrderQty, prevYesSideQty, prevNoSideQty} = data;
 
       // for auth message
       if (eventType === "authAck") {
@@ -17,22 +19,20 @@ export function handleWsMessage(): Promise<any> {
        console.log('Message:', data.message);
       }
       // for new order received
-      if (eventType === "new-order") {
-        const data = parsed.wsMessageData.data;
-        const requestId = parsed.wsMessageData.requestId;
-
-        if (data.orderSide === "yes" && data.orderType === "buy") {
+      if (eventType === "newOrder") {
+        if (userOrderSide === "yes" && userOrderType === "buy") {
           // place here the yes side buy order func
           const priceUpdate: BuyOrderUpdates = YSBOCalculations({
-            totalYesQty: data.prevYesSideQty,
-            totalNoQty: data.prevNoSideQty,
+            totalYesQty: prevYesSideQty,
+            totalNoQty: prevNoSideQty,
             b: 1000,
-            userQty: data.userOrderQty,
-            requestId: requestId,
+            userQty: userOrderQty,
+            requestId,
           });
 
           const wsData: WsPayload = {
-            eventType: "PRICE_UPDATE",
+            eventType: "priceUpdate",
+            requestId: priceUpdate.requestId,
             data: {
               yesPriceBeforeOrder: priceUpdate.yesPriceBeforeOrder,
               noPriceBeforeOrder: priceUpdate.noPriceBeforeOrder,
@@ -41,7 +41,6 @@ export function handleWsMessage(): Promise<any> {
               costBeforeOrder: priceUpdate.costBeforeOrder,
               costAfterOrder: priceUpdate.costAfterOrder,
               costToUser: priceUpdate.costToUser,
-              requestId: priceUpdate.requestId
             },
           };
 
@@ -49,20 +48,19 @@ export function handleWsMessage(): Promise<any> {
 
           resolve(wsData);
           return;
-        }
-
-        if (data.orderSide === "yes" && data.orderType === "sell") {
+        } else if (userOrderSide === "yes" && userOrderType === "sell") {
           // place the yes side sell func
           const priceUpdate: SellOrderUpdates = YSSOCalculations({
-            totalYesQty: data.prevYesSideQty,
-            totalNoQty: data.prevNoSideQty,
+            totalYesQty: prevYesSideQty,
+            totalNoQty: prevNoSideQty,
             b: 1000,
-            userQty: data.userOrderQty,
-            requestId: requestId,
+            userQty: userOrderQty,
+            requestId,
           });
 
           const wsData: WsPayload = {
-            eventType: "PRICE_UPDATE",
+            eventType: "priceUpdate",
+            requestId: priceUpdate.requestId,
             data: {
               yesPriceBeforeOrder: priceUpdate.yesPriceBeforeOrder,
               noPriceBeforeOrder: priceUpdate.noPriceBeforeOrder,
@@ -71,7 +69,6 @@ export function handleWsMessage(): Promise<any> {
               costBeforeOrder: priceUpdate.costBeforeOrder,
               costAfterOrder: priceUpdate.costAfterOrder,
               returnToUser: priceUpdate.returnToUser,
-              requestId: priceUpdate.requestId
             },
           };
 
@@ -80,17 +77,18 @@ export function handleWsMessage(): Promise<any> {
           return;
         }
 
-        if (data.orderSide === "no" && data.orderType === "buy") {
+        if (userOrderSide === "no" && userOrderType === "buy") {
           const priceUpdate: BuyOrderUpdates = NSBOCalculation({
-            totalYesQty: data.prevYesSideQty,
-            totalNoQty: data.prevNoSideQty,
+            totalYesQty: prevYesSideQty,
+            totalNoQty: prevNoSideQty,
             b: 1000,
-            userQty: data.userOrderQty,
-            requestId: requestId,
+            userQty: userOrderQty,
+            requestId,
           });
 
           const wsData: WsPayload = {
-            eventType: "PRICE_UPDATE",
+            eventType: "priceUpdate",
+            requestId: priceUpdate.requestId,
             data: {
               yesPriceBeforeOrder: priceUpdate.yesPriceBeforeOrder,
               noPriceBeforeOrder: priceUpdate.noPriceBeforeOrder,
@@ -99,7 +97,6 @@ export function handleWsMessage(): Promise<any> {
               costBeforeOrder: priceUpdate.costBeforeOrder,
               costAfterOrder: priceUpdate.costAfterOrder,
               costToUser: priceUpdate.costToUser,
-              requestId: priceUpdate.requestId
             },
           };
 
@@ -108,17 +105,18 @@ export function handleWsMessage(): Promise<any> {
           return;
         }
 
-        if (data.orderSide === "no" && data.orderType === "sell") {
+        if (userOrderSide === "no" && userOrderType === "sell") {
           const priceUpdate: SellOrderUpdates = NSSOCalculation({
-            totalYesQty: data.prevYesSideQty,
-            totalNoQty: data.prevNoSideQty,
+            totalYesQty: prevYesSideQty,
+            totalNoQty: prevNoSideQty,
             b: 1000,
-            userQty: data.userOrderQty,
-            requestId: requestId,
+            userQty: userOrderQty,
+            requestId,
           });
 
          const wsData: WsPayload = {
-            eventType: "PRICE_UPDATE",
+            eventType: "priceUpdate",
+            requestId: priceUpdate.requestId,
             data: {
               yesPriceBeforeOrder: priceUpdate.yesPriceBeforeOrder,
               noPriceBeforeOrder: priceUpdate.noPriceBeforeOrder,
@@ -127,7 +125,6 @@ export function handleWsMessage(): Promise<any> {
               costBeforeOrder: priceUpdate.costBeforeOrder,
               costAfterOrder: priceUpdate.costAfterOrder,
               returnToUser: priceUpdate.returnToUser,
-              requestId: priceUpdate.requestId
             },
           };
 
@@ -141,6 +138,7 @@ export function handleWsMessage(): Promise<any> {
     ws.on("ping", () => {
       console.log("Received ping, sending pong...🚀");
     })
+    
   });
 }
 
