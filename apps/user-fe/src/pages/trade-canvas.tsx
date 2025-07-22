@@ -13,6 +13,7 @@ import { useWebsocket } from "@/hooks/useWebSocket";
 import PlaceOrderForm from "@/components/place-order-form";
 import ShowAllPositions from "@/components/show-all-positions";
 
+
 export default function TradeCanvas() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -83,10 +84,10 @@ export default function TradeCanvas() {
   }, [markets]);
 
   return (
-    <div className="flex">
-      <div ref={chartContainerRef} style={{ width: "100%", height: "800px" }} />
+    <div className="flex w-full">
+      <div ref={chartContainerRef} className="w-[80vw] h-[80vh]" />
       <div>{isConnected ? "Connected" : "Not Connected"}</div>
-      {/* place order cart and show all positions */}
+       {/* place order cart and show all positions */}
       <div className="p-2 flex flex-col gap-2 w-96">
         <PlaceOrderForm />
         <ShowAllPositions />
