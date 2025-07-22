@@ -8,7 +8,14 @@ const useWebsocket = () => {
   const { handlePriceChange } = useMarketStore();
 
   // get socket-identity token (TODO: implement better cookie fetcj h later)
-  const socketIdentity = document.cookie.split("=")[1];
+  function getCookie(name: string) {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    console.log(match);
+    return match ? match[2] : null
+  }
+
+  const socketIdentity = getCookie("socket-identity")
+  
 
   const handleMessage = useCallback((msg: MessageEvent) => {
     try {
