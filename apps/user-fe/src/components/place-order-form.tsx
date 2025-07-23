@@ -69,7 +69,7 @@ export default function PlaceOrderForm() {
           </TabsList>
 
           <TabsContent value="yes">
-            <Card>
+            <Card className="shadow-none rounded-md">
               <CardHeader>
                 <CardTitle>Take position in Yes side</CardTitle>
                 <CardDescription>Place order for buy side</CardDescription>
@@ -104,7 +104,7 @@ export default function PlaceOrderForm() {
           </TabsContent>
 
           <TabsContent value="no">
-            <Card>
+            <Card className="shadow-none rounded-md">
               <CardHeader>
                 <CardTitle>Take position in No Side</CardTitle>
                 <CardDescription>Place order for no side</CardDescription>
