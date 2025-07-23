@@ -10,9 +10,7 @@ import { useMarketStore } from "@/stores/useMarketStore";
 import { useParams } from "react-router";
 import { useuserStore } from "@/stores/useUserStore";
 import { useWebsocket } from "@/hooks/useWebSocket";
-import PlaceOrderForm from "@/components/place-order-form";
-import ShowAllPositions from "@/components/show-all-positions";
-
+import TradeCanvasSideNavbar from "@/components/trade-canvas-side-navbar";
 
 export default function TradeCanvas() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -20,7 +18,7 @@ export default function TradeCanvas() {
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
 
   const { fetchPositions } = useuserStore();
-  const { connect, disconnect, isConnected } = useWebsocket();
+  const { connect, disconnect } = useWebsocket();
 
   useEffect(() => {
     (async () => {
@@ -84,13 +82,10 @@ export default function TradeCanvas() {
   }, [markets]);
 
   return (
-    <div className="flex w-full">
+    <div className="flex  w-full">
       <div ref={chartContainerRef} className="w-[80vw] h-[80vh]" />
-      <div>{isConnected ? "Connected" : "Not Connected"}</div>
-       {/* place order cart and show all positions */}
-      <div className="p-2 flex flex-col gap-2 w-96">
-        <PlaceOrderForm />
-        <ShowAllPositions />
+      <div>
+        <TradeCanvasSideNavbar />
       </div>
     </div>
   );
