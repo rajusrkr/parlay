@@ -13,10 +13,10 @@ export default function Markets() {
       await fetchMarkets();
     })();
 
-
-
+    // Connect to ws server
     connect()
 
+    // Disconnect on umount
     return () => {disconnect()}
   }, [connect, disconnect]);
 
@@ -29,14 +29,6 @@ export default function Markets() {
           </Link>
           <CardContent>
             <p>Market Status: {market.currentStatus}</p>
-
-            <div>
-              {
-                market.prices.map((price, i) => (
-                  <p key={i}>{price.yes.value}</p>
-                ))
-              }
-            </div>
           </CardContent>
         </Card>
       ))}

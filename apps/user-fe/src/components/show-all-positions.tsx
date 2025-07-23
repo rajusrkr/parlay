@@ -26,7 +26,7 @@ export default function ShowAllPositions() {
       <div>
         <h4 className="font-bold">All positions</h4>
       </div>
-      <Card>
+      <Card className="shadow-none rounded-md mt-1">
         <CardHeader>
           <CardTitle>Positions</CardTitle>
           <CardDescription>
@@ -35,7 +35,7 @@ export default function ShowAllPositions() {
         </CardHeader>
 
         <CardContent>
-          <div className="space-y-2 p-">
+          <div className="space-y-2">
             {positions.map((position) => (
               <div
                 key={position.marketId}
@@ -142,13 +142,3 @@ export default function ShowAllPositions() {
     </div>
   );
 }
-
-/*
-
-bought@100, 5 qty
-currentPrice => 105
-
-
-pl = current - bought => 5 * 5
-
-*/
