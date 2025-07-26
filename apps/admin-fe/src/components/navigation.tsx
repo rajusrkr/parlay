@@ -5,22 +5,22 @@ export default function Navigation() {
     <nav className="bg-gray-200 h-14 px-10 flex justify-between items-center">
       <div>
         <h2 className="text-3xl">
-          PredictX <span className="border px-1 rounded bg-black text-white">admin</span>
+          PredictX <span className="border px-1 py-1 rounded bg-black text-white">admin</span>
         </h2>
       </div>
 
       <div className="flex gap-6 text-xl">
-        <div>
-          <Link to={"/"} className="bg-gray-300 flex items-center px-2 rounded pb-1 hover:bg-gray-400 transition-all hover:shadow">Open</Link>
+        <div className="bg-gray-300 flex items-center px-4 rounded py-1 transition-all hover:shadow-2xl border-b-2 border-green-600 hover:bg-green-600 hover:text-white">
+          <Link to={"/"}>Open</Link>
         </div>
-        <div>
-            <Link to={"/"} className="bg-gray-300 flex items-center px-2 rounded pb-1 hover:bg-gray-400 transition-all hover:shadow">Settled</Link>
+        <div className="bg-gray-300 flex items-center px-4 rounded py-1 transition-all hover:shadow-2xl border-b-2 border-purple-600 hover:bg-purple-600 hover:text-white">
+            <Link to={"/"}>Settled</Link>
         </div>
-        <div>
-            <Link to={"/"} className="bg-gray-300 flex items-center px-2 rounded pb-1 hover:bg-gray-400 transition-all hover:shadow">Will Open</Link>
+        <div className="bg-gray-300 flex items-center px-4 rounded py-1 transition-all hover:shadow-2xl border-b-2 border-yellow-600 hover:bg-yellow-600 hover:text-white">
+            <Link to={"/"}>Will Open</Link>
         </div>
-        <div>
-            <Link to={"/"} className="bg-blue-600 text-white flex items-center px-2 rounded pb-1 hover:bg-blue-700 transition-all hover:shadow">Create Market</Link>
+        <div className="bg-blue-600 text-white rounded px-2 py-1 hover:bg-blue-700 transition-all hover:shadow">
+            <Link to={"/"}>Create Market</Link>
         </div>
       </div>
     </nav>
