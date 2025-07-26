@@ -20,7 +20,7 @@ export default function Navigation() {
             <Link to={"/"}>Will Open</Link>
         </div>
         <div className="bg-blue-600 text-white rounded px-2 py-1 hover:bg-blue-700 transition-all hover:shadow">
-            <Link to={"/"}>Create Market</Link>
+            <Link to={"/create-market"}>Create Market</Link>
         </div>
       </div>
     </nav>
