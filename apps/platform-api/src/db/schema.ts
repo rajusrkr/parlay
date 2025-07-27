@@ -1,5 +1,5 @@
 import { ne, sql } from "drizzle-orm";
-import { bigint, boolean, check, decimal, integer, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, decimal, integer, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const AccountRoleEnum = pgEnum("role", ["USER", "ADMIN"])
 export const CurrencyCode = pgEnum("currency_code", ["INR", "USD"])
@@ -27,6 +27,8 @@ export const marketTable = pgTable("markets", {
     id: serial("id").primaryKey(),
     marketId: varchar("market_id", {length: 36}).notNull().unique(),
     marketTitle: varchar("market_title", {length: 120}).notNull().unique(),
+    marketOverview: text("market_overview"),
+    marketSettlement: text("market_settlement"),
     yesSide: varchar("yes_side", {length: 20}).notNull(),
     noSide: varchar("no_side", {length: 20}).notNull(),
     marketStarts: timestamp("market_start").notNull(),
