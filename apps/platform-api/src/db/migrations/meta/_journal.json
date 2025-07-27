@@ -29,6 +29,13 @@
       "when": 1753603409885,
       "tag": "0003_volatile_sebastian_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1753603662150,
+      "tag": "0004_striped_alice",
+      "breakpoints": true
     }
   ]
 }

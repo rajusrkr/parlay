@@ -31,7 +31,7 @@ export const marketTable = pgTable("markets", {
     marketSettlement: text("market_settlement"),
     yesSide: varchar("yes_side", {length: 20}).notNull(),
     noSide: varchar("no_side", {length: 20}).notNull(),
-    marketStarts: bigint("market_start", {mode: "number"}).notNull(),
+    marketStarts: bigint("market_starts", {mode: "number"}).notNull(),
     marketEnds: bigint("market_ends", {mode: "number"}).notNull(),
     currentStatus: CurrentMarketStatus().default("NOT_STARTED"),
     winnerSide: varchar("winner_side", {length: 20}),
