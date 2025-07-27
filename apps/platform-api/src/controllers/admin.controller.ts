@@ -91,9 +91,6 @@ const adminLogin = async (req: Request, res: any) => {
 const createMarket = async (req: Request, res: any) => {
     const data = req.body;
 
-    console.log(data);
-    
-
     // @ts-ignore
     const adminId = req.adminId
     
@@ -103,23 +100,33 @@ const createMarket = async (req: Request, res: any) => {
         return res.status(400).json({success: false, message: "Invalid data received from admin", error: validateAdminInput.error})
     }
 
-    try {
-        const createMarket = await db.insert(marketTable).values({
-            marketId: uuidv4(),
-            marketTitle: data.marketTitle,
-            yesSide: data.side1,
-            noSide: data.side2,
-            marketStarts: 123,
-            marketEnds: 123,
-            marketCreatedBy: adminId,
 
-        }).returning()
+        switch(data.marketType){
+            case "binary":
+                try {
+                    await db.insert(marketTable).values({
+                        marketId: uuidv4(),
+                        marketTitle: data.title,
+                        yesSide: "yes",
+                        noSide: "no",
+                        marketStarts: data.marketStarts,
+                        marketEnds: data.marketEnds,
+                        marketCreatedBy: adminId
+                    })
 
-        return res.status(200).json({success: true, message: `${createMarket[0].marketTitle} - created successfully`})
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({success: false, message: "Internal server error"})
-    }
+                    return res.status(200).json({success: true, message: "Market created successfully"})
+                } catch (error) {
+                    console.log(error);
+                    return res.status(500).json({success: false, message: "Internal server error"})
+                }
+
+        
+            default:
+                console.log("Unknowm market category received");
+                res.status(400).json({message: 'Unknown market category received', success: false})
+                break;
+        }
+   
 }
 
 const deleteMarket = async (req: Request, res: any) => {

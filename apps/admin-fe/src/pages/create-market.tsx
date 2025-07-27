@@ -10,6 +10,8 @@ import {
   TextField,
 } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers";
+import type { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import { useState } from "react";
 
 const marketType = [
@@ -29,7 +31,10 @@ export default function CreateMarket() {
   const [settlement, setSettlement] = useState("");
   const [marketCategory, setMarketCategory] = useState("binary");
   const [dialogOpen, setDialogOpen] = useState(false);
-
+  const [startDateAndTime, setStartDateAndTime] = useState<Dayjs | null>(null)
+  const [endDateAndTime, setEndDateAndTime] = useState<Dayjs | null>(null)
+  
+  
   const handleDialogOpen = () => {
     setDialogOpen(true);
   };
@@ -37,13 +42,39 @@ export default function CreateMarket() {
     setDialogOpen(false);
   };
 
+  // Form submit
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    const formatedStartDateAndTime = dayjs(startDateAndTime).valueOf()
+    const formatedEndtDateAndTime = dayjs(endDateAndTime).valueOf()
+
+    // validate forms -> Will do later
+
+
+    // go for db insertion
+
+    try {
+      const sendReq = await fetch('http://localhost:8000/api/v0/admin/create-market', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({title, overview, settlement, marketStarts:formatedStartDateAndTime, marketEnds: formatedEndtDateAndTime, marketType: marketCategory})
+      })
+
+      const res = await sendReq.json()
+      console.log(res);
+      
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-
-        console.log(title, overview, settlement);
-      }}
+      onSubmit={handleFormSubmit}
     >
       <div className="px-10">
         <div className="py-5">
@@ -88,10 +119,14 @@ export default function CreateMarket() {
             </div>
             <div className="flex space-x-5">
               <div>
-                <DateTimePicker label="Select Start Time" />
+                <DateTimePicker label="Select Start Time" 
+                onChange={setStartDateAndTime}
+                />
               </div>
               <div>
-                <DateTimePicker label="Select End Time" />
+                <DateTimePicker label="Select End Time" 
+                onChange={setEndDateAndTime}
+                />
               </div>
             </div>
           </div>
@@ -182,7 +217,6 @@ export default function CreateMarket() {
           <Button
             type="submit"
             size="large"
-            className="w-52"
             variant="contained"
           >
             Create new market

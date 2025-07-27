@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken"
 
 
 function adminJwt(req: Request, res: any, next: NextFunction){
-    const token = req.headers["authorization"] ?? "";
+    const token = req.cookies.admin_auth_token;
     
     if (!token) {
         return res.status(400).json({success: false, message: "No token received, login again"})
