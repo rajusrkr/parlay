@@ -1,4 +1,14 @@
-import { Button, Chip, MenuItem, TextField } from "@mui/material";
+import {
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  MenuItem,
+  TextField,
+} from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers";
 import { useState } from "react";
 
@@ -15,13 +25,17 @@ const marketType = [
 
 export default function CreateMarket() {
   const [title, setTitle] = useState("");
-  console.log(title);
   const [overview, setOverview] = useState("");
-  console.log(overview);
   const [settlement, setSettlement] = useState("");
-  console.log(settlement);
-  const [marketCategory, setMarketCategory] = useState("");
-  console.log(marketCategory);
+  const [marketCategory, setMarketCategory] = useState("binary");
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleDialogOpen = () => {
+    setDialogOpen(true);
+  };
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
 
   return (
     <form
@@ -86,7 +100,7 @@ export default function CreateMarket() {
               select
               label="Market Type"
               helperText="Please select market category"
-              defaultValue={"binary"}
+              value={marketCategory}
               required
               onChange={(e) => setMarketCategory(e.target.value)}
             >
@@ -98,22 +112,82 @@ export default function CreateMarket() {
             </TextField>
 
             <div>
-              {marketCategory === "binary" && (
-                <div className="bg-blue-50 w-52 rounded py-2">
-                  <div className="px-4">
-                    <p className="font-semibold underline underline-offset-4">Options:</p>
+              <div>
+                {marketCategory === "binary" && (
+                  <div className="bg-blue-50 w-52 rounded py-2">
+                    <div className="px-4">
+                      <p className="font-semibold underline underline-offset-4">
+                        Options:
+                      </p>
 
-                    <div className="space-y-1">
-                      <p className="bg-blue-100 pl-1">Yes</p>
-                      <p className="bg-blue-100 pl-1">No</p>
+                      <div className="space-y-1">
+                        <p className="bg-blue-100 pl-1">Yes</p>
+                        <p className="bg-blue-100 pl-1">No</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              <div>
+                {marketCategory === "categorical" && (
+                  <div className="bg-blue-50 w-52 rounded py-2">
+                    <div className="px-4">
+                      <p className="font-semibold underline underline-offset-4">
+                        Options:
+                      </p>
+
+                      <div className="space-y-1">
+                        <p className="bg-blue-100 pl-1">Yes</p>
+                        <p className="bg-blue-100 pl-1">No</p>
+                      </div>
+                      <div>
+                        <Button onClick={handleDialogOpen}>Add Options</Button>
+
+                        <Dialog
+                          open={dialogOpen}
+                          onClose={handleDialogClose}
+                          aria-labelledby="add-options-dialog"
+                        >
+                          <DialogTitle id="add-option-dialog-title">
+                            {"Add Options below"}
+                          </DialogTitle>
+                          <DialogContent>
+                            <DialogContentText sx={{ marginBottom: 1 }}>
+                              Type options
+                            </DialogContentText>
+                            <TextField
+                              autoFocus
+                              label="Add option"
+                              type="text"
+                              size="small"
+                            />
+                          </DialogContent>
+                          <DialogActions>
+                            <Button color="error" onClick={handleDialogClose}>
+                              Close
+                            </Button>
+                            <Button onClick={handleDialogClose}>Add</Button>
+                          </DialogActions>
+                        </Dialog>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-        <Button type="submit">Submit</Button>
+        <div className="max-w-6xl mx-auto py-5">
+          <Button
+            type="submit"
+            size="large"
+            className="w-52"
+            variant="contained"
+          >
+            Create new market
+          </Button>
+        </div>
       </div>
     </form>
   );
