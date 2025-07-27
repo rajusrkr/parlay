@@ -3,10 +3,11 @@ import { Link } from "react-router";
 export default function Navigation() {
   return (
     <nav className="bg-gray-200 h-14 px-10 flex justify-between items-center">
-      <div>
+      <div className="flex gap-4">
         <h2 className="text-3xl">
           PredictX <span className="border px-1 py-1 rounded bg-black text-white">admin</span>
         </h2>
+        <Link to={"/auth/login"} className="bg-blue-600 px-3 py-1 rounded text-white hover:bg-blue-700">Login</Link>
       </div>
 
       <div className="flex gap-6 text-xl">

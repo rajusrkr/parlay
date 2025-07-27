@@ -73,7 +73,14 @@ const adminLogin = async (req: Request, res: any) => {
         // sign jwt
         const jwtToken = jwt.sign({adminId: findAdmin[0].adminId},`${process.env.JWT_SECRET}`)
 
-        return res.status(200).json({success: true, message: "Login success", token: jwtToken})
+        res.cookie("admin_auth_token", jwtToken, {
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict"
+        })
+
+        return res.status(200).json({success: true, message: "Login success"})
     } catch (error) {
         console.log(error);
         return res.status(500).json({success: false, message: "Internal server error"})
@@ -83,6 +90,9 @@ const adminLogin = async (req: Request, res: any) => {
 
 const createMarket = async (req: Request, res: any) => {
     const data = req.body;
+
+    console.log(data);
+    
 
     // @ts-ignore
     const adminId = req.adminId
@@ -99,9 +109,10 @@ const createMarket = async (req: Request, res: any) => {
             marketTitle: data.marketTitle,
             yesSide: data.side1,
             noSide: data.side2,
-            marketStarts: new Date(data.marketStarts),
-            marketEnds: new Date(data.marketEnds),
-            marketCreatedBy: adminId
+            marketStarts: 123,
+            marketEnds: 123,
+            marketCreatedBy: adminId,
+
         }).returning()
 
         return res.status(200).json({success: true, message: `${createMarket[0].marketTitle} - created successfully`})
