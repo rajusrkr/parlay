@@ -1,6 +1,8 @@
 import { Request } from "express";
-import { db } from "../db/dbConnection";
-import { marketTable, priceData } from "../db/schema";
+
+
+import {db} from "db/src/dbConnection"
+import { marketTable, priceData} from "db/src/schema"
 import { asc, eq } from "drizzle-orm";
 
 const getAllMarket = async (req: Request, res: any) => {

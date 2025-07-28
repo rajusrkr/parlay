@@ -1,11 +1,12 @@
 import { Request } from "express";
 import {RegisterSchema, LoginShema, MarketSchema} from "shared/dist/index"
-import { db } from "../db/dbConnection";
-import { adminsTable, marketTable, priceData } from "../db/schema";
-import { and, eq } from "drizzle-orm";
 import bcrypt from "bcrypt"
 import {v4 as uuidv4} from "uuid"
 import jwt from "jsonwebtoken"
+
+import {db} from "db/src/dbConnection"
+import {adminsTable, marketTable, priceData} from "db/src/schema"
+import { and, eq } from "drizzle-orm";
 
 const adminRegister = async (req: Request, res: any) => {
     const data = req.body;

@@ -1,9 +1,12 @@
 import { Request, Response } from "express";
-import { db } from "../db/dbConnection";
-import { marketTable } from "../db/schema";
-import { and, eq } from "drizzle-orm";
 import { sendOrderToWsServer } from "../ws/send-order";
 import { v4 as uuidv4 } from "uuid";
+
+
+
+import {db} from "db/src/dbConnection"
+import { marketTable } from "db/src/schema"
+import { eq, and } from "drizzle-orm";
 
 // create a new map
 export const pendingRequests = new Map<

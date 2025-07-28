@@ -1,11 +1,13 @@
 import { Request } from "express";
 import { RegisterSchema, LoginShema } from "shared/dist/index";
-import { db } from "../db/dbConnection";
-import { combinedOrders, usersTable } from "../db/schema";
-import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
+
+import {db} from "db/src/dbConnection"
+import {combinedOrders, usersTable} from "db/src/schema"
+import { eq  } from "drizzle-orm";
+
 
 const userRegister = async (req: Request, res: any) => {
   const data = req.body;
