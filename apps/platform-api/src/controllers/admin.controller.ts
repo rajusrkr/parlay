@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken"
 import {db} from "db/src/dbConnection"
 import {adminsTable, marketTable, priceData} from "db/src/schema"
 import { and, eq } from "drizzle-orm";
+import { marketQueue } from "../queueProducer/marketQueue";
 
 const adminRegister = async (req: Request, res: any) => {
     const data = req.body;
@@ -105,7 +106,7 @@ const createMarket = async (req: Request, res: any) => {
         switch(data.marketType){
             case "binary":
                 try {
-                    await db.insert(marketTable).values({
+                    const [newMarket] = await db.insert(marketTable).values({
                         marketId: uuidv4(),
                         marketTitle: data.title,
                         yesSide: "yes",
@@ -113,7 +114,9 @@ const createMarket = async (req: Request, res: any) => {
                         marketStarts: data.marketStarts,
                         marketEnds: data.marketEnds,
                         marketCreatedBy: adminId
-                    })
+                    }).returning()
+
+                    await marketQueue.add("start_market", {id: newMarket.marketId}, {delay: newMarket.marketStarts - Date.now()})
 
                     return res.status(200).json({success: true, message: "Market created successfully"})
                 } catch (error) {

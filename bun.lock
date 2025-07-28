@@ -42,6 +42,11 @@
     "apps/market-queue": {
       "name": "market-queue",
       "version": "1.0.0",
+      "dependencies": {
+        "bullmq": "^5.56.8",
+        "ioredis": "^5.6.1",
+        "tsup": "^8.5.0",
+      },
     },
     "apps/platform-api": {
       "name": "platform-api",
