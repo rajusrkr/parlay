@@ -7,4 +7,6 @@ const connection = new IORedis({
   maxRetriesPerRequest: null,
 });
 
-export const marketQueue = new Queue("market_starter", { connection });
+export const startMarketQueue = new Queue("market_starter", { connection });
+
+export const closeMarketQueue = new Queue("market_closer", {connection})
