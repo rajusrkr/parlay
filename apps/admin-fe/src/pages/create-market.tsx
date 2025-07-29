@@ -31,10 +31,9 @@ export default function CreateMarket() {
   const [settlement, setSettlement] = useState("");
   const [marketCategory, setMarketCategory] = useState("binary");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [startDateAndTime, setStartDateAndTime] = useState<Dayjs | null>(null)
-  const [endDateAndTime, setEndDateAndTime] = useState<Dayjs | null>(null)
-  
-  
+  const [startDateAndTime, setStartDateAndTime] = useState<Dayjs | null>(null);
+  const [endDateAndTime, setEndDateAndTime] = useState<Dayjs | null>(null);
+
   const handleDialogOpen = () => {
     setDialogOpen(true);
   };
@@ -44,38 +43,44 @@ export default function CreateMarket() {
 
   // Form submit
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const formatedStartDateAndTime = dayjs(startDateAndTime).valueOf()
-    const formatedEndtDateAndTime = dayjs(endDateAndTime).valueOf()
+    const formatedStartDateAndTime = dayjs(startDateAndTime).valueOf();
+    const formatedEndtDateAndTime = dayjs(endDateAndTime).valueOf();
 
     // validate forms -> Will do later
-
 
     // go for db insertion
 
     try {
-      const sendReq = await fetch('http://localhost:8000/api/v0/admin/create-market', {
-        method: 'POST',
-        headers: {
-          "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({title, overview, settlement, marketStarts:formatedStartDateAndTime, marketEnds: formatedEndtDateAndTime, marketType: marketCategory})
-      })
+      const sendReq = await fetch(
+        "http://localhost:8000/api/v0/admin/create-market",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            title,
+            overview,
+            settlement,
+            marketStarts: formatedStartDateAndTime,
+            marketEnds: formatedEndtDateAndTime,
+            marketType: marketCategory,
+          }),
+        }
+      );
 
-      const res = await sendReq.json()
+      const res = await sendReq.json();
       console.log(res);
-      
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   return (
-    <form
-      onSubmit={handleFormSubmit}
-    >
+    <form onSubmit={handleFormSubmit}>
       <div className="px-10">
         <div className="py-5">
           <Chip
@@ -91,6 +96,9 @@ export default function CreateMarket() {
         <div className="flex max-w-6xl mx-auto space-x-5">
           <div className="space-y-8">
             <div>
+              <div className="mb-2">
+                <label htmlFor="overciew">Market Title</label>
+              </div>
               <TextField
                 multiline
                 label="Market Title"
@@ -100,6 +108,9 @@ export default function CreateMarket() {
               />
             </div>
             <div>
+              <div className="mb-2">
+                <label htmlFor="overciew">Market Overview</label>
+              </div>
               <TextField
                 multiline
                 label="Overview"
@@ -109,6 +120,9 @@ export default function CreateMarket() {
               />
             </div>
             <div>
+              <div className="mb-2">
+                <label htmlFor="overciew">Market Settlement</label>
+              </div>
               <TextField
                 multiline
                 label="Settlement"
@@ -119,13 +133,21 @@ export default function CreateMarket() {
             </div>
             <div className="flex space-x-5">
               <div>
-                <DateTimePicker label="Select Start Time" 
-                onChange={setStartDateAndTime}
+                <div className="mb-2">
+                <label htmlFor="overciew">Market Starts</label>
+              </div>
+                <DateTimePicker
+                  label="Select Start Time"
+                  onChange={setStartDateAndTime}
                 />
               </div>
               <div>
-                <DateTimePicker label="Select End Time" 
-                onChange={setEndDateAndTime}
+                <div className="mb-2">
+                <label htmlFor="overciew">Market Ends</label>
+              </div>
+                <DateTimePicker
+                  label="Select End Time"
+                  onChange={setEndDateAndTime}
                 />
               </div>
             </div>
@@ -214,11 +236,7 @@ export default function CreateMarket() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto py-5">
-          <Button
-            type="submit"
-            size="large"
-            variant="contained"
-          >
+          <Button type="submit" size="large" variant="contained">
             Create new market
           </Button>
         </div>

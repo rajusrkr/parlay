@@ -11,13 +11,13 @@ export default function Navigation() {
       </div>
 
       <div className="flex gap-6 text-xl">
-        <div className="bg-gray-300 flex items-center px-4 rounded py-1 transition-all hover:shadow-2xl border-b-2 border-green-600 hover:bg-green-600 hover:text-white">
+        <div className="bg-gray-300 flex items-center px-4 rounded py-1 transition-all hover:shadow-2xl border-b-2 border-blue-600 hover:bg-gray-600 hover:text-white">
           <Link to={"/"}>Open</Link>
         </div>
-        <div className="bg-gray-300 flex items-center px-4 rounded py-1 transition-all hover:shadow-2xl border-b-2 border-purple-600 hover:bg-purple-600 hover:text-white">
+        <div className="bg-gray-300 flex items-center px-4 rounded py-1 transition-all hover:shadow-2xl border-b-2 border-blue-600 hover:bg-gray-600 hover:text-white">
             <Link to={"/"}>Settled</Link>
         </div>
-        <div className="bg-gray-300 flex items-center px-4 rounded py-1 transition-all hover:shadow-2xl border-b-2 border-yellow-600 hover:bg-yellow-600 hover:text-white">
+        <div className="bg-gray-300 flex items-center px-4 rounded py-1 transition-all hover:shadow-2xl border-b-2 border-blue-600 hover:bg-gray-600 hover:text-white">
             <Link to={"/"}>Will Open</Link>
         </div>
         <div className="bg-blue-600 text-white rounded px-2 py-1 hover:bg-blue-700 transition-all hover:shadow">
