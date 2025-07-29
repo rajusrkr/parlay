@@ -117,9 +117,10 @@ const createMarket = async (req: Request, res: any) => {
                         marketCreatedBy: adminId
                     }).returning()
 
+                    // market start queue
                     await startMarketQueue.add("start_market", {id: newMarket.marketId}, {delay: newMarket.marketStarts - Date.now()})
 
-
+                    // market close queue
                     await closeMarketQueue.add("close_market", {id: newMarket.marketId}, {delay: newMarket.marketEnds - Date.now()})
 
                     return res.status(200).json({success: true, message: "Market created successfully"})
