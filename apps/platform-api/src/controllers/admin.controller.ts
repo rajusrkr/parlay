@@ -103,18 +103,22 @@ const createMarket = async (req: Request, res: any) => {
         return res.status(400).json({success: false, message: "Invalid data received from admin", error: validateAdminInput.error})
     }
 
+    const {marketStarts, marketEnds, settlement, overview, marketCategory} = validateAdminInput.data
 
         switch(data.marketType){
             case "binary":
                 try {
                     const [newMarket] = await db.insert(marketTable).values({
                         marketId: uuidv4(),
-                        marketTitle: data.title,
+                        marketTitle: validateAdminInput.data.title,
                         yesSide: "yes",
                         noSide: "no",
-                        marketStarts: data.marketStarts,
-                        marketEnds: data.marketEnds,
-                        marketCreatedBy: adminId
+                        marketStarts,
+                        marketEnds,
+                        marketCreatedBy: adminId,
+                        marketSettlement: settlement,
+                        marketOverview: overview,
+                        marketCategory: marketCategory
                     }).returning()
 
                     // market start queue
