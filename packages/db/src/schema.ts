@@ -15,6 +15,8 @@ import {
 
 export const AccountRoleEnum = pgEnum("role", ["USER", "ADMIN"]);
 export const CurrencyCode = pgEnum("currency_code", ["INR", "USD"]);
+export const CurrentMarketStatus = pgEnum("current_status", ["NOT_STARTED","OPEN","SETTLED","CANCELLED"]);
+export const MarketCategory = pgEnum("market_category", ["SPORTS", "CRYPTO", "POLITICS"])
 
 // This table contains user details and wallet balance
 export const usersTable = pgTable("users", {
@@ -31,13 +33,6 @@ export const usersTable = pgTable("users", {
   updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
 });
 
-// enum for market status
-export const CurrentMarketStatus = pgEnum("current_status", [
-  "NOT_STARTED",
-  "OPEN",
-  "SETTLED",
-  "CANCELLED",
-]);
 
 // This table contains all information about a market
 export const marketTable = pgTable("markets", {
@@ -51,6 +46,7 @@ export const marketTable = pgTable("markets", {
   marketStarts: bigint("market_starts", { mode: "number" }).notNull(),
   marketEnds: bigint("market_ends", { mode: "number" }).notNull(),
   currentStatus: CurrentMarketStatus().default("NOT_STARTED"),
+  marketCategory: MarketCategory(),
   winnerSide: varchar("winner_side", { length: 20 }),
   totalYesQty: integer("total_yes_qty").notNull().default(500000),
   totalNoQty: integer("total_No_qty").notNull().default(500000),
