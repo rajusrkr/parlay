@@ -9,5 +9,6 @@ export const MarketSchema = z.object({
     marketType: z.string().max(10),
     marketCategory: MarketCategoryEnum,
     marketStarts: z.number(),
-    marketEnds: z.number()
+    marketEnds: z.number(),
+    thumbnailImageUrl: z.string()
 })

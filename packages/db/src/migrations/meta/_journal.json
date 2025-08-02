@@ -43,6 +43,13 @@
       "when": 1753954528520,
       "tag": "0005_foamy_kree",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1754169913021,
+      "tag": "0006_lying_james_howlett",
+      "breakpoints": true
     }
   ]
 }

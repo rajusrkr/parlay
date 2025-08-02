@@ -148,7 +148,7 @@ const createMarket = async (req: Request, res: any) => {
       });
   }
 
-  const { marketStarts, marketEnds, settlement, overview, marketCategory } =
+  const { title, marketStarts, marketEnds, settlement, overview, marketCategory,thumbnailImageUrl } =
     validateAdminInput.data;
 
   switch (data.marketType) {
@@ -158,7 +158,7 @@ const createMarket = async (req: Request, res: any) => {
           .insert(marketTable)
           .values({
             marketId: uuidv4(),
-            marketTitle: validateAdminInput.data.title,
+            marketTitle: title,
             yesSide: "yes",
             noSide: "no",
             marketStarts,
@@ -167,6 +167,7 @@ const createMarket = async (req: Request, res: any) => {
             marketSettlement: settlement,
             marketOverview: overview,
             marketCategory: marketCategory,
+            marketThumbnailImageUrl: thumbnailImageUrl
           })
           .returning();
 
@@ -342,6 +343,7 @@ const fileUpload = async (req: Request, res: any) => {
     ContentType: file.mimetype,
   };
 
+  // TODO: Implement image resize using Sharp before uplaoding it to r2
   try {
     const upload = await s3Client.send(new PutObjectCommand(uploadParams));
 

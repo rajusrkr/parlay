@@ -50,6 +50,7 @@ export const marketTable = pgTable("markets", {
   winnerSide: varchar("winner_side", { length: 20 }),
   totalYesQty: integer("total_yes_qty").notNull().default(500000),
   totalNoQty: integer("total_No_qty").notNull().default(500000),
+  marketThumbnailImageUrl: text("market_thumbnail_image_url"),
   lastUpdatedYesPrice: decimal("last_updated_yes_price", {
     precision: 19,
     scale: 2,
