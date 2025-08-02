@@ -7,13 +7,26 @@ import {
   DialogContentText,
   DialogTitle,
   MenuItem,
+  styled,
   TextField,
 } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
-import { Loader2 } from "lucide-react";
+import { CloudUpload, Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
+
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
+  height: 1,
+  overflow: "hidden",
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  whiteSpace: "nowrap",
+  width: 1,
+});
 
 const marketTypes = [
   {
@@ -41,8 +54,13 @@ export default function CreateMarket() {
   const [startDateAndTime, setStartDateAndTime] = useState<Dayjs | null>(null);
   const [endDateAndTime, setEndDateAndTime] = useState<Dayjs | null>(null);
   const [marketCategory, setMarketCategory] = useState("");
-  const [loading, setLoading] = useState(false)
-  
+  const [loading, setLoading] = useState(false);
+  const [isFileUploadError, setIsFileUploadError] = useState(false);
+  const [isFileUploadSuccess, setIsFileUploadSuccess] = useState(false);
+  const [fileUploadError, setFileUploadError] = useState("");
+  const [thumbnailImageUrl, setThumbnailImageUrl] = useState("");
+  const [isFileUploading, setIsFileUploading] = useState(false);
+
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
@@ -63,7 +81,7 @@ export default function CreateMarket() {
     // go for db insertion
 
     try {
-      setLoading(true)
+      setLoading(true);
       const sendReq = await fetch(
         "http://localhost:8000/api/v0/admin/create-market",
         {
@@ -79,7 +97,8 @@ export default function CreateMarket() {
             marketStarts: formatedStartDateAndTime,
             marketEnds: formatedEndtDateAndTime,
             marketType,
-            marketCategory
+            marketCategory,
+            thumbnailImageUrl
           }),
         }
       );
@@ -87,14 +106,73 @@ export default function CreateMarket() {
       const res = await sendReq.json();
 
       if (res.success) {
-        setLoading(false)
+        setLoading(false);
       } else {
         console.log(res);
-        setLoading(false)
+        setLoading(false);
       }
     } catch (error) {
       console.log(error);
-      setLoading(false)
+      setLoading(false);
+    }
+  };
+
+  // Thumbnail image upload
+
+  const handleThumbnailImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setIsFileUploadError(false);
+
+    const file = e.target.files?.[0];
+    if (typeof file !== "object") {
+      setIsFileUploadError(true);
+      setFileUploadError("Please select a valid file");
+      return;
+    }
+
+    const allowedFileType = [
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+      "image/gif",
+    ];
+
+    if (allowedFileType.includes(file!.type)) {
+      setIsFileUploading(true);
+
+      const formData = new FormData();
+      formData.append("file", file!);
+
+      try {
+        const sendReq = await fetch(
+          "http://localhost:8000/api/v0/admin/thumbnail-upload",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        const res = await sendReq.json();
+        if (res.success) {
+          setIsFileUploadSuccess(true);
+          setThumbnailImageUrl(res.fileUrl);
+          setIsFileUploading(false);
+        } else {
+          setIsFileUploadError(true);
+          setFileUploadError(res.message);
+          setIsFileUploading(false);
+        }
+      } catch (error) {
+        console.log(error);
+        setIsFileUploadError(true);
+        setFileUploadError("Client error occured");
+        setIsFileUploading(false);
+      }
+    } else {
+      setIsFileUploadError(true);
+      setFileUploadError("File type is not allowed");
+      return;
     }
   };
 
@@ -113,7 +191,7 @@ export default function CreateMarket() {
           />
         </div>
         <div className="flex max-w-6xl mx-auto space-x-5">
-          <div className="space-y-8">
+          <div className="space-y-10">
             <div>
               <div className="mb-2">
                 <label htmlFor="overciew">Market Title</label>
@@ -171,7 +249,60 @@ export default function CreateMarket() {
               </div>
             </div>
           </div>
-          <div className="w-full space-y-4">
+          <div className="w-full space-y-8 mt-3">
+            <div>
+              {isFileUploadSuccess ? (
+                <div>
+                  <p className="font-semibold">Thumbnail:</p>
+                  <img
+                    src={thumbnailImageUrl}
+                    alt="Thumbnail Image"
+                    height={100}
+                    width={100}
+                    className="rounded-md"
+                  />
+                  <button
+                    className="text-xs text-red-500 hover:cursor-pointer hover:underline flex mt-1"
+                    onClick={() => {
+                      setThumbnailImageUrl("");
+                      setIsFileUploadSuccess(false);
+                    }}
+                  >
+                    Delete <Trash2 size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="mb-2">
+                    <label htmlFor="market category">
+                      Upload a Thumbnail Image
+                    </label>
+                  </div>
+                  <Button
+                    component="label"
+                    disabled={isFileUploading}
+                    role={undefined}
+                    color={isFileUploadError ? "error" : "primary"}
+                    variant="contained"
+                    tabIndex={-1}
+                    startIcon={isFileUploading ? <Loader2 className="animate-spin"/> : <CloudUpload />}
+                  >
+                    {isFileUploading ? "Uplaoding..." : "Upload Thumbnail"}
+                    <VisuallyHiddenInput
+                      type="file"
+                      onChange={handleThumbnailImageUpload}
+                    />
+                  </Button>
+
+                  <div>
+                    {isFileUploadError && (
+                      <p className="text-sm text-red-500">{fileUploadError}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div>
               <div className="mb-2">
                 <label htmlFor="market category">Select market category</label>
@@ -186,14 +317,16 @@ export default function CreateMarket() {
                 className="w-44"
               >
                 {marketCategories.map((ctgry) => (
-                  <MenuItem key={ctgry.value} value ={ctgry.value}>{ctgry.label}</MenuItem>
+                  <MenuItem key={ctgry.value} value={ctgry.value}>
+                    {ctgry.label}
+                  </MenuItem>
                 ))}
               </TextField>
             </div>
 
             <div className="mb-2">
-                <label htmlFor="market type">Select market type</label>
-              </div>
+              <label htmlFor="market type">Select market type</label>
+            </div>
             <TextField
               select
               label="Market Type"
@@ -277,8 +410,18 @@ export default function CreateMarket() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto py-5">
-          <Button type="submit" disabled = {loading} size="large" variant="contained" className="w-56">
-            {loading ? <Loader2 className="animate-spin"/> : "Create new market"}
+          <Button
+            type="submit"
+            disabled={loading}
+            size="large"
+            variant="contained"
+            className="w-56"
+          >
+            {loading ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              "Create new market"
+            )}
           </Button>
         </div>
       </div>
