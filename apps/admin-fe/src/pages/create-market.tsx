@@ -60,7 +60,8 @@ export default function CreateMarket() {
   const [fileUploadError, setFileUploadError] = useState("");
   const [thumbnailImageUrl, setThumbnailImageUrl] = useState("");
   const [isFileUploading, setIsFileUploading] = useState(false);
-
+  const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
@@ -81,7 +82,14 @@ export default function CreateMarket() {
     // go for db insertion
 
     try {
+      if (!isFileUploadSuccess) {
+        setIsError(true);
+        setErrorMessage("Thumbnail is require");
+        return;
+      }
+
       setLoading(true);
+      setIsError(false);
       const sendReq = await fetch(
         "http://localhost:8000/api/v0/admin/create-market",
         {
@@ -98,7 +106,7 @@ export default function CreateMarket() {
             marketEnds: formatedEndtDateAndTime,
             marketType,
             marketCategory,
-            thumbnailImageUrl
+            thumbnailImageUrl,
           }),
         }
       );
@@ -285,7 +293,13 @@ export default function CreateMarket() {
                     color={isFileUploadError ? "error" : "primary"}
                     variant="contained"
                     tabIndex={-1}
-                    startIcon={isFileUploading ? <Loader2 className="animate-spin"/> : <CloudUpload />}
+                    startIcon={
+                      isFileUploading ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <CloudUpload />
+                      )
+                    }
                   >
                     {isFileUploading ? "Uplaoding..." : "Upload Thumbnail"}
                     <VisuallyHiddenInput
@@ -423,6 +437,7 @@ export default function CreateMarket() {
               "Create new market"
             )}
           </Button>
+          <div>{isError && <p className="text-red-500">{errorMessage}</p>}</div>
         </div>
       </div>
     </form>

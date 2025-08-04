@@ -10,6 +10,7 @@ interface Price {
 interface Market {
   marketId: string;
   marketTitle: string;
+  thumbnailImage: string;
   marketStarts: string;
   marketEnds: string;
   currentStatus: string;
