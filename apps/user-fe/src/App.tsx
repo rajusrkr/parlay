@@ -2,8 +2,8 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import Home from "./pages/home";
 import OpenMarkets from "./pages/markets";
 import Signin from "./pages/signin";
-import TradeCanvas from "./pages/trade-canvas";
 import MainLayout from "./layouts/main-layout";
+import MarketById from "./pages/market-by-id";
 
 export default function App() {
   return (
@@ -14,7 +14,7 @@ export default function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/market" element={<OpenMarkets />} />
-          <Route path="/market/:id" element={<TradeCanvas />} />
+          <Route path="/market/:id" element={<MarketById />} />
         </Route>
       </Routes>
     </BrowserRouter>
