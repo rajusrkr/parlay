@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 
 import { db } from "db/src/dbConnection";
-import { adminsTable, marketTable, priceData } from "db/src/schema";
+import { marketTable, priceData, admin } from "db/src/index";
 import { and, eq } from "drizzle-orm";
 import {
   closeMarketQueue,
@@ -24,8 +24,8 @@ const adminRegister = async (req: Request, res: any) => {
   try {
     const isAdminExists = await db
       .select()
-      .from(adminsTable)
-      .where(eq(adminsTable.email, data.email));
+      .from(admin)
+      .where(eq(admin.email, data.email));
 
     if (isAdminExists.length !== 0) {
       return res
@@ -39,7 +39,7 @@ const adminRegister = async (req: Request, res: any) => {
     const hashedPassword = bcrypt.hashSync(data.password, 10);
 
     const createAdmin = await db
-      .insert(adminsTable)
+      .insert(admin)
       .values({
         adminId: uuidv4(),
         name: data.name,
@@ -83,12 +83,12 @@ const adminLogin = async (req: Request, res: any) => {
   try {
     const findAdmin = await db
       .select({
-        adminId: adminsTable.adminId,
-        password: adminsTable.password,
-        role: adminsTable.role,
+        adminId: admin.adminId,
+        password: admin.password,
+        role: admin.role,
       })
-      .from(adminsTable)
-      .where(eq(adminsTable.email, data.email));
+      .from(admin)
+      .where(eq(admin.email, data.email));
 
     if (findAdmin.length === 0) {
       return res
