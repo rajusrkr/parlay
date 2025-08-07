@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 
 import { db } from "db/src/dbConnection";
-import { marketTable, priceData, admin } from "db/src/index";
+import { marketTable, priceData, admin, market } from "db/src/index";
 import { and, eq } from "drizzle-orm";
 import {
   closeMarketQueue,
@@ -13,6 +13,7 @@ import {
 } from "../queueProducer/marketQueue";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
+// Admin account registration
 const adminRegister = async (req: Request, res: any) => {
   const data = req.body;
   const validateAdminInput = RegisterSchema.safeParse(data);
@@ -69,6 +70,7 @@ const adminRegister = async (req: Request, res: any) => {
   }
 };
 
+// Admin account login
 const adminLogin = async (req: Request, res: any) => {
   const data = req.body;
 
@@ -130,6 +132,7 @@ const adminLogin = async (req: Request, res: any) => {
   }
 };
 
+// Create a new market
 const createMarket = async (req: Request, res: any) => {
   const data = req.body;
 
@@ -152,37 +155,44 @@ const createMarket = async (req: Request, res: any) => {
     validateAdminInput.data;
 
   switch (data.marketType) {
-    case "binary":
+    case "BINARY":
       try {
-        const [newMarket] = await db
-          .insert(marketTable)
+        const [createBinaryMarket] = await db
+          .insert(market)
           .values({
+            marketCreatedBy: adminId,
+            
             marketId: uuidv4(),
+
             marketTitle: title,
-            yesSide: "yes",
-            noSide: "no",
+            marketOverview: overview,
+            marketSettlement: settlement,
+            marketCategory: marketCategory,
+            marketThumbnailImageUrl: thumbnailImageUrl,
+
             marketStarts,
             marketEnds,
-            marketCreatedBy: adminId,
-            marketSettlement: settlement,
-            marketOverview: overview,
-            marketCategory: marketCategory,
-            marketThumbnailImageUrl: thumbnailImageUrl
+            
+            outcomesAndPrices: [
+              {outcome: "YES", price: 0, qty: 0},
+              {outcome: "NO", price: 0, qty: 0}
+            ]
           })
           .returning();
+
 
         // market start queue
         await startMarketQueue.add(
           "start_market",
-          { id: newMarket.marketId },
-          { delay: newMarket.marketStarts - Date.now() }
+          { id: createBinaryMarket.marketId },
+          { delay: createBinaryMarket.marketStarts - Date.now() }
         );
 
         // market close queue
         await closeMarketQueue.add(
           "close_market",
-          { id: newMarket.marketId },
-          { delay: newMarket.marketEnds - Date.now() }
+          { id: createBinaryMarket.marketId },
+          { delay: createBinaryMarket.marketEnds - Date.now() }
         );
 
         return res
@@ -315,6 +325,7 @@ const editMarketStatus = async (req: Request, res: any) => {
   }
 };
 
+// Upload thumbnail image
 const fileUpload = async (req: Request, res: any) => {
   const file = req.file;
 
