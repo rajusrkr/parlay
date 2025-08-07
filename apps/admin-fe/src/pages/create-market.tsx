@@ -1,445 +1,535 @@
 import {
   Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  MenuItem,
-  styled,
-  TextField,
-} from "@mui/material";
-import { DateTimePicker } from "@mui/x-date-pickers";
-import type { Dayjs } from "dayjs";
-import dayjs from "dayjs";
-import { CloudUpload, Loader2, Trash2 } from "lucide-react";
-import { useState } from "react";
+  DatePicker,
+  Input,
+  Listbox,
+  ListboxItem,
+  ListboxSection,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  Select,
+  SelectItem,
+  Textarea,
+  useDisclosure,
+} from "@heroui/react";
+import { getLocalTimeZone, now } from "@internationalized/date";
+import { Loader, UploadCloud } from "lucide-react";
+import React, { useState } from "react";
 
-const VisuallyHiddenInput = styled("input")({
-  clip: "rect(0 0 0 0)",
-  clipPath: "inset(50%)",
-  height: 1,
-  overflow: "hidden",
-  position: "absolute",
-  bottom: 0,
-  left: 0,
-  whiteSpace: "nowrap",
-  width: 1,
-});
+export const ListboxWrapper = ({ children }: { children: React.ReactNode }) => (
+  <div className="w-full max-w-xs border-small px-1 py-2 rounded-small border-default-200 dark:border-default-100">
+    {children}
+  </div>
+);
 
-const marketTypes = [
-  {
-    value: "binary",
-    label: "Binary",
-  },
-  {
-    value: "categorical",
-    label: "Categorical",
-  },
+export const marketCategory = [
+  { key: "REGULAR", label: "Regular" },
+  { key: "CRYPTO", label: "Crypto" },
+  { key: "SPORTS", label: "Sports" },
+  { key: "POLITICS", label: "Politics" },
 ];
 
-const marketCategories = [
-  { value: "SPORTS", label: "Sports" },
-  { value: "POLITICS", label: "Politics" },
-  { value: "CRYPTO", label: "Crypto" },
+export const marketType = [
+  { key: "BINARY", label: "Binary Outcomes" },
+  { key: "OTHER", label: "Other Outcomes" },
 ];
 
-export default function CreateMarket() {
-  const [title, setTitle] = useState("");
-  const [overview, setOverview] = useState("");
-  const [settlement, setSettlement] = useState("");
-  const [marketType, setMarketType] = useState("binary");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [startDateAndTime, setStartDateAndTime] = useState<Dayjs | null>(null);
-  const [endDateAndTime, setEndDateAndTime] = useState<Dayjs | null>(null);
-  const [marketCategory, setMarketCategory] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [isFileUploadError, setIsFileUploadError] = useState(false);
-  const [isFileUploadSuccess, setIsFileUploadSuccess] = useState(false);
-  const [fileUploadError, setFileUploadError] = useState("");
-  const [thumbnailImageUrl, setThumbnailImageUrl] = useState("");
-  const [isFileUploading, setIsFileUploading] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+interface Outcome {
+  outcome: string;
+  price: number;
+  qty: number;
+}
 
-  const handleDialogOpen = () => {
-    setDialogOpen(true);
-  };
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-  };
+const CreateMarket = () => {
+  const [selectedMarketType, setSelectedMarketType] = useState<
+    "BINARY" | "OTHER"
+  >("BINARY");
+  const [otherOutcomes, setOtherOutcomes] = useState<Outcome[]>([]);
+  const [outcome, setOutcome] = useState<string>("");
+  // const [editIndex, setEditIndex] = useState<number | null>(null);
 
-  // Form submit
-  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const [marketTitle, setMarketTitle] = useState("");
+  const [marketOverview, setMarketOverview] = useState("");
+  const [marketSettlement, setMarketSettlement] = useState("");
+  const [selectedMarketCategory, setSelectedMarketCategory] = useState("");
+  const [endDateAndTime, setEndDateAndTime] = useState<number | null>(null);
+  const [startDateAndTime, setStartDateAndTime] = useState<number | null>(null);
 
-    const formatedStartDateAndTime = dayjs(startDateAndTime).valueOf();
-    const formatedEndtDateAndTime = dayjs(endDateAndTime).valueOf();
+  const [fileUrl, setFileUrl] = useState<string>("");
+  const [isFileUploading, setIsFileUploading] = useState<boolean>(false);
+  const [isFileUploadingError, setIsFileUploadingError] =
+    useState<boolean>(false);
+  const [fileUploadErrorMessage, setFileUploadErrorMessage] =
+    useState<string>("");
+  const [isFileUploadingSuccess, setIsFileUploadingSuccess] =
+    useState<boolean>(false);
 
-    // validate forms -> Will do later
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-    // go for db insertion
+  // Upload thumbnail image
+  const thumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files![0];
 
-    try {
-      if (!isFileUploadSuccess) {
-        setIsError(true);
-        setErrorMessage("Thumbnail is require");
-        return;
-      }
-
-      setLoading(true);
-      setIsError(false);
-      const sendReq = await fetch(
-        "http://localhost:8000/api/v0/admin/create-market",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            title,
-            overview,
-            settlement,
-            marketStarts: formatedStartDateAndTime,
-            marketEnds: formatedEndtDateAndTime,
-            marketType,
-            marketCategory,
-            thumbnailImageUrl,
-          }),
-        }
-      );
-
-      const res = await sendReq.json();
-
-      if (res.success) {
-        setLoading(false);
-      } else {
-        console.log(res);
-        setLoading(false);
-      }
-    } catch (error) {
-      console.log(error);
-      setLoading(false);
-    }
-  };
-
-  // Thumbnail image upload
-
-  const handleThumbnailImageUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setIsFileUploadError(false);
-
-    const file = e.target.files?.[0];
     if (typeof file !== "object") {
-      setIsFileUploadError(true);
-      setFileUploadError("Please select a valid file");
       return;
     }
 
-    const allowedFileType = [
+    const allowedFileTypes = [
       "image/png",
       "image/jpeg",
       "image/webp",
       "image/gif",
     ];
 
-    if (allowedFileType.includes(file!.type)) {
+    if (!allowedFileTypes.includes(file.type)) {
+      window.alert("Invalid file type");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
       setIsFileUploading(true);
 
-      const formData = new FormData();
-      formData.append("file", file!);
-
-      try {
-        const sendReq = await fetch(
-          "http://localhost:8000/api/v0/admin/thumbnail-upload",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        const res = await sendReq.json();
-        if (res.success) {
-          setIsFileUploadSuccess(true);
-          setThumbnailImageUrl(res.fileUrl);
-          setIsFileUploading(false);
-        } else {
-          setIsFileUploadError(true);
-          setFileUploadError(res.message);
-          setIsFileUploading(false);
+      const sendReq = await fetch(
+        "http://localhost:8000/api/v0/admin/thumbnail-upload",
+        {
+          method: "POST",
+          body: formData,
         }
-      } catch (error) {
-        console.log(error);
-        setIsFileUploadError(true);
-        setFileUploadError("Client error occured");
+      );
+
+      const res = await sendReq.json();
+
+      if (res.success) {
+        setFileUrl(res.fileUrl);
+        setIsFileUploadingSuccess(true);
         setIsFileUploading(false);
+      } else {
+        setIsFileUploading(false);
+        setIsFileUploadingError(true);
+        setFileUploadErrorMessage(res.message);
       }
-    } else {
-      setIsFileUploadError(true);
-      setFileUploadError("File type is not allowed");
-      return;
+    } catch (error) {
+      console.log(error);
+      setIsFileUploading(false);
+    }
+  };
+
+  // Handle form sbmission
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    console.log("hola");
+
+    const binaryOutcomes: Outcome[] = [
+      { outcome: "YES", price: 0, qty: 0 },
+      { outcome: "NO", price: 0, qty: 0 },
+    ];
+
+
+
+
+    try {
+      const sendReq = await fetch( "http://localhost:8000/api/v0/admin/create-market", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({title: marketTitle, overview: marketOverview, settlement: marketSettlement, marketCategory: selectedMarketCategory,marketType: selectedMarketType, thumbnailImageUrl: fileUrl, marketStarts: startDateAndTime, marketEnds: endDateAndTime, binaryOutcomes})
+      })
+
+      const res = await sendReq.json()
+      console.log(res);
+      
+    } catch (error) {
+      console.log(error);
     }
   };
 
   return (
-    <form onSubmit={handleFormSubmit}>
-      <div className="px-10">
-        <div className="py-5">
-          <Chip
-            label="Create new market"
-            variant="outlined"
-            style={{
-              fontSize: "26px",
-              backgroundColor: "black",
-              color: "white",
-            }}
-          />
-        </div>
-        <div className="flex max-w-6xl mx-auto space-x-5">
-          <div className="space-y-10">
+    <div className="p-4">
+      <form
+        className="flex max-w-6xl mx-auto gap-4"
+        onSubmit={handleFormSubmit}
+      >
+        {/* Left side */}
+        <div className="space-y-4 w-full">
+          <div>
             <div>
-              <div className="mb-2">
-                <label htmlFor="overciew">Market Title</label>
-              </div>
-              <TextField
-                multiline
-                label="Market Title"
-                fullWidth
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
+              <label htmlFor="Market settlement">
+                <span className="text-sm font-semibold text-gray-500">
+                  Market Title
+                </span>
+              </label>
             </div>
-            <div>
-              <div className="mb-2">
-                <label htmlFor="overciew">Market Overview</label>
-              </div>
-              <TextField
-                multiline
-                label="Overview"
-                fullWidth
-                onChange={(e) => setOverview(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <div className="mb-2">
-                <label htmlFor="overciew">Market Settlement</label>
-              </div>
-              <TextField
-                multiline
-                label="Settlement"
-                fullWidth
-                onChange={(e) => setSettlement(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex space-x-5">
-              <div>
-                <div className="mb-2">
-                  <label htmlFor="overciew">Market Starts</label>
-                </div>
-                <DateTimePicker
-                  label="Select Start Time"
-                  onChange={setStartDateAndTime}
-                />
-              </div>
-              <div>
-                <div className="mb-2">
-                  <label htmlFor="overciew">Market Ends</label>
-                </div>
-                <DateTimePicker
-                  label="Select End Time"
-                  onChange={setEndDateAndTime}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="w-full space-y-8 mt-3">
-            <div>
-              {isFileUploadSuccess ? (
-                <div>
-                  <p className="font-semibold">Thumbnail:</p>
-                  <img
-                    src={thumbnailImageUrl}
-                    alt="Thumbnail Image"
-                    height={100}
-                    width={100}
-                    className="rounded-md"
-                  />
-                  <button
-                    className="text-xs text-red-500 hover:cursor-pointer hover:underline flex mt-1"
-                    onClick={() => {
-                      setThumbnailImageUrl("");
-                      setIsFileUploadSuccess(false);
-                    }}
-                  >
-                    Delete <Trash2 size={14} />
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <div className="mb-2">
-                    <label htmlFor="market category">
-                      Upload a Thumbnail Image
-                    </label>
-                  </div>
-                  <Button
-                    component="label"
-                    disabled={isFileUploading}
-                    role={undefined}
-                    color={isFileUploadError ? "error" : "primary"}
-                    variant="contained"
-                    tabIndex={-1}
-                    startIcon={
-                      isFileUploading ? (
-                        <Loader2 className="animate-spin" />
-                      ) : (
-                        <CloudUpload />
-                      )
-                    }
-                  >
-                    {isFileUploading ? "Uplaoding..." : "Upload Thumbnail"}
-                    <VisuallyHiddenInput
-                      type="file"
-                      onChange={handleThumbnailImageUpload}
-                    />
-                  </Button>
-
-                  <div>
-                    {isFileUploadError && (
-                      <p className="text-sm text-red-500">{fileUploadError}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="mb-2">
-                <label htmlFor="market category">Select market category</label>
-              </div>
-              <TextField
-                select
-                label="Market Category"
-                helperText="Select market category"
-                value={marketCategory}
-                onChange={(e) => setMarketCategory(e.target.value)}
-                required
-                className="w-44"
-              >
-                {marketCategories.map((ctgry) => (
-                  <MenuItem key={ctgry.value} value={ctgry.value}>
-                    {ctgry.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </div>
-
-            <div className="mb-2">
-              <label htmlFor="market type">Select market type</label>
-            </div>
-            <TextField
-              select
-              label="Market Type"
-              helperText="Select market type"
-              value={marketType}
+            <Input
+              type="text"
+              placeholder="Enter market title"
+              label="Market title"
+              labelPlacement="inside"
+              variant="bordered"
               required
-              onChange={(e) => setMarketType(e.target.value)}
-            >
-              {marketTypes.map((mrkt) => (
-                <MenuItem key={mrkt.value} value={mrkt.value}>
-                  {mrkt.label}
-                </MenuItem>
-              ))}
-            </TextField>
+              onChange={(e) => setMarketTitle(e.target.value)}
+            />
+          </div>
 
+          <div>
             <div>
-              <div>
-                {marketType === "binary" && (
-                  <div className="bg-blue-50 w-52 rounded py-2">
-                    <div className="px-4">
-                      <p className="font-semibold underline underline-offset-4">
-                        Options:
-                      </p>
+              <label htmlFor="Market settlement">
+                <span className="text-sm font-semibold text-gray-500">
+                  Market Overview
+                </span>
+              </label>
+            </div>
+            <Textarea
+              placeholder="Enter market overview"
+              label="Market overview"
+              labelPlacement="inside"
+              variant="bordered"
+              required
+              onChange={(e) => setMarketOverview(e.target.value)}
+            />
+          </div>
+          <div>
+            <div>
+              <label htmlFor="Market settlement">
+                <span className="text-sm font-semibold text-gray-500">
+                  Market Settlement
+                </span>
+              </label>
+            </div>
+            <Textarea
+              placeholder="Enter market settlement"
+              label="Market settlement"
+              labelPlacement="inside"
+              variant="bordered"
+              required
+              onChange={(e) => setMarketSettlement(e.target.value)}
+            />
+          </div>
 
-                      <div className="space-y-1">
-                        <p className="bg-blue-100 pl-1">Yes</p>
-                        <p className="bg-blue-100 pl-1">No</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+          {/* Date and Time picker area */}
+          <div>
+            <div>
+              <label htmlFor="Start date">
+                <span className="text-sm font-semibold text-gray-500">
+                  Select Start Date & Time
+                </span>
+              </label>
+            </div>
+            <div className="flex gap-4">
+              <div className="w-full">
+                <DatePicker
+                  hideTimeZone
+                  showMonthAndYearPickers
+                  defaultValue={now(getLocalTimeZone())}
+                  label="Market start date"
+                  labelPlacement="inside"
+                  variant="bordered"
+                  isRequired
+                  onChange={(e) => {
+                    const date = new Date(
+                      e!.year,
+                      e!.month - 1,
+                      e!.day,
+                      e!.hour,
+                      e!.minute,
+                      0,
+                      0
+                    );
+                    const unixTimestamp = Math.floor(date.getTime() / 1000);
+                    setStartDateAndTime(unixTimestamp);
+                  }}
+                />
               </div>
+            </div>
+          </div>
 
-              <div>
-                {marketType === "categorical" && (
-                  <div className="bg-blue-50 w-52 rounded py-2">
-                    <div className="px-4">
-                      <p className="font-semibold underline underline-offset-4">
-                        Options:
-                      </p>
-
-                      <div className="space-y-1">
-                        <p className="bg-blue-100 pl-1">Yes</p>
-                        <p className="bg-blue-100 pl-1">No</p>
-                      </div>
-                      <div>
-                        <Button onClick={handleDialogOpen}>Add Options</Button>
-
-                        <Dialog
-                          open={dialogOpen}
-                          onClose={handleDialogClose}
-                          aria-labelledby="add-options-dialog"
-                        >
-                          <DialogTitle id="add-option-dialog-title">
-                            {"Add Options below"}
-                          </DialogTitle>
-                          <DialogContent>
-                            <DialogContentText sx={{ marginBottom: 1 }}>
-                              Type options
-                            </DialogContentText>
-                            <TextField
-                              autoFocus
-                              label="Add option"
-                              type="text"
-                              size="small"
-                            />
-                          </DialogContent>
-                          <DialogActions>
-                            <Button color="error" onClick={handleDialogClose}>
-                              Close
-                            </Button>
-                            <Button onClick={handleDialogClose}>Add</Button>
-                          </DialogActions>
-                        </Dialog>
-                      </div>
-                    </div>
-                  </div>
-                )}
+          <div>
+            <div>
+              <label htmlFor="End date">
+                <span className="text-sm font-semibold text-gray-500">
+                  Select End Date & Time
+                </span>
+              </label>
+            </div>
+            <div className="flex gap-4">
+              <div className="w-full">
+                <DatePicker
+                  hideTimeZone
+                  showMonthAndYearPickers
+                  defaultValue={now(getLocalTimeZone())}
+                  label="Market end date"
+                  labelPlacement="inside"
+                  variant="bordered"
+                  isRequired
+                  onChange={(e) => {
+                    const date = new Date(
+                      e!.year,
+                      e!.month - 1,
+                      e!.day,
+                      e!.hour,
+                      e!.minute,
+                      0,
+                      0
+                    );
+                    const unixTimestamp = Math.floor(date.getTime() / 1000);
+                    setEndDateAndTime(unixTimestamp);
+                  }}
+                />
               </div>
             </div>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto py-5">
-          <Button
-            type="submit"
-            disabled={loading}
-            size="large"
-            variant="contained"
-            className="w-56"
-          >
-            {loading ? (
-              <Loader2 className="animate-spin" />
+
+        {/* Right side */}
+        <div className="w-full space-y-4">
+          <div className="max-w-xs">
+            {isFileUploadingSuccess ? (
+              <>
+                <div className="mt-1 max-w-xs">
+                  <p className="text-sm font-semibold text-gray-500">
+                    Thumbnail image
+                  </p>
+                  <img
+                    src={fileUrl}
+                    alt="thumbnail"
+                    className="rounded-lg object-contain w-20 h-20"
+                  />
+
+                  <div className="mt-1">
+                    <Button
+                      size="sm"
+                      color="danger"
+                      variant="light"
+                      onPress={() => {
+                        setFileUrl("");
+                        setIsFileUploadingSuccess(false);
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              </>
             ) : (
-              "Create new market"
+              <>
+                <div>
+                  <label htmlFor="Thumbnail Image">
+                    <span className="text-sm font-semibold text-gray-500 flex items-center">
+                      Thumbnail Image
+                      {isFileUploading && (
+                        <>
+                          uploading...
+                          <Loader size={16} className="animate-spin" />
+                        </>
+                      )}
+                    </span>
+                  </label>
+                </div>
+                <Input
+                  type="file"
+                  label="Upload thumbnail"
+                  variant="bordered"
+                  isRequired
+                  startContent={<UploadCloud />}
+                  onChange={thumbnailUpload}
+                />
+                <div>
+                  {isFileUploadingError && (
+                    <p className="text-xs text-red-500 font-semibold">
+                      {fileUploadErrorMessage}
+                    </p>
+                  )}
+                </div>
+              </>
             )}
-          </Button>
-          <div>{isError && <p className="text-red-500">{errorMessage}</p>}</div>
+          </div>
+          <div className="max-w-xs">
+            <div>
+              <label htmlFor="Market category">
+                <span className="text-sm font-semibold text-gray-500">
+                  Select Market category
+                </span>
+              </label>
+            </div>
+            <Select
+              label="Market category"
+              placeholder="Select market category"
+              selectionMode="single"
+              variant="bordered"
+              isRequired
+              onChange={(e) => setSelectedMarketCategory(e.target.value)}
+            >
+              {marketCategory.map((mrktCrgry) => (
+                <SelectItem key={mrktCrgry.key}>{mrktCrgry.label}</SelectItem>
+              ))}
+            </Select>
+          </div>
+
+          <div className="max-w-xs">
+            <div>
+              <label htmlFor="Market type">
+                <span className="text-sm font-semibold text-gray-500">
+                  Select Market type
+                </span>
+              </label>
+            </div>
+
+            <Select
+              label="Market type"
+              placeholder="Select market type"
+              selectionMode="single"
+              variant="bordered"
+              defaultSelectedKeys={["BINARY"]}
+              isRequired
+              onChange={(e) => {
+                setSelectedMarketType(e.target.value as "BINARY" | "OTHER");
+              }}
+            >
+              {marketType.map((mrktType) => (
+                <SelectItem key={mrktType.key}>{mrktType.label}</SelectItem>
+              ))}
+            </Select>
+          </div>
+
+          {/* Outcome section */}
+          <div>
+            <div>
+              <label htmlFor="Outcomes">
+                <span className="text-sm font-semibold text-gray-500">
+                  Outcomes for {selectedMarketType.toLowerCase()} outcome market
+                </span>
+              </label>
+            </div>
+
+            {selectedMarketType === "BINARY" ? (
+              <>
+                <ListboxWrapper>
+                  <Listbox
+                    aria-label="Listbox with binary outcomes"
+                    variant="light"
+                  >
+                    <ListboxSection title={"Outcomes"}>
+                      <ListboxItem className="hover:cursor-text">
+                        1. Yes
+                      </ListboxItem>
+                      <ListboxItem className="hover:cursor-text">
+                        2. No
+                      </ListboxItem>
+                    </ListboxSection>
+                  </Listbox>
+                </ListboxWrapper>
+              </>
+            ) : (
+              <>
+                <ListboxWrapper>
+                  <Listbox
+                    aria-label="Listbox with other outcomes"
+                    variant="light"
+                  >
+                    <ListboxSection title={"Outcomes"}>
+                      {otherOutcomes.length === 0 ? (
+                        <ListboxItem className="hover:cursor-text text-gray-500">
+                          Please add outcomes
+                        </ListboxItem>
+                      ) : (
+                        <>
+                          {otherOutcomes.map((mltoutcms, i) => (
+                            <ListboxItem key={i} className="hover:cursor-text">
+                              {`${i + 1}. ${mltoutcms.outcome}`}
+                            </ListboxItem>
+                          ))}
+                        </>
+                      )}
+                    </ListboxSection>
+                  </Listbox>
+                  <div>
+                    <Button
+                      onPress={onOpen}
+                      color="primary"
+                      variant="flat"
+                      size="sm"
+                      className="font-semibold text-xs"
+                    >
+                      Add outcomes
+                    </Button>
+
+                    <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+                      <ModalContent>
+                        <>
+                          <ModalHeader className="font-semibold text-gray-500">
+                            Add outcomes
+                          </ModalHeader>
+                          <ModalBody>
+                            {otherOutcomes.map((mltoutcms, i) => (
+                              <div key={i}>
+                                <p
+                                // onClick={() => {
+                                //   setOutcome(
+                                //     otherOutcomes.filter(
+                                //       (_, idx) => idx === i
+                                //     )[0].outcome
+                                //   );
+                                //   setEditIndex(i);
+                                // }}
+                                >{`${i + 1}. ${mltoutcms.outcome}`}</p>
+                              </div>
+                            ))}
+                          </ModalBody>
+                          <ModalFooter>
+                            <Input
+                              type="text"
+                              placeholder="Add outcome"
+                              size="sm"
+                              value={outcome}
+                              onChange={(e) => {
+                                setOutcome(e.target.value);
+                              }}
+                            />
+                            <Button
+                              variant="flat"
+                              color="primary"
+                              size="sm"
+                              className="font-semibold px-6"
+                              onPress={() => {
+                                if (outcome.length === 0) {
+                                  return;
+                                }
+                                setOtherOutcomes((prev) => [
+                                  ...prev,
+                                  { outcome: outcome, price: 0, qty: 0 },
+                                ]);
+                                setOutcome("");
+                              }}
+                            >
+                              Add outcome
+                            </Button>
+                          </ModalFooter>
+                        </>
+                      </ModalContent>
+                    </Modal>
+                  </div>
+                </ListboxWrapper>
+              </>
+            )}
+          </div>
+          {/* FORM SUBMISSION BUTTON */}
+          <div className="mt-4 max-w-xs">
+            <Button type="submit" className="w-full" color="primary">
+              Submit
+            </Button>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   );
-}
+};
+
+export default CreateMarket;
