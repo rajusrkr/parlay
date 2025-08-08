@@ -4,10 +4,9 @@ import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 
-import {db} from "db/src/dbConnection"
-import {combinedOrders, usersTable} from "db/src/schema"
-import { eq  } from "drizzle-orm";
-
+import { db } from "db/src/dbConnection";
+import { position, user } from "db/src/index";
+import { eq } from "drizzle-orm";
 
 const userRegister = async (req: Request, res: any) => {
   const data = req.body;
@@ -20,22 +19,20 @@ const userRegister = async (req: Request, res: any) => {
   try {
     const isUserExists = await db
       .select()
-      .from(usersTable)
-      .where(eq(usersTable.email, data.email));
+      .from(user)
+      .where(eq(user.email, data.email));
 
     if (isUserExists.length !== 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "User already exists with provided email.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "User already exists with provided email.",
+      });
     }
 
     const hashedPassword = bcrypt.hashSync(data.password, 10);
 
     const createUser = await db
-      .insert(usersTable)
+      .insert(user)
       .values({
         userId: uuidv4(),
         name: data.name,
@@ -50,13 +47,11 @@ const userRegister = async (req: Request, res: any) => {
         .json({ success: false, message: "db error: unable to create user." });
     }
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "User created successfully",
-        userId: createUser[0].userId,
-      });
+    return res.status(200).json({
+      success: true,
+      message: "User created successfully",
+      userId: createUser[0].userId,
+    });
   } catch (error) {
     console.log(error);
     return res
@@ -81,12 +76,12 @@ const userLogin = async (req: Request, res: any) => {
   try {
     const findUser = await db
       .select({
-        email: usersTable.email,
-        password: usersTable.password,
-        userId: usersTable.userId,
+        email: user.email,
+        password: user.password,
+        userId: user.userId,
       })
-      .from(usersTable)
-      .where(eq(usersTable.email, data.email));
+      .from(user)
+      .where(eq(user.email, data.email));
 
     if (findUser.length === 0) {
       return res
@@ -112,22 +107,21 @@ const userLogin = async (req: Request, res: any) => {
       `${process.env.JWT_SECRET}`
     );
 
-// ws auth cookie
-const socketKey = jwt.sign({role: "userFe"}, `${process.env.JWT_SECRET}`)
+    // ws auth cookie
+    const socketKey = jwt.sign({ role: "userFe" }, `${process.env.JWT_SECRET}`);
 
     res.cookie("socket-identity", socketKey, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       secure: true,
-      sameSite: "strict"
-    })
+      sameSite: "strict",
+    });
 
-    res.cookie("auth_session", signInJWT, { 
+    res.cookie("auth_session", signInJWT, {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
       httpOnly: true,
       secure: true,
-      sameSite: "strict"
-    })
-
+      sameSite: "strict",
+    });
 
     return res.status(200).json({ success: true, message: "Signin success" });
   } catch (error) {
@@ -146,20 +140,18 @@ const addMoney = async (req: Request, res: any) => {
 
   try {
     const deposit = await db
-      .update(usersTable)
+      .update(user)
       .set({
         walletBalance: Math.round(data.amount),
       })
-      .where(eq(usersTable.userId, userId))
+      .where(eq(user.userId, userId))
       .returning();
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Money deposited",
-        newBalance: deposit[0].walletBalance,
-      });
+    return res.status(200).json({
+      success: true,
+      message: "Money deposited",
+      newBalance: deposit[0].walletBalance,
+    });
   } catch (error) {
     console.error(error);
     return res
@@ -168,23 +160,31 @@ const addMoney = async (req: Request, res: any) => {
   }
 };
 
-const getAllPositions =  async (req: Request, res: any) => {
+const getAllPositions = async (req: Request, res: any) => {
   // @ts-ignore
   const userId = req.userId;
 
   try {
-    const positions = await db.select().from(combinedOrders).where(eq(combinedOrders.userId, userId))
+    const positions = await db
+      .select()
+      .from(position)
+      .where(eq(position.positionTakenBy, userId));
 
     if (positions.length === 0) {
-      return res.status(400).json({success: false, message: "No position available"})
+      return res
+        .status(400)
+        .json({ success: false, message: "No position available" });
     }
 
-    return res.status(200).json({success: true, message: "positions fetched", positions})
+    return res
+      .status(200)
+      .json({ success: true, message: "positions fetched", positions });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({success: false, message: "Internal server error"})
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
-}
+};
 
 export { userRegister, userLogin, addMoney, getAllPositions };
- 

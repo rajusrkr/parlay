@@ -1,9 +1,12 @@
 import { Router } from "express";
-import { getAllMarket, getPrices } from "../controllers/market.controller";
+import {
+  getAllMarket,
+  // getPrices
+} from "../controllers/market.controller";
 
-const router = Router()
+const router = Router();
 
-router.get("/get-markets", getAllMarket)
-router.post("/get-price", getPrices)
+router.get("/get-markets", getAllMarket);
+// router.post("/get-price", getPrices)
 
-export default router
+export default router;

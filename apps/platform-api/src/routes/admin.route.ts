@@ -4,7 +4,7 @@ import {
   adminRegister,
   createMarket,
   deleteMarket,
-  editMarketStatus,
+  // editMarketStatus,
   fileUpload,
 } from "../controllers/admin.controller";
 import { adminJwt } from "../middlewares/admin.middleware";
@@ -16,7 +16,7 @@ router.post("/auth/register", adminRegister);
 router.post("/auth/login", adminLogin);
 router.post("/create-market", adminJwt, createMarket);
 router.delete("/delete-market", adminJwt, deleteMarket);
-router.put("/edit-market-status", adminJwt, editMarketStatus);
+// router.put("/edit-market-status", adminJwt, editMarketStatus);
 
 
 // handle file
