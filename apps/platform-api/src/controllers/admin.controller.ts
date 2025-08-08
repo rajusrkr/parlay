@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 
 import { db } from "db/src/dbConnection";
-import { marketTable, priceData, admin, market } from "db/src/index";
+import { admin, market } from "db/src/index";
 import { and, eq } from "drizzle-orm";
 import {
   closeMarketQueue,
@@ -222,11 +222,11 @@ const deleteMarket = async (req: Request, res: any) => {
 
   try {
     const deleteMarketById = await db
-      .delete(marketTable)
+      .delete(market)
       .where(
         and(
-          eq(marketTable.marketId, marketId!.toString()),
-          eq(marketTable.marketCreatedBy, adminId)
+          eq(market.marketId, marketId!.toString()),
+          eq(market.marketCreatedBy, adminId)
         )
       )
       .returning();
@@ -251,81 +251,83 @@ const deleteMarket = async (req: Request, res: any) => {
   }
 };
 
-const editMarketStatus = async (req: Request, res: any) => {
-  const data = req.query.status;
-  const marketId = req.query.marketId;
-  // @ts-ignore
-  const adminId = req.adminId;
+// const editMarketStatus = async (req: Request, res: any) => {
+//   const data = req.query.status;
+//   const marketId = req.query.marketId;
+//   // @ts-ignore
+//   const adminId = req.adminId;
 
-  const allowedInputs = [
-    "NOT_STARTED",
-    "OPEN",
-    "SETTLED",
-    "CANCELLED",
-  ] as const;
+//   const allowedInputs = [
+//     "NOT_STARTED",
+//     "OPEN",
+//     "SETTLED",
+//     "CANCELLED",
+//   ] as const;
 
-  const status = allowedInputs.find(
-    (s) => s === data!.toString().toUpperCase()
-  );
+//   const status = allowedInputs.find(
+//     (s) => s === data!.toString().toUpperCase()
+//   );
 
-  if (!status || typeof status === "undefined") {
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid status code" });
-  }
+//   if (!status || typeof status === "undefined") {
+//     return res
+//       .status(400)
+//       .json({ success: false, message: "Invalid status code" });
+//   }
 
-  try {
-    const updateMarket = await db
-      .update(marketTable)
-      .set({
-        currentStatus: status,
-      })
-      .where(
-        and(
-          eq(marketTable.marketId, marketId!.toString()),
-          eq(marketTable.marketCreatedBy, adminId)
-        )
-      )
-      .returning();
+//   try {
+//     const updateMarket = await db
+//       .update(market)
+//       .set({
+//         currentStatus: status,
+//       })
+//       .where(
+//         and(
+//           eq(market.marketId, marketId!.toString()),
+//           eq(market.marketCreatedBy, adminId)
+//         )
+//       )
+//       .returning();
 
-    if (updateMarket.length === 0) {
-      return res
-        .status(200)
-        .json({ success: false, message: "Unable change the status" });
-    }
+//     if (updateMarket.length === 0) {
+//       return res
+//         .status(200)
+//         .json({ success: false, message: "Unable change the status" });
+//     }
 
-    if (updateMarket[0].currentStatus === "OPEN") {
-      await db.insert(priceData).values({
-        marketId: marketId!.toString(),
-        noSidePrice: "0.5",
-        yesSidePrice: "0.5",
-        priceUpdatedOn: Math.floor(Date.now() / 1000),
-      });
+//     if (updateMarket[0].currentStatus === "OPEN") {
+//       await db.insert(order).values({
+//         marketId: marketId!.toString(),
+//         noSidePrice: "0.5",
+//         yesSidePrice: "0.5",
+//         priceUpdatedOn: Math.floor(Date.now() / 1000),
+//       });
 
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "Market status changed to OPEN and price data created",
-        });
-    }
+//       return res
+//         .status(200)
+//         .json({
+//           success: true,
+//           message: "Market status changed to OPEN and price data created",
+//         });
+//     }
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Update success",
-        current_status: updateMarket[0].currentStatus,
-      });
-  } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
-  }
-};
+//     return res
+//       .status(200)
+//       .json({
+//         success: true,
+//         message: "Update success",
+//         current_status: updateMarket[0].currentStatus,
+//       });
+//   } catch (error) {
+//     console.log(error);
+//     return res
+//       .status(500)
+//       .json({ success: false, message: "Internal server error" });
+//   }
+// };
 
 // Upload thumbnail image
+
+
 const fileUpload = async (req: Request, res: any) => {
   const file = req.file;
 
@@ -381,6 +383,6 @@ export {
   adminLogin,
   createMarket,
   deleteMarket,
-  editMarketStatus,
+  // editMarketStatus,
   fileUpload,
 };
