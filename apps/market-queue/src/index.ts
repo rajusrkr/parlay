@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import IORedis from "ioredis";
 import { db } from "db/src/dbConnection";
-import { marketTable, priceData } from "db/src/schema";
+import { market, order } from "db/src/index";
 import { eq } from "drizzle-orm";
 
 const connection = new IORedis({
@@ -23,16 +23,16 @@ const startMarketWorker = new Worker(
     const marketId = job.data.id;
 
     await db
-      .update(marketTable)
+      .update(market)
       .set({ currentStatus: "OPEN" })
-      .where(eq(marketTable.marketId, marketId));
+      .where(eq(market.marketId, marketId));
 
-    await db.insert(priceData).values({
-      marketId: marketId.toString(),
-      noSidePrice: "0.5",
-      yesSidePrice: "0.5",
-      priceUpdatedOn: Math.floor(Date.now() / 1000),
-    });
+    // await db.insert(order).values({
+    //   orderPlacedFor: marketId.toString(),
+    //   noSidePrice: "0.5",
+    //   yesSidePrice: "0.5",
+    //   priceUpdatedOn: Math.floor(Date.now() / 1000),
+    // });
 
     console.log(`Market ${marketId} started`);
   },
@@ -48,9 +48,9 @@ const closeMarketWorker = new Worker(
     const marketId = job.data.id;
 
     await db
-      .update(marketTable)
+      .update(market)
       .set({ currentStatus: "SETTLED" })
-      .where(eq(marketTable.marketId, marketId));
+      .where(eq(market.marketId, marketId));
 
     console.log("Market closed", marketId);
   },
