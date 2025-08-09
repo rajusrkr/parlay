@@ -1,2 +1,0 @@
-ALTER TABLE "markets" ALTER COLUMN "market_start" SET DATA TYPE bigint USING EXTRACT(EPOCH FROM market_start)::bigint;--> statement-breakpoint
-ALTER TABLE "markets" ALTER COLUMN "market_ends" SET DATA TYPE bigint USING EXTRACT(EPOCH FROM market_ends)::bigint;

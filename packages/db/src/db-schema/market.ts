@@ -25,8 +25,11 @@ const market = pgTable("market", {
     marketEnds: bigint("market_ends", { mode: "number" }).notNull(),
 
     
-    // Outcome and prices
-    outcomeAndPrice: jsonb("outcome_&_price"), 
+    // Outcome and prices, will store latest prices
+    outcomesAndPrices: jsonb("outcome_&_price").notNull(), 
+
+    // Winner
+    winner: jsonb("winner"),
 
 
     // Timestamp

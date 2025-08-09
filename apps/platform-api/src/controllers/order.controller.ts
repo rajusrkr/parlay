@@ -1,11 +1,8 @@
 import { Request, Response } from "express";
 import { sendOrderToWsServer } from "../ws/send-order";
 import { v4 as uuidv4 } from "uuid";
-
-
-
 import {db} from "db/src/dbConnection"
-import { marketTable } from "db/src/schema"
+import { market } from "db/src/index"
 import { eq, and } from "drizzle-orm";
 
 // create a new map
@@ -23,11 +20,11 @@ const handleOrder = async (req: Request, res: any) => {
   try {
     const getMarketDetailsById = await db
       .select()
-      .from(marketTable)
+      .from(market)
       .where(
         and(
-          eq(marketTable.marketId, data.marketId),
-          eq(marketTable.currentStatus, "OPEN")
+          eq(market.marketId, data.marketId),
+          eq(market.currentStatus, "OPEN")
         )
       );
 

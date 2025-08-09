@@ -1,1 +1,0 @@
-ALTER TABLE "markets" ADD COLUMN "market_thumbnail_image_url" text;

@@ -1,1 +1,0 @@
-ALTER TABLE "markets" RENAME COLUMN "market_start" TO "market_starts";

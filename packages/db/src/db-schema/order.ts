@@ -14,12 +14,12 @@ const order = pgTable("order",{
     
     
     // Order details
-    orderTakenIn: varchar("order_taken_id", {length: 36}),
-    orderPlacedFor: varchar("order_plced_for", {length: 12}),
-    orderType: OrderType().notNull(),
+    orderTakenIn: varchar("order_taken_id", {length: 36}), // the market id
+    orderPlacedFor: varchar("order_plced_for", {length: 12}), // order outcome
+    orderType: OrderType().notNull(), // buy or sell
     orderQty: integer("order_qty").notNull(),
 
-    // New updated price
+    // New updated price, will be used as price data
     updatedPrices: jsonb("updated_prices"),
 
 
