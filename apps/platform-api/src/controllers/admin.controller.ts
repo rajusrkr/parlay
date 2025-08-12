@@ -1,5 +1,4 @@
 import { Request } from "express";
-import { RegisterSchema, LoginShema, MarketSchema } from "shared/dist/index";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
@@ -12,6 +11,7 @@ import {
   startMarketQueue,
 } from "../queueProducer/marketQueue";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { RegisterSchema, LoginShema, MarketSchema } from "types/src/index"
 
 // Admin account registration
 const adminRegister = async (req: Request, res: any) => {
@@ -22,11 +22,13 @@ const adminRegister = async (req: Request, res: any) => {
     return res.status(400).json(validateAdminInput.error);
   }
 
+  const { email, name, password } = validateAdminInput.data
+
   try {
     const isAdminExists = await db
       .select()
       .from(admin)
-      .where(eq(admin.email, data.email));
+      .where(eq(admin.email, email));
 
     if (isAdminExists.length !== 0) {
       return res
@@ -37,14 +39,14 @@ const adminRegister = async (req: Request, res: any) => {
         });
     }
 
-    const hashedPassword = bcrypt.hashSync(data.password, 10);
+    const hashedPassword = bcrypt.hashSync(password, 10);
 
     const createAdmin = await db
       .insert(admin)
       .values({
         adminId: uuidv4(),
-        name: data.name,
-        email: data.email,
+        name: name,
+        email: email,
         password: hashedPassword,
       })
       .returning();
@@ -82,6 +84,8 @@ const adminLogin = async (req: Request, res: any) => {
       .json({ success: false, message: "Invalid credentials" });
   }
 
+  const { email, password } = validateAdminInput.data
+
   try {
     const findAdmin = await db
       .select({
@@ -90,7 +94,7 @@ const adminLogin = async (req: Request, res: any) => {
         role: admin.role,
       })
       .from(admin)
-      .where(eq(admin.email, data.email));
+      .where(eq(admin.email, email));
 
     if (findAdmin.length === 0) {
       return res
@@ -102,7 +106,7 @@ const adminLogin = async (req: Request, res: any) => {
     const dbPassword = findAdmin[0].password;
 
     // compare password
-    const compare = bcrypt.compareSync(data.password, dbPassword!);
+    const compare = bcrypt.compareSync(password, dbPassword!);
 
     if (!compare) {
       return res
@@ -139,80 +143,76 @@ const createMarket = async (req: Request, res: any) => {
   // @ts-ignore
   const adminId = req.adminId;
 
-  const validateAdminInput = MarketSchema.safeParse(data);
+  const validateData = MarketSchema.safeParse(data);
+  console.log(validateData);
+  
 
-  if (!validateAdminInput.success) {
+  if (!validateData.success) {
     return res
       .status(400)
       .json({
         success: false,
         message: "Invalid data received from admin",
-        error: validateAdminInput.error,
+        error: validateData.error,
       });
   }
 
-  const { title, marketStarts, marketEnds, settlement, overview, marketCategory,thumbnailImageUrl } =
-    validateAdminInput.data;
+  const { title, marketStarts, marketEnds, settlement, overview, marketCategory, thumbnailImageUrl, outcomes } = validateData.data;
 
-  switch (data.marketType) {
-    case "BINARY":
-      try {
-        const [createBinaryMarket] = await db
-          .insert(market)
-          .values({
-            marketCreatedBy: adminId,
-            
-            marketId: uuidv4(),
+  try {
+    const [createBinaryMarket] = await db
+      .insert(market)
+      .values({
+        marketCreatedBy: adminId,
 
-            marketTitle: title,
-            marketOverview: overview,
-            marketSettlement: settlement,
-            marketCategory: marketCategory,
-            marketThumbnailImageUrl: thumbnailImageUrl,
+        marketId: uuidv4(),
 
-            marketStarts,
-            marketEnds,
-            
-            outcomesAndPrices: [
-              {outcome: "YES", price: 0, qty: 0},
-              {outcome: "NO", price: 0, qty: 0}
-            ]
-          })
-          .returning();
+        marketTitle: title,
+        marketOverview: overview,
+        marketSettlement: settlement,
+        marketCategory: marketCategory,
+        marketThumbnailImageUrl: thumbnailImageUrl,
+
+        marketStarts,
+        marketEnds,
+
+        outcomesAndPrices: outcomes
+      })
+      .returning();
+      console.log("hola");
+      console.log(createBinaryMarket.marketStarts);
+      
+      console.log(createBinaryMarket.marketStarts - (Math.floor(new Date().getTime() / 1000)))
+      
+      
+    // market start queue
+    await startMarketQueue.add(
+      "start_market",
+      { id: createBinaryMarket.marketId },
+      { delay: ((createBinaryMarket.marketStarts) - (Math.floor(new Date().getTime() / 1000))) * 1000 }
+    );
+
+    // market close queue
+    await closeMarketQueue.add(
+      "close_market",
+      { id: createBinaryMarket.marketId },
+      { delay: ((createBinaryMarket.marketEnds) - (Math.floor(new Date().getTime() / 1000))) * 1000 }
+    );
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Market created successfully" });
 
 
-        // market start queue
-        await startMarketQueue.add(
-          "start_market",
-          { id: createBinaryMarket.marketId },
-          { delay: createBinaryMarket.marketStarts - Date.now() }
-        );
-
-        // market close queue
-        await closeMarketQueue.add(
-          "close_market",
-          { id: createBinaryMarket.marketId },
-          { delay: createBinaryMarket.marketEnds - Date.now() }
-        );
-
-        return res
-          .status(200)
-          .json({ success: true, message: "Market created successfully" });
-      } catch (error) {
-        console.log(error);
-        return res
-          .status(500)
-          .json({ success: false, message: "Internal server error" });
-      }
-
-    default:
-      console.log("Unknowm market category received");
-      res
-        .status(400)
-        .json({ message: "Unknown market category received", success: false });
-      break;
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
-};
+
+
+}
 
 const deleteMarket = async (req: Request, res: any) => {
   const marketId = req.query.marketId;
@@ -251,83 +251,67 @@ const deleteMarket = async (req: Request, res: any) => {
   }
 };
 
-// const editMarketStatus = async (req: Request, res: any) => {
-//   const data = req.query.status;
-//   const marketId = req.query.marketId;
-//   // @ts-ignore
-//   const adminId = req.adminId;
+const editMarketStatus = async (req: Request, res: any) => {
+  const data = req.query.status;
+  const marketId = req.query.marketId;
+  // @ts-ignore
+  const adminId = req.adminId;
 
-//   const allowedInputs = [
-//     "NOT_STARTED",
-//     "OPEN",
-//     "SETTLED",
-//     "CANCELLED",
-//   ] as const;
+  const allowedInputs = [
+    "not_started",
+    "open",
+    "settled",
+    "cancelled",
+  ] as const;
 
-//   const status = allowedInputs.find(
-//     (s) => s === data!.toString().toUpperCase()
-//   );
+  const status = allowedInputs.find(
+    (s) => s === data!.toString()
+  );
 
-//   if (!status || typeof status === "undefined") {
-//     return res
-//       .status(400)
-//       .json({ success: false, message: "Invalid status code" });
-//   }
+  if (!status || typeof status === "undefined") {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid status code" });
+  }
 
-//   try {
-//     const updateMarket = await db
-//       .update(market)
-//       .set({
-//         currentStatus: status,
-//       })
-//       .where(
-//         and(
-//           eq(market.marketId, marketId!.toString()),
-//           eq(market.marketCreatedBy, adminId)
-//         )
-//       )
-//       .returning();
+  try {
+    const updateMarket = await db
+      .update(market)
+      .set({
+        currentStatus: status,
+      })
+      .where(
+        and(
+          eq(market.marketId, marketId!.toString()),
+          eq(market.marketCreatedBy, adminId)
+        )
+      )
+      .returning();
 
-//     if (updateMarket.length === 0) {
-//       return res
-//         .status(200)
-//         .json({ success: false, message: "Unable change the status" });
-//     }
+    if (updateMarket.length === 0) {
+      return res
+        .status(200)
+        .json({ success: false, message: "Unable change the status" });
+    }
 
-//     if (updateMarket[0].currentStatus === "OPEN") {
-//       await db.insert(order).values({
-//         marketId: marketId!.toString(),
-//         noSidePrice: "0.5",
-//         yesSidePrice: "0.5",
-//         priceUpdatedOn: Math.floor(Date.now() / 1000),
-//       });
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Update success",
+        current_status: updateMarket[0].currentStatus,
+      });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
 
-//       return res
-//         .status(200)
-//         .json({
-//           success: true,
-//           message: "Market status changed to OPEN and price data created",
-//         });
-//     }
 
-//     return res
-//       .status(200)
-//       .json({
-//         success: true,
-//         message: "Update success",
-//         current_status: updateMarket[0].currentStatus,
-//       });
-//   } catch (error) {
-//     console.log(error);
-//     return res
-//       .status(500)
-//       .json({ success: false, message: "Internal server error" });
-//   }
-// };
 
 // Upload thumbnail image
-
-
 const fileUpload = async (req: Request, res: any) => {
   const file = req.file;
 
