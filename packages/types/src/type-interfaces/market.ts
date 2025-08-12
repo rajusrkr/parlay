@@ -1,6 +1,12 @@
 import { any, z } from "zod";
 
-const MarketCategoryEnum = z.enum(["SPORTS", "POLITICS", "CRYPTO"])
+const MarketCategoryEnum = z.enum(["sports", "politics", "crypto", "regular"])
+
+const outcome = z.object({
+    outcome: z.string(),
+    price: z.string(),
+    qty: z.number()
+})
 
 export const MarketSchema = z.object({
     title: z.string().max(200),
@@ -10,6 +16,6 @@ export const MarketSchema = z.object({
     marketCategory: MarketCategoryEnum,
     marketStarts: z.number(),
     marketEnds: z.number(),
-    outcomes: any,
+    outcomes: z.array(outcome),
     thumbnailImageUrl: z.string()
 })
