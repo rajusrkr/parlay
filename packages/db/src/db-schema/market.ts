@@ -1,7 +1,7 @@
 import { bigint, jsonb, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const CurrentMarketStatus = pgEnum("current_status", ["not_started","open","settled","cancelled"]);
-export const MarketCategory = pgEnum("market_category", ["sports", "crypto", "politics"])
+export const MarketCategory = pgEnum("market_category", ["sports", "crypto", "politics", "regular"])
 
 export interface OutcomeAndPrice {
     outcome: string,
