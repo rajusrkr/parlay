@@ -10,7 +10,7 @@ const connection = new IORedis({
   maxRetriesPerRequest: null,
 });
 
-console.log("Hello there it is market queue");
+console.log("Market queue is started and listening on port 6379");
 
 const startMarketWorker = new Worker(
   "market_starter",
@@ -24,15 +24,8 @@ const startMarketWorker = new Worker(
 
     await db
       .update(market)
-      .set({ currentStatus: "OPEN" })
+      .set({ currentStatus: "open" })
       .where(eq(market.marketId, marketId));
-
-    // await db.insert(order).values({
-    //   orderPlacedFor: marketId.toString(),
-    //   noSidePrice: "0.5",
-    //   yesSidePrice: "0.5",
-    //   priceUpdatedOn: Math.floor(Date.now() / 1000),
-    // });
 
     console.log(`Market ${marketId} started`);
   },
@@ -41,7 +34,6 @@ const startMarketWorker = new Worker(
 
 const closeMarketWorker = new Worker(
   "market_closer",
-
   async (job) => {
     console.log("Closing market", job.id);
 
@@ -49,7 +41,7 @@ const closeMarketWorker = new Worker(
 
     await db
       .update(market)
-      .set({ currentStatus: "SETTLED" })
+      .set({ currentStatus: "settled" })
       .where(eq(market.marketId, marketId));
 
     console.log("Market closed", marketId);
