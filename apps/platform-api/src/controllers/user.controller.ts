@@ -1,5 +1,4 @@
 import { Request } from "express";
-import { RegisterSchema, LoginShema } from "shared/dist/index";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
@@ -7,20 +6,24 @@ import jwt from "jsonwebtoken";
 import { db } from "db/src/dbConnection";
 import { position, user } from "db/src/index";
 import { eq } from "drizzle-orm";
+import { LoginShema, RegisterSchema } from "types/src/index";
 
 const userRegister = async (req: Request, res: any) => {
   const data = req.body;
-  const validateUserInput = RegisterSchema.safeParse(data);
 
-  if (!validateUserInput.success) {
-    return res.status(400).json(validateUserInput.error);
+  const validateData = RegisterSchema.safeParse(data)
+
+  if (!validateData.success) {
+    return res.status(400).json({ success: false, message: validateData.error })
   }
+
+  const { email, name, password } = validateData.data;
 
   try {
     const isUserExists = await db
       .select()
       .from(user)
-      .where(eq(user.email, data.email));
+      .where(eq(user.email, email));
 
     if (isUserExists.length !== 0) {
       return res.status(400).json({
@@ -29,14 +32,14 @@ const userRegister = async (req: Request, res: any) => {
       });
     }
 
-    const hashedPassword = bcrypt.hashSync(data.password, 10);
+    const hashedPassword = bcrypt.hashSync(password, 10);
 
     const createUser = await db
       .insert(user)
       .values({
         userId: uuidv4(),
-        name: data.name,
-        email: data.email,
+        name: name,
+        email: email,
         password: hashedPassword,
       })
       .returning();
@@ -65,13 +68,16 @@ const userLogin = async (req: Request, res: any) => {
 
   console.log(data);
 
-  const validateUserData = LoginShema.safeParse(data);
+  const validateData = LoginShema.safeParse(data);
 
-  if (!validateUserData.success) {
+  if (!validateData.success) {
     return res
       .status(400)
-      .json({ success: false, message: "Data is not valid" });
+      .json({ success: false, message: validateData.error });
   }
+
+
+  const { email, password } = validateData.data
 
   try {
     const findUser = await db
@@ -81,7 +87,7 @@ const userLogin = async (req: Request, res: any) => {
         userId: user.userId,
       })
       .from(user)
-      .where(eq(user.email, data.email));
+      .where(eq(user.email, email));
 
     if (findUser.length === 0) {
       return res
@@ -93,7 +99,7 @@ const userLogin = async (req: Request, res: any) => {
     const dbPassword = findUser[0].password;
 
     // compare password
-    const compare = bcrypt.compareSync(data.password, dbPassword!);
+    const compare = bcrypt.compareSync(password, dbPassword!);
 
     if (!compare) {
       return res
