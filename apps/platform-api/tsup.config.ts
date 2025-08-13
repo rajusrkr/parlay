@@ -11,7 +11,8 @@ export default defineConfig({
     target: "node18",
     esbuildOptions(options){
         options.alias = {
-            db: "../../packages/db"
+            db: "../../packages/db",
+            types: "../../packages/types"
         }
     }
 })
