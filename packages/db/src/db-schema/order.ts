@@ -1,7 +1,7 @@
 import { bigint, integer, jsonb, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 import { user } from "./user";
 
-export const OrderType = pgEnum("order_type", ["BUY", "SELL"])
+export const OrderType = pgEnum("order_type", ["buy", "sell"])
 
 const order = pgTable("order",{
     // Order Identity
@@ -23,8 +23,9 @@ const order = pgTable("order",{
     updatedPrices: jsonb("updated_prices"),
 
 
-    // Timestamp, an successfull order can't be modified, so skiping updated_at
-    createdAt: bigint("created_at", {mode: "number"}),
+    // Timestamps
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").$onUpdate(() => new Date())
 })
 
 

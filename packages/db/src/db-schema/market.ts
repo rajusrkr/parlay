@@ -12,7 +12,7 @@ export interface OutcomeAndPrice {
 const market = pgTable("market", {
     // Market identity
     id: serial("id").primaryKey(),
-    marketId: varchar("market_id", {length: 36}).notNull(),
+    marketId: varchar("market_id", {length: 36}).notNull().unique(),
 
     // Market creater identity
     marketCreatedBy: varchar("market_created_by", {length: 36}),

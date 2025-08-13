@@ -3,7 +3,7 @@ import { jsonb, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core"
 const position = pgTable("position", {
     // Position identity
     id: serial("id").primaryKey(),
-    positionId: varchar("position_id", {length: 36}).notNull(),
+    positionId: varchar("position_id", {length: 36}).notNull().unique(),
 
 
     // User Identity
