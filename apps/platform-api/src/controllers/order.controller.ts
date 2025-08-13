@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { sendOrderToWsServer } from "../ws/send-order";
+import { sendOrderToWsServer } from "../ws/send-order-to-wsServer";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "db/src/dbConnection"
 import { market } from "db/src/index"
