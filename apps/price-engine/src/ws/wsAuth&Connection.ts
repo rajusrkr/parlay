@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken"
-import { WsPayload } from "shared/dist/index"
+import { WsPayload } from "types/src/index"
 import { ws } from "../ws-client"
-import { handleWsMessage } from "./handle-messages"
+import { handleWsEvents } from "./handle-ws-events"
 
 export function authAndConnectToWsServer(){
         // auth token with role
@@ -13,5 +13,5 @@ export function authAndConnectToWsServer(){
             console.log(`[Platform Api] connecting to ws-server`);
         })
 
-        handleWsMessage()
+        handleWsEvents()
 }
