@@ -5,14 +5,16 @@ interface Outcome {
 }
 
 interface Data {
-        // data for price calculation
-        oucomes?: Outcome[],
-        votedOutcomeIndex?: number,
-        qty?: number,
-        orderType?: string,
-
-        // message
-        message?: string
+    // data for price calculation
+    outcomes?: Outcome[],
+    votedOutcomeIndex?: number,
+    qty?: number,
+    orderType?: string,
+    tradeCost?: string,
+    returnToUser?: string,
+    
+    // message
+    message?: string
 }
 
 
