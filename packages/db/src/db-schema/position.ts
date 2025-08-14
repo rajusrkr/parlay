@@ -1,10 +1,11 @@
-import { jsonb, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, jsonb, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 import { user } from "./user";
 import { market } from "./market";
 
 interface TotalQtyAndAvgPrice {
-    qty: number,
+    totalQty: number,
     avgPrice: string
+    atTotalCost: string,
 }
 
 const position = pgTable("position", {
@@ -21,6 +22,7 @@ const position = pgTable("position", {
     positionTakenIn: varchar("position_taken_in", {length: 36}).references(() => market.marketId).notNull(),
     positionTakenFor: varchar("position_taken_for", {length: 12}).notNull(),
     totalQtyAndAvgPrice: jsonb("total_qty_&_avg_price").$type<TotalQtyAndAvgPrice>().notNull(),
+    isPositionSettled: boolean("is_position_settles").default(false),
 
 
     // Timestamp
