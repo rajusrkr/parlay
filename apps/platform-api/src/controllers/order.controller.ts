@@ -10,7 +10,7 @@ import { OutcomeAndPrice } from "db/src/db-schema/market";
 // create a new map
 export const pendingRequests = new Map<
   string,
-  { res: Response; userId: string; marketId: string; orderType: string; userOrderQty: number; outcomesAndPrices: OutcomeAndPrice[]; votedOutcomeIndex: number; wsResponse: any }
+  { res: Response; userId: string; marketId: string; orderType: string; userOrderQty: number; outcomesAndPrices: OutcomeAndPrice[]; votedOutcomeIndex: number; votedOutcome: string; wsResponse: any }
 >();
 
 const handleOrder = async (req: Request, res: any) => {
@@ -46,8 +46,11 @@ const handleOrder = async (req: Request, res: any) => {
     }
 
     const indexForVotedOutcome = marketDetails[0].outcome.findIndex((outcms) => outcms.outcome === votedOutcome)
+    if (indexForVotedOutcome < 0) {
+      return res.status(400).json({ success: false, message: "Voted outcome is not valid." })
+    }
     const requestId = uuidv4();
-    
+
     pendingRequests.set(requestId, {
       res,
       userId,
@@ -56,9 +59,10 @@ const handleOrder = async (req: Request, res: any) => {
       userOrderQty: qty,
       outcomesAndPrices: marketDetails[0].outcome,
       votedOutcomeIndex: indexForVotedOutcome,
+      votedOutcome,
       wsResponse: null,
     });
-    
+
     // Send order to ws server
     sendOrderToWsServer({
       eventType: "newOrder",

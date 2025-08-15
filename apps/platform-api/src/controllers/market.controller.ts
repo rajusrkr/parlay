@@ -19,7 +19,7 @@ const getAllMarket = async (req: Request, res: any) => {
         outcomesAndPrices: market.outcomesAndPrices,
       })
       .from(market)
-      .where(eq(market.currentStatus, "OPEN"));
+      .where(eq(market.currentStatus, "open"));
 
     if (markets.length === 0) {
       return res
