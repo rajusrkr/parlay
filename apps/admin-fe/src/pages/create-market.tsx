@@ -12,12 +12,15 @@ import {
   ModalHeader,
   Select,
   SelectItem,
+  Spinner,
   Textarea,
   useDisclosure,
 } from "@heroui/react";
 import { getLocalTimeZone, now } from "@internationalized/date";
 import { Loader, UploadCloud } from "lucide-react";
 import React, { useState } from "react";
+import { useNavigate } from "react-router";
+import { MarketSchema } from "types/src/index";
 
 export const ListboxWrapper = ({ children }: { children: React.ReactNode }) => (
   <div className="w-full max-w-xs border-small px-1 py-2 rounded-small border-default-200 dark:border-default-100">
@@ -26,27 +29,28 @@ export const ListboxWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 export const marketCategory = [
-  { key: "REGULAR", label: "Regular" },
-  { key: "CRYPTO", label: "Crypto" },
-  { key: "SPORTS", label: "Sports" },
-  { key: "POLITICS", label: "Politics" },
+  { key: "regular", label: "Regular" },
+  { key: "crypto", label: "Crypto" },
+  { key: "sports", label: "Sports" },
+  { key: "politics", label: "Politics" },
 ];
 
 export const marketType = [
-  { key: "BINARY", label: "Binary Outcomes" },
-  { key: "OTHER", label: "Other Outcomes" },
+  { key: "binary", label: "Binary Outcomes" },
+  { key: "other", label: "Other Outcomes" },
 ];
 
 interface Outcome {
   outcome: string;
-  price: number;
-  qty: number;
+  price: string;
+  tradedQty: number;
 }
 
 const CreateMarket = () => {
   const [selectedMarketType, setSelectedMarketType] = useState<
-    "BINARY" | "OTHER"
-  >("BINARY");
+    "binary" | "other"
+  >("binary");
+
   const [otherOutcomes, setOtherOutcomes] = useState<Outcome[]>([]);
   const [outcome, setOutcome] = useState<string>("");
   // const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -55,8 +59,22 @@ const CreateMarket = () => {
   const [marketOverview, setMarketOverview] = useState("");
   const [marketSettlement, setMarketSettlement] = useState("");
   const [selectedMarketCategory, setSelectedMarketCategory] = useState("");
-  const [endDateAndTime, setEndDateAndTime] = useState<number | null>(null);
-  const [startDateAndTime, setStartDateAndTime] = useState<number | null>(null);
+
+  // Time fields
+  const time = now(getLocalTimeZone());
+  const date = Math.floor(
+    new Date(
+      time.year,
+      time.month - 1,
+      time.day,
+      time.hour,
+      time.minute
+    ).getTime() / 1000
+  );
+  const [endDateAndTime, setEndDateAndTime] = useState<number>(date);
+  const [startDateAndTime, setStartDateAndTime] = useState<number>(date);
+  const [startDateError, setStartDateError] = useState("");
+  const [endDateError, setEndDateError] = useState("");
 
   const [fileUrl, setFileUrl] = useState<string>("");
   const [isFileUploading, setIsFileUploading] = useState<boolean>(false);
@@ -66,6 +84,16 @@ const CreateMarket = () => {
     useState<string>("");
   const [isFileUploadingSuccess, setIsFileUploadingSuccess] =
     useState<boolean>(false);
+
+  // Form submiting
+  const [isFormSubmiting, setIsFormSubmiting] = useState(false);
+  const [formSubmitingError, setFormSubmitingError] = useState("");
+
+  // Redirect
+  const router = useNavigate();
+
+  // URI
+  const BACKEND_URI = import.meta.env.VITE_PLATFORM_API_URI
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
@@ -80,12 +108,13 @@ const CreateMarket = () => {
     const allowedFileTypes = [
       "image/png",
       "image/jpeg",
+      "image/jpg",
       "image/webp",
       "image/gif",
     ];
 
     if (!allowedFileTypes.includes(file.type)) {
-      window.alert("Invalid file type");
+      window.alert(`Invalid file type, ${file.type} not allowed`);
       return;
     }
 
@@ -96,7 +125,7 @@ const CreateMarket = () => {
       setIsFileUploading(true);
 
       const sendReq = await fetch(
-        "http://localhost:8000/api/v0/admin/thumbnail-upload",
+        `${BACKEND_URI}/thumbnail-upload`,
         {
           method: "POST",
           body: formData,
@@ -124,31 +153,73 @@ const CreateMarket = () => {
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    console.log("hola");
-
     const binaryOutcomes: Outcome[] = [
-      { outcome: "YES", price: 0, qty: 0 },
-      { outcome: "NO", price: 0, qty: 0 },
+      { outcome: "yes", price: "0", tradedQty: 0 },
+      { outcome: "no", price: "0", tradedQty: 0 },
     ];
 
+    const marketData = {
+      title: marketTitle,
+      overview: marketOverview,
+      settlement: marketSettlement,
+      marketCategory: selectedMarketCategory,
+      thumbnailImageUrl: fileUrl,
+      marketStarts: startDateAndTime,
+      marketEnds: endDateAndTime,
+      outcomes:
+        selectedMarketType === "binary" ? binaryOutcomes : otherOutcomes,
+    };
+    // Compare dates
+    const currentDateAndTime = Math.floor(new Date().getTime() / 1000);
 
+    if (startDateAndTime < currentDateAndTime) {
+      setStartDateError("Start date and time should not be in past");
+      return;
+    }
 
+    if (
+      endDateAndTime < currentDateAndTime ||
+      endDateAndTime < startDateAndTime
+    ) {
+      setEndDateError(
+        "End date and time should not be in past or should greater than Start date and time"
+      );
+      return;
+    }
+
+    // return
+    const validateMarketData = MarketSchema.safeParse(marketData);
+
+    if (!validateMarketData.success) {
+      console.log(validateMarketData.error.message);
+      return;
+    }
 
     try {
-      const sendReq = await fetch( "http://localhost:8000/api/v0/admin/create-market", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({title: marketTitle, overview: marketOverview, settlement: marketSettlement, marketCategory: selectedMarketCategory,marketType: selectedMarketType, thumbnailImageUrl: fileUrl, marketStarts: startDateAndTime, marketEnds: endDateAndTime, binaryOutcomes})
-      })
+      setIsFormSubmiting(true);
+      const sendReq = await fetch(
+        `${BACKEND_URI}/create-market`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(marketData),
+        }
+      );
 
-      const res = await sendReq.json()
-      console.log(res);
-      
+      const res = await sendReq.json();
+      if (res.success) {
+        setIsFormSubmiting(false);
+        router("/");
+      } else {
+        setIsFormSubmiting(false);
+        setFormSubmitingError(res.message);
+      }
     } catch (error) {
       console.log(error);
+      setIsFormSubmiting(false);
     }
   };
 
@@ -219,7 +290,7 @@ const CreateMarket = () => {
             <div>
               <label htmlFor="Start date">
                 <span className="text-sm font-semibold text-gray-500">
-                  Select Start Date & Time
+                  {"Select Start Date & Time ( MM/DD/YYYY, HH:MM )"}
                 </span>
               </label>
             </div>
@@ -234,6 +305,7 @@ const CreateMarket = () => {
                   variant="bordered"
                   isRequired
                   onChange={(e) => {
+                    setStartDateError("");
                     const date = new Date(
                       e!.year,
                       e!.month - 1,
@@ -247,6 +319,12 @@ const CreateMarket = () => {
                     setStartDateAndTime(unixTimestamp);
                   }}
                 />
+
+                <div>
+                  {startDateError.length > 0 && (
+                    <p className="text-red-500 text-sm">{startDateError}</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -255,7 +333,7 @@ const CreateMarket = () => {
             <div>
               <label htmlFor="End date">
                 <span className="text-sm font-semibold text-gray-500">
-                  Select End Date & Time
+                  {"Select End Date & Time ( MM/DD/YYYY, HH:MM )"}
                 </span>
               </label>
             </div>
@@ -270,6 +348,7 @@ const CreateMarket = () => {
                   variant="bordered"
                   isRequired
                   onChange={(e) => {
+                    setEndDateError("");
                     const date = new Date(
                       e!.year,
                       e!.month - 1,
@@ -283,6 +362,11 @@ const CreateMarket = () => {
                     setEndDateAndTime(unixTimestamp);
                   }}
                 />
+                <div>
+                  {endDateError.length > 0 && (
+                    <p className="text-red-500 text-sm">{endDateError}</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -387,10 +471,10 @@ const CreateMarket = () => {
               placeholder="Select market type"
               selectionMode="single"
               variant="bordered"
-              defaultSelectedKeys={["BINARY"]}
+              defaultSelectedKeys={["binary"]}
               isRequired
               onChange={(e) => {
-                setSelectedMarketType(e.target.value as "BINARY" | "OTHER");
+                setSelectedMarketType(e.target.value as "binary" | "other");
               }}
             >
               {marketType.map((mrktType) => (
@@ -409,7 +493,7 @@ const CreateMarket = () => {
               </label>
             </div>
 
-            {selectedMarketType === "BINARY" ? (
+            {selectedMarketType === "binary" ? (
               <>
                 <ListboxWrapper>
                   <Listbox
@@ -442,7 +526,10 @@ const CreateMarket = () => {
                       ) : (
                         <>
                           {otherOutcomes.map((mltoutcms, i) => (
-                            <ListboxItem key={i} className="hover:cursor-text">
+                            <ListboxItem
+                              key={i}
+                              className="hover:cursor-text capitalize"
+                            >
                               {`${i + 1}. ${mltoutcms.outcome}`}
                             </ListboxItem>
                           ))}
@@ -471,14 +558,16 @@ const CreateMarket = () => {
                             {otherOutcomes.map((mltoutcms, i) => (
                               <div key={i}>
                                 <p
-                                // onClick={() => {
-                                //   setOutcome(
-                                //     otherOutcomes.filter(
-                                //       (_, idx) => idx === i
-                                //     )[0].outcome
-                                //   );
-                                //   setEditIndex(i);
-                                // }}
+                                  // onClick={() => {
+                                  //   setOutcome(
+                                  //     otherOutcomes.filter(
+                                  //       (_, idx) => idx === i
+                                  //     )[0].outcome
+                                  //   );
+                                  //   setEditIndex(i);
+                                  // }}
+
+                                  className="capitalize"
                                 >{`${i + 1}. ${mltoutcms.outcome}`}</p>
                               </div>
                             ))}
@@ -504,7 +593,11 @@ const CreateMarket = () => {
                                 }
                                 setOtherOutcomes((prev) => [
                                   ...prev,
-                                  { outcome: outcome, price: 0, qty: 0 },
+                                  {
+                                    outcome: outcome.toLowerCase(),
+                                    price: "0",
+                                    tradedQty: 0,
+                                  },
                                 ]);
                                 setOutcome("");
                               }}
@@ -522,9 +615,19 @@ const CreateMarket = () => {
           </div>
           {/* FORM SUBMISSION BUTTON */}
           <div className="mt-4 max-w-xs">
-            <Button type="submit" className="w-full" color="primary">
-              Submit
+            <Button
+              type="submit"
+              className="w-full"
+              color="primary"
+              disabled={isFormSubmiting}
+            >
+              {isFormSubmiting ? <Spinner /> : "Submit"}
             </Button>
+          </div>
+          <div>
+            {formSubmitingError.length > 0 && (
+              <p className="text-red-500 text-sm">{formSubmitingError}</p>
+            )}
           </div>
         </div>
       </form>
