@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "dev": "node dist/index.js"
   },
   "keywords": [],
@@ -16,6 +16,7 @@
   "devDependencies": {
     "@types/dotenv": "^8.2.3",
     "@types/ws": "^8.18.1",
-    "dotenv": "^16.5.0"
+    "dotenv": "^16.5.0",
+    "tsup": "^8.5.0"
   }
 }

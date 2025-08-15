@@ -1,4 +1,4 @@
-import { wsPort, WsPayload, FinalPriceUpdate } from "shared/dist/index";
+import { wsPort, WsPayload, FinalPriceUpdate } from "shared/src/index";
 import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
@@ -64,7 +64,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
   ws.on("message", (msg) => {
     try {
       const parsedMessage = JSON.parse(msg.toString());
-      console.log(parsedMessage);
+      // console.log(parsedMessage);
 
       const { eventType, data, requestId, marketId } = parsedMessage;
       const {
@@ -117,21 +117,12 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
 
         // handle new order
         case "newOrder":
-          console.log("New order received from:", ws.clientRole);
-
-          // data to send price engine
-          const orderMessage: WsPayload = {
-            eventType: "newOrder",
-            requestId,
-            data,
-          };
-
           for (const [client, clientRole] of connectedClients.entries()) {
             if (
               clientRole === "priceEngine" &&
               client.readyState === WebSocket.OPEN
             ) {
-              client.send(JSON.stringify(orderMessage));
+              client.send(JSON.stringify(parsedMessage));
             }
           }
           break;
@@ -139,23 +130,12 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
         // Handle price update from price engine
         case "priceUpdate":
           console.log("Price update received from Price Engine");
-
-          const priceMessage: WsPayload = {
-            eventType: "priceUpdate",
-            requestId,
-            data: {
-              costToUser,
-              returnToUser,
-              noPriceAfterOrder,
-              yesPriceAftereOrder,
-            },
-          };
           for (const [client, clientRole] of connectedClients.entries()) {
             if (
               clientRole === "platformApi" &&
               client.readyState === WebSocket.OPEN
             ) {
-              client.send(JSON.stringify(priceMessage));
+              client.send(JSON.stringify(parsedMessage));
             }
           }
           break;
