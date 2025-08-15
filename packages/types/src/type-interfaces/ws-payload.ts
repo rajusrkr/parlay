@@ -1,7 +1,7 @@
 interface Outcome {
     outcome: string,
     price: string,
-    qty: number
+    tradedQty: number
 }
 
 interface Data {
@@ -12,6 +12,9 @@ interface Data {
     orderType?: string,
     tradeCost?: string,
     returnToUser?: string,
+
+    // auth
+    authToken?: string,
     
     // message
     message?: string
@@ -20,7 +23,7 @@ interface Data {
 
 interface WsPayload {
     eventType: string,
-    requestId: string,
+    requestId?: string,
 
     data: Data
 }
