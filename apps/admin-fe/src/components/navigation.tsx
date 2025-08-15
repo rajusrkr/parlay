@@ -14,13 +14,13 @@ export default function Navigation() {
       </div>
 
       <div className="flex items-center gap-2 text-xl">
-        <div>
+        {/* <div>
           <Link to={"/market/create"}>
             <Chip size="lg" radius="md" variant="flat" color="primary">
               Create Market
             </Chip>
           </Link>
-        </div>
+        </div> */}
         <div>
           <Link to={"/auth/login"}>
             <Chip size="lg" radius="md" color="primary">

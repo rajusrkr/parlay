@@ -224,7 +224,7 @@ const CreateMarket = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="py-4 px-10">
       <form
         className="flex max-w-6xl mx-auto gap-4"
         onSubmit={handleFormSubmit}
