@@ -1,0 +1,1 @@
+ALTER TABLE "order" ADD COLUMN "average_traded_price" numeric(12, 2);

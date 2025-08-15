@@ -1,4 +1,4 @@
-import { bigint, integer, jsonb, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import { bigint, decimal, integer, jsonb, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 import { user } from "./user";
 import { market } from "./market";
 
@@ -19,6 +19,7 @@ const order = pgTable("order", {
     orderPlacedFor: varchar("order_plced_for", { length: 12 }), // order outcome
     orderType: OrderType().notNull(), // buy or sell
     orderQty: integer("order_qty").notNull(),
+    averageTradedPrice: decimal("average_traded_price", {precision: 12, scale: 2}),
 
     // New updated price, will be used as price data
     updatedPrices: jsonb("updated_prices").notNull(),

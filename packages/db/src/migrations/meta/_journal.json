@@ -71,6 +71,13 @@
       "when": 1755168877565,
       "tag": "0009_oval_hex",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1755237872078,
+      "tag": "0010_curvy_prism",
+      "breakpoints": true
     }
   ]
 }

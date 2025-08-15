@@ -1,4 +1,4 @@
-import { boolean, integer, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, decimal, integer, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const AccountRole = pgEnum("account_role", ["USER", "ADMIN"])
 export const CurrencyCode = pgEnum("currency_code", ["INR", "USD"])
@@ -17,7 +17,7 @@ const user = pgTable("user", {
 
 
     // Wallet & Balance
-    walletBalance: integer("wallet_balance").default(50000),
+    walletBalance: decimal("wallet_balance", {precision: 12, scale: 2}).default("50000.00"),
     currencyCode: CurrencyCode().default("USD"),
 
     
