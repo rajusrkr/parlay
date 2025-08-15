@@ -13,6 +13,8 @@ export function handleWsEvents(): Promise<any> {
       const { eventType, requestId, data } = parsedMessage
       // Extract fields from data
       const { votedOutcomeIndex, orderType, qty, outcomes } = data;
+      console.log(data);
+      
 
       // Switch case implementation for different events
       switch (eventType) {
@@ -24,6 +26,8 @@ export function handleWsEvents(): Promise<any> {
         // New order event
         case "newOrder":
           // Liquidity parameter
+          console.log(parsedMessage.data.outcomes);
+          
           const b = 1000;
 
           // Get the calculated price
@@ -31,6 +35,8 @@ export function handleWsEvents(): Promise<any> {
           // Send the update object
           if (orderType === "buy") {
             const { calculatedOutcome, tradeCost } = buySellShare({ b, orderType, outcomeIndex: votedOutcomeIndex, outcomes, qty })
+            console.log(tradeCost);
+            
 
             const update: WsPayload = {
               eventType: "priceUpdate",
@@ -39,6 +45,8 @@ export function handleWsEvents(): Promise<any> {
                 tradeCost,
                 outcomes: calculatedOutcome,
                 votedOutcomeIndex,
+                orderType,
+                qty
               }
             }
             ws.send(JSON.stringify(update))
@@ -54,6 +62,8 @@ export function handleWsEvents(): Promise<any> {
                 returnToUser,
                 outcomes: calculatedOutcome,
                 votedOutcomeIndex,
+                orderType,
+                qty
               }
             }
 
