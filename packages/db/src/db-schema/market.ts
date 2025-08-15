@@ -7,7 +7,7 @@ export const MarketCategory = pgEnum("market_category", ["sports", "crypto", "po
 export interface OutcomeAndPrice {
     outcome: string,
     price: string,
-    qty: number
+    tradedQty: number
 }
 
 const market = pgTable("market", {

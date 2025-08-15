@@ -9,7 +9,7 @@ interface OutcomeAndPrice {
 
 const price = pgTable("price", {
     id: serial("id").primaryKey(),
-    marketId: varchar("market_id", { length: 36 }).references(() => market.marketId, {onDelete: "cascade"}).notNull(),
+    marketId: varchar("market_id", { length: 36 }).references(() => market.marketId, { onDelete: "cascade" }).notNull(),
     outcomesAndPrices: jsonb("outcomes_and_prices").$type<OutcomeAndPrice[]>().notNull(),
 
     createdAt: bigint("created_at", { mode: "number" })
