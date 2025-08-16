@@ -1,7 +1,5 @@
-export default function Cancelled(){
-    return(
-        <div className="px-10">
-            cancelled
-        </div>
-    )
+import MarketCards from "../components/market-cards";
+
+export default function Cancelled() {
+  return <MarketCards marketStatus="cancelled"/>;
 }

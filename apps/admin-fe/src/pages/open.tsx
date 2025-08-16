@@ -1,5 +1,5 @@
-export default function Open(){
-    return(
-        <div className="px-10">open</div>
-    )
+import MarketCards from "../components/market-cards";
+
+export default function Open() {
+  return <MarketCards marketStatus="open" />;
 }

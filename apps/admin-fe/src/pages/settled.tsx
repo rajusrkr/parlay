@@ -1,7 +1,5 @@
-export default function Settled(){
-    return(
-        <div className="px-10">
-            settled
-        </div>
-    )
+import MarketCards from "../components/market-cards";
+
+export default function Settled() {
+  return <MarketCards marketStatus="settled" />;
 }
