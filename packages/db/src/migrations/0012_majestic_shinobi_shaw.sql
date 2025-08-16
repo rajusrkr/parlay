@@ -1,0 +1,1 @@
+ALTER TABLE "market" RENAME COLUMN "outcome_&_price" TO "outcome_and_price";

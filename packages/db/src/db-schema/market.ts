@@ -23,8 +23,8 @@ const market = pgTable("market", {
     marketTitle: varchar("market_title", { length: 255 }).notNull(),
     marketOverview: text("market_overview"),
     marketSettlement: text("market_settlement"),
-    currentStatus: CurrentMarketStatus().default("not_started"),
-    marketCategory: MarketCategory(),
+    currentStatus: CurrentMarketStatus("current_status").default("not_started"),
+    marketCategory: MarketCategory("market_category"),
     marketThumbnailImageUrl: text("market_thumbnail_image_url"),
 
     // Timing
@@ -33,7 +33,7 @@ const market = pgTable("market", {
 
 
     // Outcome and prices, will store latest prices
-    outcomesAndPrices: jsonb("outcome_&_price").$type<OutcomeAndPrice[]>().notNull(),
+    outcomesAndPrices: jsonb("outcome_and_price").$type<OutcomeAndPrice[]>().notNull(),
 
     // Winner
     winner: jsonb("winner"),
