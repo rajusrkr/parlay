@@ -10,8 +10,13 @@ import {
   Spinner,
 } from "@heroui/react";
 import { Link } from "react-router";
+import { ChevronRightCircle } from "lucide-react";
 
-export default function MarketCards({marketStatus} : {marketStatus: string}) {
+export default function MarketCards({
+  marketStatus,
+}: {
+  marketStatus: string;
+}) {
   const { fetchMarkets, markets, isLoading } = useMarketStore();
 
   useEffect(() => {
@@ -47,43 +52,62 @@ export default function MarketCards({marketStatus} : {marketStatus: string}) {
           <>
             {markets
               .filter((mrkt) => mrkt.currentStatus === marketStatus)
-              .map((opnMrkt, i) => (
+              .map((filteredMrkts, i) => (
                 <Card className="mt-4" key={i}>
                   {/* Card header */}
                   <CardHeader>
                     <div className="flex items-center gap-2">
                       <Image
-                        src={opnMrkt.thumbnailImage}
-                        height={30}
-                        width={30}
+                        src={filteredMrkts.thumbnailImage}
+                        height={50}
+                        width={50}
                         alt="Market Thumnail Image"
+                        className="w-50 h-50 object-cover rounded-full"
                       />
-                      <p className="text-2xl">{opnMrkt.marketTitle}</p>
+                      <p className="text-2xl capitalize">
+                        {filteredMrkts.marketTitle}
+                      </p>
+                      <Chip color="secondary" size="sm" variant="flat">
+                        <span className="capitalize font-semibold">
+                          {filteredMrkts.marketCategory}
+                        </span>
+                      </Chip>
                     </div>
                   </CardHeader>
                   {/* Card body */}
-                  <CardBody className="h-20">
+                  <CardBody className="h-24">
                     <div>
-                      <h3>Outcomes ({opnMrkt.outcomesAndPrices.length}):</h3>
-                      {opnMrkt.outcomesAndPrices.map((outcmsPrices, i) => (
-                        <p
-                          key={i}
-                          className="capitalize"
-                        >{`${i + 1}. ${outcmsPrices.outcome}`}</p>
-                      ))}
+                      <h3>
+                        Outcomes ({filteredMrkts.outcomesAndPrices.length}):
+                      </h3>
+                      {filteredMrkts.outcomesAndPrices.map(
+                        (outcmsPrices, i) => (
+                          <p
+                            key={i}
+                            className="capitalize"
+                          >{`${i + 1}. ${outcmsPrices.outcome}`}</p>
+                        )
+                      )}
                     </div>
                   </CardBody>
 
                   {/* Card footer */}
-                  <CardFooter>
+                  <CardFooter className="flex justify-between">
                     <div>
-                      <Chip size="sm">
-                        Closing:
-                        {` ${new Date(opnMrkt.marketEnds * 1000).toLocaleString()}`}
+                      <Chip size="sm" color="warning" variant="flat">
+                        <span className="font-semibold">
+                          Closing:
+                          {` ${new Date(filteredMrkts.marketEnds * 1000).toLocaleString()}`}
+                        </span>
                       </Chip>
                     </div>
                     <div>
-                      <Link to={"/"}>Details</Link>
+                      <Link
+                        to={"/"}
+                        className="underline text-primary flex items-center gap-0.5"
+                      >
+                        Details <ChevronRightCircle size={"18"} />
+                      </Link>
                     </div>
                   </CardFooter>
                 </Card>
@@ -94,15 +118,3 @@ export default function MarketCards({marketStatus} : {marketStatus: string}) {
     </div>
   );
 }
-
-/**
- *
- * array.length > 0 show card
- * array.length === 0 show loader, after loading finishes, if have items show it else show nothing to show
- *
- *
- *
- *
- * nothing
- * loading
- */
