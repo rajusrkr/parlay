@@ -8,17 +8,17 @@ interface OutcomeAndPrice {
 }
 
 interface MarketData {
-    market_id: string,
-    market_title: string,
-    market_overview: string,
-    market_settlement: string,
-    current_status: string,
-    market_category: string,
-    market_thumbnail_image_url: string,
-    market_starts: number,
-    market_ends: number,
-    winner: string,
-    outcome_and_price: OutcomeAndPrice[]
+    marketId: string,
+    marketTitle: string,
+    marketOverview: string,
+    marketSettlement: string,
+    currentStatus: string,
+    marketCategory: string,
+    thumbnailImage: string,
+    marketStarts: number,
+    marketEnds: number,
+    winnerSide: string,
+    outcomesAndPrices: OutcomeAndPrice[]
 }
 
 
