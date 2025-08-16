@@ -1,4 +1,5 @@
 import { Chip } from "@heroui/react";
+import { LogIn } from "lucide-react";
 import { Link } from "react-router";
 
 export default function Navigation() {
@@ -14,17 +15,12 @@ export default function Navigation() {
       </div>
 
       <div className="flex items-center gap-2 text-xl">
-        {/* <div>
-          <Link to={"/market/create"}>
-            <Chip size="lg" radius="md" variant="flat" color="primary">
-              Create Market
-            </Chip>
-          </Link>
-        </div> */}
         <div>
           <Link to={"/auth/login"}>
             <Chip size="lg" radius="md" color="primary">
-              Login
+              <span className="font-semibold flex items-center gap-0.5">
+                Login <LogIn size={"18"} />
+              </span>
             </Chip>
           </Link>
         </div>

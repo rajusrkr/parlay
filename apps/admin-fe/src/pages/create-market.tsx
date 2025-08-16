@@ -125,7 +125,7 @@ const CreateMarket = () => {
       setIsFileUploading(true);
 
       const sendReq = await fetch(
-        `${BACKEND_URI}/thumbnail-upload`,
+        `${BACKEND_URI}/admin/thumbnail-upload`,
         {
           method: "POST",
           body: formData,
@@ -198,7 +198,7 @@ const CreateMarket = () => {
     try {
       setIsFormSubmiting(true);
       const sendReq = await fetch(
-        `${BACKEND_URI}/create-market`,
+        `${BACKEND_URI}/admin/create-market`,
         {
           method: "POST",
           headers: {
