@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import IORedis from "ioredis";
 import { db } from "db/src/dbConnection";
-import { market, order } from "db/src/index";
+import { market } from "db/src/index";
 import { eq } from "drizzle-orm";
 
 const connection = new IORedis({

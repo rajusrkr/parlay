@@ -2,7 +2,6 @@ import { Request } from "express";
 
 import { db } from "db/src/dbConnection";
 import { market } from "db/src/index";
-import { eq } from "drizzle-orm";
 
 const getAllMarket = async (req: Request, res: any) => {
   try {
@@ -11,15 +10,17 @@ const getAllMarket = async (req: Request, res: any) => {
       .select({
         marketId: market.marketId,
         marketTitle: market.marketTitle,
+        marketOverview: market.marketOverview,
+        marketSettlement: market.marketSettlement,
         thumbnailImage: market.marketThumbnailImageUrl,
         marketStarts: market.marketStarts,
         marketEnds: market.marketEnds,
         currentStatus: market.currentStatus,
+        marketCategory: market.marketCategory,
         winnerSide: market.winner,
         outcomesAndPrices: market.outcomesAndPrices,
       })
       .from(market)
-      .where(eq(market.currentStatus, "open"));
 
     if (markets.length === 0) {
       return res

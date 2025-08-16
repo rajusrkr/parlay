@@ -15,7 +15,7 @@ interface Data {
 
     // auth
     authToken?: string,
-    
+
     // message
     message?: string
 }
@@ -28,4 +28,4 @@ interface WsPayload {
     data: Data
 }
 
-export {WsPayload}
+export type { WsPayload }
