@@ -75,7 +75,7 @@ export default function MarketCards({
                     </div>
                   </CardHeader>
                   {/* Card body */}
-                  <CardBody className="h-24">
+                  <CardBody className="h-24 overflow-y-auto scrollbar-hide">
                     <div>
                       <h3>
                         Outcomes ({filteredMrkts.outcomesAndPrices.length}):
@@ -103,7 +103,7 @@ export default function MarketCards({
                     </div>
                     <div>
                       <Link
-                        to={"/"}
+                        to={`/market/${filteredMrkts.marketId}`}
                         className="underline text-primary flex items-center gap-0.5"
                       >
                         Details <ChevronRightCircle size={"18"} />
