@@ -1,6 +1,6 @@
 type Outcome = {
     outcome: string;
-    price: string;
+    price: number;
     tradedQty: number
 }
 
@@ -9,7 +9,7 @@ type Outcome = {
 
 
 // LMSR cost function
-function lmsrCostFunc({ q, b }: { q: number[], b: number }): string {
+function lmsrCostFunc({ q, b }: { q: number[], b: number }): number {
 
     // This is for terminating the number overflow
     const maxQ = Math.max(...q.map((qty) => qty / b)); // [5,-3,2,3]
@@ -17,29 +17,29 @@ function lmsrCostFunc({ q, b }: { q: number[], b: number }): string {
     // e^qi/b - maxQ 
     const sumExp = q.map((qty) => Math.exp(qty / b - maxQ)).reduce((acc, val) => acc + val, 0);
 
-    const cost = parseFloat((b * (maxQ + Math.log(sumExp))).toString()).toFixed(2)
+    const cost =b * (maxQ + Math.log(sumExp))
 
     return cost;
 }
 
 
 // Price calculation function
-function lmsrPriceFunc({ q, b }: { q: number[], b: number }): string[] {
+function lmsrPriceFunc({ q, b }: { q: number[], b: number }): number[] {
 
     // Get the maxq
     const maxQ = Math.max(...q.map((qty) => qty / b));
 
     const expVals = q.map((qty) => Math.exp(qty / b - maxQ))
 
-    const sumExp = parseFloat((expVals.reduce((acc, val) => acc + val, 0)).toString()).toFixed(2)
+    const sumExp = expVals.reduce((acc, val) => acc + val, 0)
 
-    const prices = expVals.map((val) => parseFloat((val / Number(sumExp)).toString()).toFixed(2))
+    const prices = expVals.map((val) => (val / Number(sumExp)))
 
     return prices
 }
 
 
-function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes: Outcome[], b: number, outcomeIndex: number, qty: number, orderType: string }): { calculatedOutcome: Outcome[], tradeCost?: string, returnToUser?: string } {
+function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes: Outcome[], b: number, outcomeIndex: number, qty: number, orderType: string }): { calculatedOutcome: Outcome[], tradeCost?: number, returnToUser?: number } {
 
     // Get the qty array
     const providedQty = outcomes.map((otcms) => otcms.tradedQty);
@@ -55,7 +55,7 @@ function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes:
 
             const costAfter = lmsrCostFunc({ q: addedQty, b });
 
-            const tradeCost = parseFloat((Number(costAfter) - Number(costBefore)).toString()).toFixed(2);
+            const tradeCost = (Number(costAfter) - Number(costBefore))
             const newPrices = lmsrPriceFunc({ q: addedQty, b })
 
             const updatedOutcomes: Outcome[] = outcomes.map((otcms, i) => ({
@@ -73,7 +73,7 @@ function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes:
             substractedQty[outcomeIndex] -= qty;
 
             const costAfterSubstraction = lmsrCostFunc({ q: substractedQty, b });
-            const returnToUser = parseFloat((Number(costBefore) - Number(costAfterSubstraction)).toString()).toFixed(2);
+            const returnToUser = (Number(costBefore) - Number(costAfterSubstraction));
             const newPricesAfterSubstraction = lmsrPriceFunc({ q: substractedQty, b })
 
             const newOutcomesAfterSubstraction: Outcome[] = outcomes.map((otcms, i) => ({

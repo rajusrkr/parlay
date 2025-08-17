@@ -37,6 +37,11 @@ export function handleWsEvents(): Promise<any> {
             const { calculatedOutcome, tradeCost } = buySellShare({ b, orderType, outcomeIndex: votedOutcomeIndex, outcomes, qty })
             console.log(tradeCost);
             
+            console.log("calculations");
+            console.log(calculatedOutcome);
+            console.log(tradeCost);
+            
+            
 
             const update: WsPayload = {
               eventType: "priceUpdate",
@@ -55,6 +60,8 @@ export function handleWsEvents(): Promise<any> {
           } else if (orderType === "sell") {
             const { calculatedOutcome, returnToUser } = buySellShare({ b, orderType, outcomeIndex: votedOutcomeIndex, outcomes, qty })
 
+
+            
             const update: WsPayload = {
               eventType: "priceUpdate",
               requestId,

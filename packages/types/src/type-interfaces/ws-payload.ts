@@ -1,6 +1,6 @@
 interface Outcome {
     outcome: string,
-    price: string,
+    price: number,
     tradedQty: number
 }
 
@@ -10,8 +10,8 @@ interface Data {
     votedOutcomeIndex?: number,
     qty?: number,
     orderType?: string,
-    tradeCost?: string,
-    returnToUser?: string,
+    tradeCost?: number,
+    returnToUser?: number,
 
     // auth
     authToken?: string,
