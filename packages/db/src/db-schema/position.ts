@@ -19,7 +19,7 @@ const position = pgTable("position", {
 
 
     // Position details
-    positionTakenIn: varchar("position_taken_in", { length: 36 }).references(() => market.marketId).notNull(),
+    positionTakenIn: varchar("position_taken_in", { length: 36 }).references(() => market.marketId,{onDelete: "cascade"}).notNull(),
     positionTakenFor: varchar("position_taken_for", { length: 12 }).notNull(),
     totalQtyAndAvgPrice: jsonb("total_qty_&_avg_price").$type<TotalQtyAndAvgPrice>().notNull(),
     isPositionSettled: boolean("is_position_settles").default(false),

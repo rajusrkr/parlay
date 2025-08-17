@@ -7,7 +7,7 @@ const pl = pgTable("pl", {
 
     // Market details and User details
     marketId: varchar("market_id", { length: 36 }).references(() => market.marketId).notNull(),
-    userId: varchar("user_id", { length: 36 }).references(() => user.userId).notNull(),
+    userId: varchar("user_id", { length: 36 }).references(() => user.userId, {onDelete: "cascade"}).notNull(),
 
     // PL details
     plOutcome: text("pl_outcome").notNull(),
