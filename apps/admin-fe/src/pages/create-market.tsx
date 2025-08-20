@@ -163,6 +163,7 @@ const CreateMarket = () => {
       overview: marketOverview,
       settlement: marketSettlement,
       marketCategory: selectedMarketCategory,
+      marketType: selectedMarketType,
       thumbnailImageUrl: fileUrl,
       marketStarts: startDateAndTime,
       marketEnds: endDateAndTime,
@@ -195,6 +196,8 @@ const CreateMarket = () => {
       return;
     }
 
+    const validatedData = validateMarketData.data
+
     try {
       setIsFormSubmiting(true);
       const sendReq = await fetch(
@@ -205,7 +208,7 @@ const CreateMarket = () => {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify(marketData),
+          body: JSON.stringify(validatedData),
         }
       );
 
@@ -457,6 +460,8 @@ const CreateMarket = () => {
             </Select>
           </div>
 
+          {/* Outcome select section */}
+
           <div className="max-w-xs">
             <div>
               <label htmlFor="Market type">
@@ -614,6 +619,11 @@ const CreateMarket = () => {
             )}
           </div>
           {/* FORM SUBMISSION BUTTON */}
+            <div>
+              {formSubmitingError.length > 0 && (
+                <p className="text-red-500 text-lg"> Error: {formSubmitingError}</p>
+              )}
+            </div>
           <div className="mt-4 max-w-xs">
             <Button
               type="submit"
@@ -623,11 +633,6 @@ const CreateMarket = () => {
             >
               {isFormSubmiting ? <Spinner /> : "Submit"}
             </Button>
-          </div>
-          <div>
-            {formSubmitingError.length > 0 && (
-              <p className="text-red-500 text-sm">{formSubmitingError}</p>
-            )}
           </div>
         </div>
       </form>
