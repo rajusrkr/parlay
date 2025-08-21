@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { MarketData } from "types/src/index"
+import { BACKEND_URI } from "../constants";
 
 
 
@@ -17,16 +18,14 @@ interface Market {
 
     // API calls
     fetchMarkets: () => Promise<void>
-    editMarket: () => Promise<void>
+    editMarket: ({ id, value }: { id: string, value: any }) => Promise<void>
 }
 
-const BACKEND_URI = import.meta.env.VITE_PLATFORM_API_URI;
 
 
 const useMarketStore = create(persist<Market>((set) => ({
     isError: false,
     erroeMessage: null,
-
     isLoading: false,
 
     markets: [],
@@ -50,14 +49,13 @@ const useMarketStore = create(persist<Market>((set) => ({
         }
     },
 
-    editMarket: async () => {
+    editMarket: async ({ id, value }) => {
         try {
             set((prev) => ({
-                ...prev,
-                markets: prev.markets.map((market) => market.marketId === "dfjdgy" ? { ...market, } : market)
+                markets: prev.markets.map((market) => market.marketId === id ? { ...market, ...value } : market)
             }))
         } catch (error) {
-
+            console.log(error);
         }
     }
 }), { name: "market" }))

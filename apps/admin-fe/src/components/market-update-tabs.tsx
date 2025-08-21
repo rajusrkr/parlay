@@ -1,4 +1,5 @@
 import {
+  addToast,
   Button,
   Card,
   CardBody,
@@ -13,6 +14,7 @@ import {
   ListboxSection,
   Select,
   SelectItem,
+  Spinner,
   Tab,
   Tabs,
   Textarea,
@@ -24,12 +26,13 @@ import type { MarketData } from "types/src/index";
 import isEqual from "lodash/isEqual";
 import cloneDeep from "lodash/cloneDeep";
 
-
 import {
   ListboxWrapper,
   marketCategory,
   marketType,
 } from "../pages/create-market";
+import { useMarketStore } from "../store/market";
+import { BACKEND_URI } from "../constants";
 
 const tabNamesAndFields = [
   { key: "general", title: "General" },
@@ -45,6 +48,12 @@ export const marketStatus = [
   { key: "cancelled", label: "Cancell" },
 ];
 
+interface Outcome {
+  outcome: string;
+  price: string;
+  tradedQty: number;
+}
+
 export default function MarketUpdateTabs({
   marketData,
 }: {
@@ -52,18 +61,19 @@ export default function MarketUpdateTabs({
 }) {
   const [newData, setNewData] = useState<MarketData>(cloneDeep(marketData));
 
-
-  const [selectedTab, setSelectedTab] = useState(tabNamesAndFields[0].key);
+  const [selectedTab, setSelectedTab] = useState<string>(
+    tabNamesAndFields[0].key
+  );
   const [isFileUploading, setIsFileUploading] = useState<boolean>(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [isFileUploadingError, setIsFileUploadingError] =
     useState<boolean>(false);
   const [fileUploadErrorMessage, setFileUploadErrorMessage] =
     useState<string>("");
-  const [outcome, setOutcome] = useState("")
-  const [editingOutcome, setEditingOutcome] = useState("")
+  const [outcome, setOutcome] = useState("");
+  const [editingOutcome, setEditingOutcome] = useState("");
 
-  const [editingIndex, setEditingIndex] = useState<number | null>(null)
-
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const startDate = new Date(newData.marketStarts * 1000);
   const endDate = new Date(newData.marketEnds * 1000);
@@ -74,7 +84,8 @@ export default function MarketUpdateTabs({
   const handleFileSelection = () => {
     fileRef.current?.click();
   };
-  const BACKEND_URI = import.meta.env.VITE_PLATFORM_API_URI;
+
+  const { editMarket } = useMarketStore()
 
   // Upload thumbnail image
   const thumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,17 +135,68 @@ export default function MarketUpdateTabs({
     }
   };
 
-  const handleMarketDataChange = () => {
-    const finalData: any = {};
+  const handleMarketDataChange = async () => {
+    const updatedData: any = {};
 
     for (const key of Object.keys(newData) as (keyof MarketData)[]) {
       // const typedData = data as keyof MarketData;
 
       if (!isEqual(newData[key], marketData[key])) {
-        finalData[key] = newData[key];
+        updatedData[key] = newData[key];
       }
     }
+
+    if (Object.keys(updatedData).length === 0) {
+      addToast({
+        title: "Update",
+        description: "No changes made",
+        color: "warning",
+      });
+      return;
+    }
+
+    const finalData = {
+      marketId: newData.marketId,
+      newUpdatData: updatedData,
+    };
     console.log(finalData);
+    
+
+    try {
+      setIsUpdating(true);
+      const sendReq = await fetch(`${BACKEND_URI}/admin/edit-market`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(finalData),
+      });
+
+      const res = await sendReq.json();
+
+      if (res.success) {
+        
+        editMarket({id: newData.marketId, value: finalData.newUpdatData})
+        addToast({
+          title: "Update",
+          description: `${res.message}`,
+          color: "success",
+        });
+        setIsUpdating(false);
+      } else {
+        addToast({
+          title: "Update",
+          description: `${res.message}`,
+          color: "warning",
+        });
+        setIsUpdating(false);
+      }
+    } catch (error) {
+      console.log(error);
+      setIsUpdating(false);
+    }
+
     return;
   };
 
@@ -226,9 +288,9 @@ export default function MarketUpdateTabs({
                               Upload new
                             </Chip>
                             <div>
-                              {
-                                isFileUploadingError && (<p>{fileUploadErrorMessage}</p>)
-                              }
+                              {isFileUploadingError && (
+                                <p>{fileUploadErrorMessage}</p>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -418,7 +480,10 @@ export default function MarketUpdateTabs({
                           defaultSelectedKeys={[newData.marketCategory]}
                           isRequired
                           onChange={(e) => {
-                            setNewData({ ...newData, marketCategory: e.target.value })
+                            setNewData({
+                              ...newData,
+                              marketCategory: e.target.value,
+                            });
                           }}
                         >
                           {marketCategory.map((mrktCrgry) => (
@@ -449,9 +514,14 @@ export default function MarketUpdateTabs({
                             defaultSelectedKeys={[newData.marketType]}
                             isRequired
                             onChange={(e) => {
+                              const binaryOutcomes: Outcome[] = [
+                                { outcome: "yes", price: "0", tradedQty: 0 },
+                                { outcome: "no", price: "0", tradedQty: 0 },
+                              ];
                               setNewData({
                                 ...newData,
                                 [e.target.name]: e.target.value,
+                                outcomesAndPrices: binaryOutcomes,
                               });
                             }}
                           >
@@ -487,64 +557,122 @@ export default function MarketUpdateTabs({
                         ) : (
                           <>
                             <Card>
-                              <CardHeader>
-                                Outcomes
-                              </CardHeader>
+                              <CardHeader>Outcomes</CardHeader>
                               <CardBody>
-                                {
-                                  newData.outcomesAndPrices.map((otcmsAndPrice, i) => (
-                                    < div key={i}>
-                                      {
-                                        editingIndex === i ? (<>
+                                {newData.outcomesAndPrices.map(
+                                  (otcmsAndPrice, i) => (
+                                    <div key={i}>
+                                      {editingIndex === i ? (
+                                        <>
                                           <Input
                                             defaultValue={editingOutcome}
                                             size="lg"
                                             variant="faded"
                                             className="px-1"
                                             onChange={(e) => {
-                                              setEditingOutcome(e.target.value)
+                                              setEditingOutcome(e.target.value);
                                             }}
-                                            endContent={<Save className="hover:cursor-pointer" onClick={() => {
-                                              const newOutcomeArray = newData.outcomesAndPrices;
-                                              newOutcomeArray[editingIndex] = { price: "0", outcome: editingOutcome, tradedQty: 0 }
+                                            endContent={
+                                              <Save
+                                                className="hover:cursor-pointer"
+                                                onClick={() => {
+                                                  const newOutcomeArray =
+                                                    newData.outcomesAndPrices;
+                                                  newOutcomeArray[
+                                                    editingIndex
+                                                  ] = {
+                                                    price: "0",
+                                                    outcome: editingOutcome,
+                                                    tradedQty: 0,
+                                                  };
 
-                                              setNewData({ ...newData, outcomesAndPrices: newOutcomeArray })
-                                              setEditingIndex(null)
-                                            }} />}
+                                                  setNewData({
+                                                    ...newData,
+                                                    outcomesAndPrices:
+                                                      newOutcomeArray,
+                                                  });
+                                                  setEditingIndex(null);
+                                                }}
+                                              />
+                                            }
                                           />
-                                        </>) : (<>
+                                        </>
+                                      ) : (
+                                        <>
                                           <ul className="p-2">
-                                            <li className="capitalize border-1.5 border-default p-2 rounded-lg flex justify-between" key={i}>{`${i + 1}. ${otcmsAndPrice.outcome}`} <span className="flex gap-4"><Edit onClick={() => {
-                                              setEditingIndex(i)
-                                              setEditingOutcome(otcmsAndPrice.outcome)
-                                            }} className="hover:cursor-pointer" /> <Trash color="#ff2119" className="hover:cursor-pointer"
-                                              onClick={() => {
-                                                const newOutcomeArray = newData.outcomesAndPrices.filter((otcms) => otcms.outcome !== otcmsAndPrice.outcome)
-                                                setNewData({ ...newData, outcomesAndPrices: newOutcomeArray })
-                                              }}
-                                              /> </span></li>
+                                            <li
+                                              className="capitalize border-1.5 border-default p-2 rounded-lg flex justify-between"
+                                              key={i}
+                                            >
+                                              {`${i + 1}. ${otcmsAndPrice.outcome}`}{" "}
+                                              <span className="flex gap-4">
+                                                <Edit
+                                                  onClick={() => {
+                                                    setEditingIndex(i);
+                                                    setEditingOutcome(
+                                                      otcmsAndPrice.outcome
+                                                    );
+                                                  }}
+                                                  className="hover:cursor-pointer"
+                                                />{" "}
+                                                <Trash
+                                                  color="#ff2119"
+                                                  className="hover:cursor-pointer"
+                                                  onClick={() => {
+                                                    const newOutcomeArray =
+                                                      newData.outcomesAndPrices.filter(
+                                                        (otcms) =>
+                                                          otcms.outcome !==
+                                                          otcmsAndPrice.outcome
+                                                      );
+                                                    setNewData({
+                                                      ...newData,
+                                                      outcomesAndPrices:
+                                                        newOutcomeArray,
+                                                    });
+                                                  }}
+                                                />{" "}
+                                              </span>
+                                            </li>
                                           </ul>
-                                        </>)
-                                      }
-                                    </ div>
-                                  ))
-                                }
+                                        </>
+                                      )}
+                                    </div>
+                                  )
+                                )}
 
                                 <div className="mt-2">
                                   <div className="flex">
-                                    <Input variant="faded" className="px-2" placeholder="Add new outcomes"
+                                    <Input
+                                      variant="faded"
+                                      className="px-2"
+                                      placeholder="Add new outcomes"
                                       value={outcome}
                                       onChange={(e) => {
                                         setOutcome(e.target.value);
-                                      }} />
+                                      }}
+                                    />
                                     <Button
                                       onPress={() => {
                                         if (outcome.length === 0) {
                                           return;
                                         }
-                                        setNewData({ ...newData, outcomesAndPrices: [...newData.outcomesAndPrices, { price: "0", outcome: outcome, tradedQty: 0 }] })
-                                        setOutcome("")
-                                      }}><Send /></Button>
+                                        setNewData({
+                                          ...newData,
+                                          outcomesAndPrices: [
+                                            ...newData.outcomesAndPrices,
+                                            {
+                                              price: "0",
+                                              outcome: outcome,
+                                              tradedQty: 0,
+                                            },
+                                          ],
+                                        });
+                                        setOutcome("");
+                                      }}
+                                    >
+                                      <Send />
+                                    </Button>
                                   </div>
                                 </div>
                               </CardBody>
@@ -557,8 +685,8 @@ export default function MarketUpdateTabs({
                 )}
 
                 {/* Status section */}
-                {
-                  selectedTab === "status" && (<>
+                {selectedTab === "status" && (
+                  <>
                     <div>
                       <div>
                         <div>
@@ -592,19 +720,18 @@ export default function MarketUpdateTabs({
                         </Select>
                       </div>
                     </div>
-                  </>)
-                }
-
+                  </>
+                )}
               </CardBody>
               <CardFooter>
                 <Button
+                  disabled={isUpdating}
                   className="w-full"
                   size="sm"
                   color="primary"
-
                   onPress={handleMarketDataChange}
                 >
-                  Sumbit chnages
+                  {isUpdating ? <Spinner /> : <p> Sumbit chnages</p>}
                 </Button>
               </CardFooter>
             </Card>
