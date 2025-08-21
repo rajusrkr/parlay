@@ -17,6 +17,7 @@ const getAllMarket = async (req: Request, res: any) => {
         marketEnds: market.marketEnds,
         currentStatus: market.currentStatus,
         marketCategory: market.marketCategory,
+        marketType: market.marketType,
         winnerSide: market.winner,
         outcomesAndPrices: market.outcomesAndPrices,
       })

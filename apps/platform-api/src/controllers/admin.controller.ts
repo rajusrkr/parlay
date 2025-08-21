@@ -157,7 +157,7 @@ const createMarket = async (req: Request, res: any) => {
       });
   }
 
-  const { title, marketStarts, marketEnds, settlement, overview, marketCategory, thumbnailImageUrl, outcomes } = validateData.data;
+  const { title, marketStarts, marketEnds, settlement, overview, marketCategory, marketType, thumbnailImageUrl, outcomes } = validateData.data;
 
   try {
     const [createBinaryMarket] = await db
@@ -171,6 +171,7 @@ const createMarket = async (req: Request, res: any) => {
         marketOverview: overview,
         marketSettlement: settlement,
         marketCategory: marketCategory,
+        marketType,
         marketThumbnailImageUrl: thumbnailImageUrl,
 
         marketStarts,

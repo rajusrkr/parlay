@@ -2,7 +2,8 @@ import { bigint, jsonb, pgEnum, pgTable, serial, text, timestamp, varchar } from
 import { admin } from "./admin";
 
 export const CurrentMarketStatus = pgEnum("current_status", ["not_started", "open", "settled", "cancelled"]);
-export const MarketCategory = pgEnum("market_category", ["sports", "crypto", "politics", "regular"])
+export const MarketCategory = pgEnum("market_category", ["sports", "crypto", "politics", "regular"]);
+export const MarketType = pgEnum("market_type", ["binary", "other"])
 
 export interface OutcomeAndPrice {
     outcome: string,
@@ -25,6 +26,7 @@ const market = pgTable("market", {
     marketSettlement: text("market_settlement"),
     currentStatus: CurrentMarketStatus("current_status").default("not_started"),
     marketCategory: MarketCategory("market_category"),
+    marketType: MarketType("market_type"),
     marketThumbnailImageUrl: text("market_thumbnail_image_url"),
 
     // Timing

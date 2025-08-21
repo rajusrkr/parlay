@@ -1,25 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { MarketData } from "types/src/index"
 
-interface OutcomeAndPrice {
-    price: string,
-    outcome: string,
-    tradedQty: number
-}
-
-interface MarketData {
-    marketId: string,
-    marketTitle: string,
-    marketOverview: string,
-    marketSettlement: string,
-    currentStatus: string,
-    marketCategory: string,
-    thumbnailImage: string,
-    marketStarts: number,
-    marketEnds: number,
-    winnerSide: string,
-    outcomesAndPrices: OutcomeAndPrice[]
-}
 
 
 interface Market {
@@ -35,6 +17,7 @@ interface Market {
 
     // API calls
     fetchMarkets: () => Promise<void>
+    editMarket: () => Promise<void>
 }
 
 const BACKEND_URI = import.meta.env.VITE_PLATFORM_API_URI;
@@ -64,6 +47,17 @@ const useMarketStore = create(persist<Market>((set) => ({
         } catch (error) {
             console.log(error);
             set({ isLoading: false })
+        }
+    },
+
+    editMarket: async () => {
+        try {
+            set((prev) => ({
+                ...prev,
+                markets: prev.markets.map((market) => market.marketId === "dfjdgy" ? { ...market, } : market)
+            }))
+        } catch (error) {
+
         }
     }
 }), { name: "market" }))

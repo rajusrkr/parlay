@@ -8,6 +8,7 @@ import Open from "./pages/open";
 import WillOpen from "./pages/will-open";
 import Settled from "./pages/settled";
 import Cancelled from "./pages/cancelled";
+import MarketById from "./pages/market-by-id";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/market/will-open" element={<WillOpen />} />
           <Route path="/market/settled" element={<Settled />} />
           <Route path="/market/cancelled" element={<Cancelled />} />
+          <Route path="/market/:id" element = {<MarketById />}/>
         </Route>
 
         <Route>
