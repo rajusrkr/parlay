@@ -2,6 +2,7 @@ import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Spinn
 import { Trash } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { BACKEND_URI } from "../constants";
 
 export default function MarketDeleteBtn({ title, marketId }: { title: string, marketId: string }) {
     const { isOpen, onOpen, onOpenChange } = useDisclosure()
@@ -10,7 +11,6 @@ export default function MarketDeleteBtn({ title, marketId }: { title: string, ma
 
     const navigate = useNavigate()
 
-    const BACKEND_URI = import.meta.env.VITE_PLATFORM_API_URI;
 
 
     const handleDelete = async () => {
