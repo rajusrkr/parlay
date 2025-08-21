@@ -4,6 +4,7 @@ import {
   adminRegister,
   createMarket,
   deleteMarket,
+  editMarket,
   // editMarketStatus,
   fileUpload,
 } from "../controllers/admin.controller";
@@ -34,5 +35,6 @@ function handleFileCheckAndHandleError(
   });
 }
 router.post("/thumbnail-upload", handleFileCheckAndHandleError, fileUpload);
+router.patch("/edit-market", adminJwt, editMarket)
 
 export default router;

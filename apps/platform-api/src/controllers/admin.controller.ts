@@ -11,7 +11,7 @@ import {
   startMarketQueue,
 } from "../queueProducer/marketQueue";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { RegisterSchema, LoginShema, MarketSchema } from "types/src/index"
+import { RegisterSchema, LoginShema, MarketSchema, validateEditData } from "types/src/index"
 
 // Admin account registration
 const adminRegister = async (req: Request, res: any) => {
@@ -145,7 +145,7 @@ const createMarket = async (req: Request, res: any) => {
 
   const validateData = MarketSchema.safeParse(data);
   console.log(validateData);
-  
+
 
   if (!validateData.success) {
     return res
@@ -180,12 +180,12 @@ const createMarket = async (req: Request, res: any) => {
         outcomesAndPrices: outcomes
       })
       .returning();
-      console.log("hola");
-      console.log(createBinaryMarket.marketStarts);
-      
-      console.log(createBinaryMarket.marketStarts - (Math.floor(new Date().getTime() / 1000)))
-      
-      
+    console.log("hola");
+    console.log(createBinaryMarket.marketStarts);
+
+    console.log(createBinaryMarket.marketStarts - (Math.floor(new Date().getTime() / 1000)))
+
+
     // market start queue
     await startMarketQueue.add(
       "start_market",
@@ -215,6 +215,7 @@ const createMarket = async (req: Request, res: any) => {
 
 }
 
+// Delete market
 const deleteMarket = async (req: Request, res: any) => {
   const marketId = req.query.marketId;
 
@@ -310,6 +311,45 @@ const editMarketStatus = async (req: Request, res: any) => {
   }
 };
 
+// Edit market
+const editMarket = async (req: Request, res: any) => {
+  const data = req.body;
+  console.log(data);
+  
+  // @ts-ignore
+  const adminId = req.adminId
+
+  const marketId = data.marketId
+
+  const validate = validateEditData.safeParse(data.newUpdatData)
+  if (validate.error) {
+    return res.status(400).json({ success: false, message: "Invalid data received" })
+  }
+
+
+  const marketData = validate.data;
+  console.log(marketData);
+
+  const cleanData = Object.fromEntries(Object.entries(marketData).filter(([_, v]) => v !== undefined))
+
+
+try {
+    await db.update(market).set(cleanData).where(and(
+      eq(market.marketId, marketId),
+      eq(market.marketCreatedBy, adminId)
+    ))
+  
+    return res.status(200).json({success: true, message: "Updated successfully"})
+} catch (error) {
+  console.log(error);
+      return res.status(500).json({success: false, message: "Internal server error"})
+
+}
+
+
+
+}
+
 
 
 // Upload thumbnail image
@@ -370,4 +410,5 @@ export {
   deleteMarket,
   // editMarketStatus,
   fileUpload,
+  editMarket
 };
