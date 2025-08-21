@@ -21,6 +21,20 @@ export const MarketSchema = z.object({
     thumbnailImageUrl: z.string()
 })
 
+export const validateEditData = z.object({
+    marketTitle: z.string().max(200).optional(),
+    marketOverview: z.string().max(500).optional(),
+    marketSettlement: z.string().max(500).optional(),
+    currentStatus: z.string().optional(),
+    marketCategory: MarketCategoryEnum.optional(),
+    marketType: MarketType.optional(),
+    marketStarts: z.number().optional(),
+    marketEnds: z.number().optional(),
+    outcomesAndPrices: z.array(outcome).optional(),
+    thumbnailImage: z.string().optional()
+}).strict()
+
+
 
 // Type interface
 interface OutcomeAndPrice {
