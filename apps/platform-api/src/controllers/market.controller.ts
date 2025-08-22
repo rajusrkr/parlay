@@ -12,7 +12,7 @@ const getAllMarket = async (req: Request, res: any) => {
         marketTitle: market.marketTitle,
         marketOverview: market.marketOverview,
         marketSettlement: market.marketSettlement,
-        thumbnailImage: market.marketThumbnailImageUrl,
+        thumbnailImage: market.thumbnailImage,
         marketStarts: market.marketStarts,
         marketEnds: market.marketEnds,
         currentStatus: market.currentStatus,

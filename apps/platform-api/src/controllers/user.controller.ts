@@ -148,7 +148,7 @@ const addMoney = async (req: Request, res: any) => {
     const deposit = await db
       .update(user)
       .set({
-        walletBalance: Math.round(data.amount),
+        walletBalance: Math.round((data.amount)).toString(),
       })
       .where(eq(user.userId, userId))
       .returning();

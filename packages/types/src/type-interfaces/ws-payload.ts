@@ -1,6 +1,6 @@
 interface Outcome {
     outcome: string,
-    price: number,
+    price: string,
     tradedQty: number
 }
 

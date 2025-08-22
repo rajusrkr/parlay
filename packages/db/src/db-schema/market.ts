@@ -14,7 +14,7 @@ export interface OutcomeAndPrice {
 const market = pgTable("market", {
     // Market identity
     id: serial("id").primaryKey(),
-    marketId: varchar("market_id", { length: 36 }).notNull().unique(),
+    marketId: varchar("market_id", { length: 36 }).unique().notNull(),
 
     // Market creater identity
     marketCreatedBy: varchar("market_created_by", { length: 36 }).references(() => admin.adminId, { onDelete: "cascade" }).notNull(),
@@ -22,12 +22,12 @@ const market = pgTable("market", {
 
     // Market details
     marketTitle: varchar("market_title", { length: 255 }).notNull(),
-    marketOverview: text("market_overview"),
-    marketSettlement: text("market_settlement"),
+    marketOverview: text("market_overview").notNull(),
+    marketSettlement: text("market_settlement").notNull(),
     currentStatus: CurrentMarketStatus("current_status").default("not_started"),
     marketCategory: MarketCategory("market_category"),
     marketType: MarketType("market_type"),
-    marketThumbnailImageUrl: text("market_thumbnail_image_url"),
+    thumbnailImage: text("market_thumbnail_image_url").notNull(),
 
     // Timing
     marketStarts: bigint("market_starts", { mode: "number" }).notNull(),

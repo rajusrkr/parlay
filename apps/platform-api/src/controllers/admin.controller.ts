@@ -172,7 +172,7 @@ const createMarket = async (req: Request, res: any) => {
         marketSettlement: settlement,
         marketCategory: marketCategory,
         marketType,
-        marketThumbnailImageUrl: thumbnailImageUrl,
+        thumbnailImage: thumbnailImageUrl,
 
         marketStarts,
         marketEnds,
@@ -331,6 +331,8 @@ const editMarket = async (req: Request, res: any) => {
   console.log(marketData);
 
   const cleanData = Object.fromEntries(Object.entries(marketData).filter(([_, v]) => v !== undefined))
+  console.log(cleanData );
+  
 
 
 try {

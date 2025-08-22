@@ -120,6 +120,20 @@
       "when": 1755599521533,
       "tag": "0016_sticky_fantastic_four",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1755855721052,
+      "tag": "0017_zippy_joystick",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1755856201255,
+      "tag": "0018_steep_starjammers",
+      "breakpoints": true
     }
   ]
 }
