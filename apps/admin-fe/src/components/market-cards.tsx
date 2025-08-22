@@ -53,7 +53,7 @@ export default function MarketCards({
             {markets
               .filter((mrkt) => mrkt.currentStatus === marketStatus)
               .map((filteredMrkts, i) => (
-                <Card className="mt-4" key={i}>
+                <Card className="mt-4" key={i} radius="none">
                   {/* Card header */}
                   <CardHeader>
                     <div className="flex items-center gap-2">
