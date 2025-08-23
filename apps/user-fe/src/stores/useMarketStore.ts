@@ -1,28 +1,13 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { MarketData } from "types/src/index"
 
-interface Price {
-  yes: { time: number; value: number };
-  no: { time: number; value: number };
-}
-
-
-interface Market {
-  marketId: string;
-  marketTitle: string;
-  thumbnailImage: string;
-  marketStarts: string;
-  marketEnds: string;
-  currentStatus: string;
-  winnerSide: string | null;
-  prices: Price[];
-}
 
 interface MarketStates {
   isError: boolean;
   erroMessage: string | null;
-  
-  markets: Market[];
+
+  markets: MarketData[];
 
   fetchMarkets: () => Promise<void>;
   handlePriceChange: ({ marketId, noPrice, yesPrice, time }: { marketId: string, time: number, yesPrice: number, noPrice: number }) => void;
