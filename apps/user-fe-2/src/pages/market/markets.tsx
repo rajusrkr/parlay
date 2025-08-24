@@ -90,7 +90,7 @@ export default function Markets() {
                     <TableColumn>
                       Outcomes ({filteredData.outcomesAndPrices.length})
                     </TableColumn>
-                    <TableColumn>Percentage</TableColumn>
+                    <TableColumn>Prices</TableColumn>
                     <TableColumn>Action</TableColumn>
                   </TableHeader>
                   <TableBody>
