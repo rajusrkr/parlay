@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 
-export type MarketCategoryEnum = "sports" | "politics" | "crypto" | "regular" | "all"
+export type MarketCategoryEnum = "sports" | "politics" | "crypto" | "regular"
 export type MarketStatusEnum = "open" | "not_started" | "cancelled" | "settled"
 
 interface MarketFilter {
@@ -14,7 +14,7 @@ interface MarketFilter {
 }
 
 const marketFilter = create(persist<MarketFilter>((set) => ({
-    marketCategory: ["all"],
+    marketCategory: ["crypto", "politics", "regular", "sports"],
     marketStatus: ["open"],
 
 

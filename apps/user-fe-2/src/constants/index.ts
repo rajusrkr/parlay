@@ -1,0 +1,1 @@
+export const PLATFORM_API_URI = import.meta.env.VITE_PLATFORM_API_URI

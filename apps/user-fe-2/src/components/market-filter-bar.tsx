@@ -13,13 +13,12 @@ import {
 
 const marketStatuses = [
   { title: "Open", value: "open" },
-  { title: "Will Open", value: "not_started" },
+  { title: "Will open", value: "not_started" },
   { title: "Settled", value: "settled" },
   { title: "Cancelled", value: "cancelled" },
 ];
 
 const marketCategories = [
-  { title: "All", value: "all" },
   { title: "Crypto", value: "crypto" },
   { title: "Politics", value: "politics" },
   { title: "Sports", value: "sports" },
@@ -100,7 +99,7 @@ export default function MarketFilterbar() {
     changeMarketStatus({ status: sttus });
   };
   return (
-    <div className="bg-default py-2 mt-2 max-w-7xl mx-auto rounded-full">
+    <div className="bg-default my-2 py-2 max-w-7xl mx-auto rounded-t-4xl">
       <div className="flex items-center justify-center gap-8">
         {/* Market status */}
         <div className="flex flex-col justify-center items-center">
