@@ -118,7 +118,7 @@ export function handleWsEvents() {
                                 positionTakenBy: userId,
                                 positionTakenIn: marketId,
                                 positionTakenFor: votedOutcome,
-                                totalQtyAndAvgPrice: { totalQty: qty!, avgPrice: averageCost.toString(), atTotalCost: tradeCost! }
+                                totalQtyAndAvgPrice: { totalQty: qty!, avgPrice: averageCost.toString(), atTotalCost: tradeCost!.toString() }
                             })
                         } else {
                             // If position available
@@ -149,6 +149,14 @@ export function handleWsEvents() {
                         }).where(eq(market.marketId, marketId!))
 
                         // TODO: Broad cast the prices here
+                        const update: WsPayload = {
+                            eventType: "priceBroadCast",
+                            marketId,
+                            data: {
+                                outcomes: outcomes
+                            }
+                        }
+                        ws.send(JSON.stringify(update))
 
                     }).then(() => {
                         return res.status(200).json({ success: true, message: "Order placed successfully" })
