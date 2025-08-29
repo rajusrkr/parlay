@@ -28,6 +28,7 @@ export default function Register() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(loginData),
+          credentials: "include"
         }
       );
 
@@ -109,7 +110,7 @@ export default function Register() {
 
           <div className="">
             <Button className="w-full" color="primary" type="submit">
-              Register
+              Login
             </Button>
           </div>
 

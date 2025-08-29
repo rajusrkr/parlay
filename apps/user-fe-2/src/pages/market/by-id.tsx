@@ -17,10 +17,18 @@ import {
   TableRow,
 } from "@heroui/react";
 import { useState } from "react";
+import { PLATFORM_API_URI } from "../../constants/index";
 
 interface SelectedOutcome {
   outcome: string;
   price: string;
+}
+
+interface OrderData {
+  qty: number;
+  orderType: string;
+  votedOutcome: string;
+  marketId: string;
 }
 
 export default function MarketById() {
@@ -43,6 +51,32 @@ export default function MarketById() {
     outcome: outcomesAndPrices[0].outcome,
     price: outcomesAndPrices[0].price,
   });
+  const [qty, setQty] = useState<number | null>(null);
+
+  const handleOrder = async () => {
+    const validatedData: OrderData = {
+      marketId: marketIdFromUrl!,
+      orderType: "buy",
+      qty: qty!,
+      votedOutcome: selectedOutcome.outcome,
+    };
+
+    try {
+      const sendReq = await fetch(`${PLATFORM_API_URI}/user/handle-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(validatedData),
+        credentials: "include",
+      });
+
+      const res = await sendReq.json();
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto py-4 px-2">
@@ -149,7 +183,10 @@ export default function MarketById() {
               <div className="flex justify-between">
                 <div>
                   <p className="capitalize font-semibold ">
-                    ✅ <span className="underline underline-offset-2">{selectedOutcome.outcome}</span>
+                    ✅{" "}
+                    <span className="underline underline-offset-2">
+                      {selectedOutcome.outcome}
+                    </span>
                   </p>
                 </div>
 
@@ -163,22 +200,32 @@ export default function MarketById() {
 
               <div className="mt-4 space-y-2">
                 <div>
-                    <Chip variant="faded" color="success">Order Quantity</Chip>
+                  <Chip variant="faded" color="success">
+                    Order Quantity
+                  </Chip>
                 </div>
                 <div>
-                    <Input 
+                  <Input
                     variant="faded"
                     placeholder="Quantity, eg: 5000"
-                    />
+                    onChange={(e) => {
+                      setQty(Number(e.target.value));
+                    }}
+                  />
                 </div>
               </div>
 
               <div className="mt-4">
-                <Chip color="danger" variant="flat">Attention: Orders can get executed upto in between 10% - 15% slippage.</Chip>
+                <Chip color="danger" variant="flat">
+                  Attention: Orders can get executed upto in between 10% - 15%
+                  slippage.
+                </Chip>
               </div>
             </CardBody>
             <CardFooter>
-              <Button variant="flat" color="success" className="w-full">
+              <Button variant="flat" color="success" className="w-full"
+              onPress={handleOrder}
+              >
                 Buy
               </Button>
             </CardFooter>

@@ -1,4 +1,5 @@
-import { wsPort, WsPayload, FinalPriceUpdate } from "shared/src/index";
+import { wsPort } from "shared/src/index";
+import { WsPayload } from "types/src/index";
 import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
@@ -64,7 +65,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
   ws.on("message", (msg) => {
     try {
       const parsedMessage = JSON.parse(msg.toString());
-      // console.log(parsedMessage);
+      console.log(parsedMessage);
 
       const { eventType, data, requestId, marketId } = parsedMessage;
       const {
@@ -141,21 +142,19 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
           break;
 
         // Handle final price update, price update to ui afte db operation
-        case "finalPriceUpdate":
+        case "priceBroadCast":
           console.log("Final price uodate received from Platform Api");
 
           console.log("marketId", marketId);
           
 
-          const finalPriceMessage: FinalPriceUpdate = {
+          const finalPriceMessage = {
             eventType: "finalPriceUpdate",
-            marketId,
+            
             data: {
-              yesPrice,
-              noPrice,
-              avgPrice,
-              userTotalQty,
-              time,
+              marketId: marketId,
+            outcomes: data.outcomes
+               
             },
           };
 

@@ -9,9 +9,10 @@ interface Market {
     isError: boolean;
     errorMessage: string | null;
 
-    markets: MarketData[]
+    markets: MarketData[];
 
-    fetchMarket: () => Promise<void>
+    fetchMarket: () => Promise<void>;
+    updatePrices: ({marketId, newPriceData} : {marketId: string, newPriceData: any}) => void;
 }
 
 const usemarketStore = create(persist<Market>((set) => ({
@@ -38,6 +39,15 @@ const usemarketStore = create(persist<Market>((set) => ({
             console.log(error);
             set({ isLoading: false, isError: true, errorMessage: "Uncaught error" })
         }
+    },
+
+    
+
+
+    updatePrices: ({marketId,newPriceData}) => {
+       set((prev) => ({
+        markets: prev.markets.map((market) => market.marketId === marketId ? {...market, outcomesAndPrices: newPriceData} : market)
+       }))
     }
 
 }), { name: "market-store" }))

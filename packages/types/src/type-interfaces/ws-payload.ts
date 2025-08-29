@@ -24,6 +24,7 @@ interface Data {
 interface WsPayload {
     eventType: string,
     requestId?: string,
+    marketId?: string,
 
     data: Data
 }

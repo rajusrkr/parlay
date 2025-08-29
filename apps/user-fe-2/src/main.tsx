@@ -5,9 +5,9 @@ import App from "./App.tsx";
 import { HeroUIProvider } from "@heroui/react";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  // <StrictMode>
     <HeroUIProvider>
       <App />
     </HeroUIProvider>
-  </StrictMode>
+  // </StrictMode>
 );

@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { usemarketStore } from "../../store/market";
 
 interface SocketContextType {
     socket: WebSocket | null;
@@ -8,9 +9,10 @@ interface SocketContextType {
 const SocketContext = createContext<SocketContextType | null>(null);
 
 
+
 function getCookie(name: string){
     const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-
+    
     return match ? match[2] : null;
 }
 
@@ -26,6 +28,7 @@ export const SocketProvider = ({children}:{children: React.ReactNode}) => {
     const socketRef = useRef<WebSocket | null>(null)
     const [socket, setSocket] = useState<WebSocket | null>(null)
     const retryRef = useRef(0)
+    const {updatePrices} = usemarketStore()
 
 
     // Connect function
@@ -47,6 +50,11 @@ export const SocketProvider = ({children}:{children: React.ReactNode}) => {
             if (message.eventType === "authAck") {
                 socketRef.current = ws;
                 setSocket(ws)
+            } else if (message.eventType === "finalPriceUpdate") {
+                console.log(message);
+                
+                updatePrices({marketId: message.data.marketId, newPriceData: message.data.outcomes})
+                
             }
             
         }
