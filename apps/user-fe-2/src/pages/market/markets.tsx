@@ -57,7 +57,7 @@ export default function Markets() {
                 </div>
                 <div>
                   <Link to={`/market/${filteredData.marketId}`}>
-                    <h3>{filteredData.marketTitle}</h3>
+                    <h3 className="font-semibold text-lg">{filteredData.marketTitle}</h3>
                   </Link>
                   <div className="space-x-1">
                     <Chip
@@ -99,7 +99,7 @@ export default function Markets() {
                         <TableCell>
                           <span className="capitalize">{prices.outcome}</span>
                         </TableCell>
-                        <TableCell>{prices.price}</TableCell>
+                        <TableCell>{Number(prices.price).toFixed(2)}</TableCell>
                         <TableCell>
                           <Button size="sm" variant="flat" color="success">
                             Buy

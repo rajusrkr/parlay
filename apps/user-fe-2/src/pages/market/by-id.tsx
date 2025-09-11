@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@heroui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PLATFORM_API_URI } from "../../constants/index";
 
 interface SelectedOutcome {
@@ -39,8 +39,6 @@ export default function MarketById() {
     marketTitle,
     currentStatus,
     marketCategory,
-    marketEnds,
-    marketStarts,
     outcomesAndPrices,
     marketOverview,
     marketSettlement,
@@ -52,6 +50,13 @@ export default function MarketById() {
     price: outcomesAndPrices[0].price,
   });
   const [qty, setQty] = useState<number | null>(null);
+
+  const [cost, setCost] = useState<Number>(0);
+
+  useEffect(() => {
+    const newCost = Number(qty) * Number(selectedOutcome.price);
+    setCost(Number(newCost.toFixed(2)));
+  }, [qty, selectedOutcome.price]);
 
   const handleOrder = async () => {
     const validatedData: OrderData = {
@@ -90,21 +95,21 @@ export default function MarketById() {
                 <div>
                   <Image
                     src={thumbnailImage}
-                    className="w-20 h-20 object-contain"
+                    className="w-28 h-28 object-contain"
                   />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold">{marketTitle}</h3>
+                  <h3 className="text-3xl font-bold">{marketTitle}</h3>
                   <div className="space-x-1">
                     <Chip
-                      size="sm"
+                      size="md"
                       variant="dot"
                       color={currentStatus === "open" ? "success" : "default"}
                     >
                       Status:{" "}
                       <span className="capitalize">{currentStatus}</span>
                     </Chip>
-                    <Chip size="sm" variant="bordered">
+                    <Chip size="md" variant="bordered">
                       Category:{" "}
                       <span className="capitalize">{marketCategory}</span>
                     </Chip>
@@ -122,9 +127,11 @@ export default function MarketById() {
               color="success"
             >
               <TableHeader>
-                <TableColumn>Outcome ({outcomesAndPrices.length})</TableColumn>
-                <TableColumn>Chances</TableColumn>
-                <TableColumn>Prices</TableColumn>
+                <TableColumn className="text-lg">
+                  Outcomes ({outcomesAndPrices.length})
+                </TableColumn>
+                <TableColumn className="text-lg">Chances</TableColumn>
+                <TableColumn className="text-lg">Prices</TableColumn>
               </TableHeader>
 
               <TableBody>
@@ -141,8 +148,8 @@ export default function MarketById() {
                     <TableCell>
                       <span className="capitalize">{prices.outcome}</span>
                     </TableCell>
-                    <TableCell>{Number(prices.price) * 100}</TableCell>
-                    <TableCell>{prices.price}</TableCell>
+                    <TableCell>{`${(Number(prices.price) * 100).toFixed(2)} %`}</TableCell>
+                    <TableCell>{`$ ${Number(prices.price).toFixed(2)}/Share`}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -153,7 +160,7 @@ export default function MarketById() {
           <div>
             <Card>
               <CardHeader>
-                <h3 className="font-semibold">Overview & Settlement</h3>
+                <h3 className="font-semibold text-lg">Overview & Settlement</h3>
               </CardHeader>
               <CardBody className="space-y-4">
                 <div>
@@ -175,16 +182,18 @@ export default function MarketById() {
 
         {/* Left side */}
         <div className="w-full">
-          <Card className="max-w-4xl">
+          <Card className="max-w-4xl py-1.5">
             <CardHeader className="">
-              <p className="font-semibold text-default-500">Place Order</p>
+              <p className="font-semibold text-lg text-default-500">
+                Place Order
+              </p>
             </CardHeader>
             <CardBody>
               <div className="flex justify-between">
                 <div>
                   <p className="capitalize font-semibold ">
-                    ✅{" "}
-                    <span className="underline underline-offset-2">
+                    ✅{" You have selected: "}
+                    <span className="underline underline-offset-2 text-primary-500">
                       {selectedOutcome.outcome}
                     </span>
                   </p>
@@ -194,37 +203,59 @@ export default function MarketById() {
                   <Chip
                     variant="faded"
                     color="primary"
-                  >{`Price: ${selectedOutcome.price}`}</Chip>
+                  >{`Price: ${Number(selectedOutcome.price).toFixed(2)}`}</Chip>
                 </div>
               </div>
 
-              <div className="mt-4 space-y-2">
-                <div>
-                  <Chip variant="faded" color="success">
-                    Order Quantity
-                  </Chip>
+              <div className="mt-4 flex justify-between gap-2">
+                <div className="space-y-1.5">
+                  <div>
+                    <Chip variant="faded" color="success">
+                      Order Quantity
+                    </Chip>
+                  </div>
+                  <div>
+                    <Input
+                      className="w-96"
+                      variant="faded"
+                      placeholder="Quantity, eg: 5000"
+                      onChange={(e) => {
+                        setQty(Number(e.target.value));
+                      }}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Input
-                    variant="faded"
-                    placeholder="Quantity, eg: 5000"
-                    onChange={(e) => {
-                      setQty(Number(e.target.value));
-                    }}
-                  />
+
+                <div className="space-y-1.5">
+                  <div>
+                    <Chip variant="faded" color="success">
+                      Total cost
+                    </Chip>
+                  </div>
+                  <div>
+                    <Input
+                      variant="faded"
+                      disabled
+                      placeholder="000"
+                      value={cost?.toString()}
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="mt-4">
                 <Chip color="danger" variant="flat">
-                  Attention: Orders can get executed upto in between 10% - 15%
+                  Attention: Orders can get executed upto between 10% - 15%
                   slippage.
                 </Chip>
               </div>
             </CardBody>
             <CardFooter>
-              <Button variant="flat" color="success" className="w-full"
-              onPress={handleOrder}
+              <Button
+                variant="flat"
+                color="success"
+                className="w-full"
+                onPress={handleOrder}
               >
                 Buy
               </Button>
