@@ -1,1 +1,0 @@
-ALTER TABLE "position" ADD COLUMN "is_position_settles" boolean DEFAULT false;

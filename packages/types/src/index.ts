@@ -1,5 +1,0 @@
-export * from "./type-interfaces/login"
-export * from "./type-interfaces/market"
-export * from "./type-interfaces/register"
-export * from "./type-interfaces/order"
-export * from "./type-interfaces/ws-payload"

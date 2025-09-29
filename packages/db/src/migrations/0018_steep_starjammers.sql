@@ -1,1 +1,0 @@
-ALTER TABLE "market" ALTER COLUMN "market_thumbnail_image_url" SET NOT NULL;

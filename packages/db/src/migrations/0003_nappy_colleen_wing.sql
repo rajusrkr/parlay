@@ -1,1 +1,0 @@
-ALTER TYPE "public"."market_category" ADD VALUE 'regular';
