@@ -1,0 +1,65 @@
+import { Worker } from "bullmq";
+import IORedis from "ioredis";
+import { db, market } from "@repo/db/dist/src";
+import { eq } from "drizzle-orm";
+
+const connection = new IORedis({
+  host: "127.0.0.1",
+  port: 6379,
+  maxRetriesPerRequest: null,
+});
+
+console.log("Market queue is started and listening on port 6379");
+
+const startMarketWorker = new Worker(
+  "market_starter",
+  async (job) => {
+    console.log("Processing market", job.id);
+    console.log(job);
+
+    const marketId = job.data.id;
+
+    // TODO: add try catch later
+    await db
+      .update(market)
+      .set({ currentStatus: "open" })
+      .where(eq(market.marketId, marketId));
+
+    console.log(`Market ${marketId} started`);
+  },
+  { connection }
+);
+
+const closeMarketWorker = new Worker(
+  "market_closer",
+  async (job) => {
+    console.log("Closing market", job.id);
+
+    const marketId = job.data.id;
+
+    // TODO: add try catch later
+    await db
+      .update(market)
+      .set({ currentStatus: "settled" })
+      .where(eq(market.marketId, marketId));
+
+    console.log("Market closed", marketId);
+  },
+  { connection }
+);
+
+startMarketWorker.on("failed", (job, error) => {
+  console.error(`Job ${job?.id} failed`, error);
+});
+
+startMarketWorker.on("completed", (job) => {
+  console.log(`Job ${job.id} has been completed`);
+});
+
+closeMarketWorker.on("completed", (job) => {
+  console.log(`Closing job ${job.id} has been completed`);
+});
+
+closeMarketWorker.on("failed", (job, error) => {
+  console.log(`Closing job ${job?.id} failed`, error);
+});
