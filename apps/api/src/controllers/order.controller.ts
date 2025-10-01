@@ -5,7 +5,7 @@ import { market } from "@repo/db/dist/src"
 import { eq, and } from "drizzle-orm";
 import { OrderSchema } from "@repo/shared/dist/src"
 import { OutcomeAndPrice } from "@repo/db/dist/src/schemas/market";
-// import { sendOrderToWsServer } from "../ws/sendOrderToWsServer";
+import { sendOrderToWsServer } from "../ws/sendOrderToWsServer";
 
 // create a new map
 export const pendingRequests = new Map<
@@ -64,16 +64,16 @@ const handleOrder = async (req: Request, res: any) => {
     });
 
     // Send order to ws server
-    // sendOrderToWsServer({
-    //   eventType: "newOrder",
-    //   requestId,
-    //   data: {
-    //     outcomes: marketDetails[0].outcome,
-    //     qty,
-    //     orderType,
-    //     votedOutcomeIndex: indexForVotedOutcome
-    //   },
-    // });
+    sendOrderToWsServer({
+      eventType: "newOrder",
+      requestId,
+      data: {
+        outcomes: marketDetails[0].outcome,
+        qty,
+        orderType,
+        votedOutcomeIndex: indexForVotedOutcome
+      },
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal server error" });

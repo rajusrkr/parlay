@@ -5,13 +5,17 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build" : "tsc -b",
+    "build": "tsc -b",
     "dev": "tsc --watch"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^17.2.3",
     "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^8.2.3"
   }
 }
