@@ -114,7 +114,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
         case "newOrder":
           for (const [client, clientRole] of connectedClients.entries()) {
             if (
-              clientRole === "priceEngine" &&
+              clientRole === "PriceEngine" &&
               client.readyState === WebSocket.OPEN
             ) {
               client.send(JSON.stringify(parsedMessage));

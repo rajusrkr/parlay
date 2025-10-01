@@ -58,6 +58,21 @@
         "typescript": "5.9.2",
       },
     },
+    "apps/price-engine": {
+      "name": "price-engine",
+      "version": "1.0.0",
+      "dependencies": {
+        "@repo/shared": "*",
+        "dotenv": "^17.2.3",
+        "jsonwebtoken": "^9.0.2",
+        "ws": "^8.18.3",
+      },
+      "devDependencies": {
+        "@types/dotenv": "^8.2.3",
+        "@types/jsonwebtoken": "^9.0.10",
+        "@types/ws": "^8.18.1",
+      },
+    },
     "apps/web": {
       "name": "web",
       "version": "0.1.0",
@@ -1090,6 +1105,8 @@
     "prelude-ls": ["prelude-ls@1.2.1", "", {}, "sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g=="],
 
     "prettier": ["prettier@3.6.2", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ=="],
+
+    "price-engine": ["price-engine@workspace:apps/price-engine"],
 
     "prop-types": ["prop-types@15.8.1", "", { "dependencies": { "loose-envify": "^1.4.0", "object-assign": "^4.1.1", "react-is": "^16.13.1" } }, "sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg=="],
 
