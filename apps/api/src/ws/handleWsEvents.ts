@@ -254,7 +254,7 @@ export function handleWsEvents() {
 
                         // Update market
                         await tx.update(market).set({
-                            outcomesAndPrices: outcomes
+                            outcomesAndPrices: outcomes!
                         }).where(eq(market.marketId, marketId))
                     }).then(() => {
                         return res.status(200).json({ success: true, message: "Sell order successfull" })

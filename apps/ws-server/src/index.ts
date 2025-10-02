@@ -11,8 +11,8 @@ interface ExtendedWebsocket extends WebSocket {
 }
 
 const connectedClients = new Map<ExtendedWebsocket, string>();
-const wss = new WebSocketServer({ port: 8001 });
-console.log(`WS-SERVER is listening on port ${8001}`);
+const wss = new WebSocketServer({ port: 8002 });
+console.log(`WS-SERVER is listening on port ${8002}`);
 // ===================
 // Handle heart beat
 // ===================

@@ -1,6 +1,6 @@
 type Outcome = {
     outcome: string;
-    price: number;
+    price: string;
     tradedQty: number
 }
 
@@ -58,7 +58,7 @@ function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes:
 
             const updatedOutcomes: Outcome[] = outcomes.map((otcms, i) => ({
                 ...otcms,
-                price: newPrices[i],
+                price: (newPrices[i]).toString(),
                 tradedQty: addedQty[i]
             }))
 
@@ -76,7 +76,7 @@ function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes:
 
             const newOutcomesAfterSubstraction: Outcome[] = outcomes.map((otcms, i) => ({
                 ...otcms,
-                price: newPricesAfterSubstraction[i],
+                price: (newPricesAfterSubstraction[i]).toString(),
                 tradedQty: substractedQty[i]
             }))
 
