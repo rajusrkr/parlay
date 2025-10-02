@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import { db } from "@repo/db/dist/src";
 import { position, user } from "@repo/db/dist/src";
 import { eq } from "drizzle-orm";
-import { RegisterSchema, LoginShema } from "@repo/shared/dist/src";
+import { RegisterSchema, LoginSchema } from "@repo/shared/dist/src";
 
 const userRegister = async (req: Request, res: any) => {
   const data = req.body;
@@ -68,7 +68,7 @@ const userLogin = async (req: Request, res: any) => {
 
   console.log(data);
 
-  const validateData = LoginShema.safeParse(data);
+  const validateData = LoginSchema.safeParse(data);
 
   if (!validateData.success) {
     return res

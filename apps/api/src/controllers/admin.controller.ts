@@ -11,7 +11,7 @@ import {
   startMarketQueue,
 } from "../queueProducer/marketQueue";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { RegisterSchema, LoginShema, MarketSchema, validateEditData } from "@repo/shared/dist/src"
+import { RegisterSchema, LoginSchema, MarketSchema, validateEditData } from "@repo/shared/dist/src"
 
 // Admin account registration
 const adminRegister = async (req: Request, res: any) => {
@@ -62,7 +62,7 @@ const adminRegister = async (req: Request, res: any) => {
       .json({
         success: true,
         message: "Admin created successfully",
-        userId: createAdmin[0].adminId,
+        adminId: createAdmin[0].adminId,
       });
   } catch (error) {
     console.log(error);
@@ -76,7 +76,7 @@ const adminRegister = async (req: Request, res: any) => {
 const adminLogin = async (req: Request, res: any) => {
   const data = req.body;
 
-  const validateAdminInput = LoginShema.safeParse(data);
+  const validateAdminInput = LoginSchema.safeParse(data);
 
   if (!validateAdminInput.success) {
     return res
@@ -120,7 +120,7 @@ const adminLogin = async (req: Request, res: any) => {
       `${process.env.JWT_SECRET}`
     );
 
-    res.cookie("admin_auth_token", jwtToken, {
+    res.cookie("aAuthToken", jwtToken, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
       secure: true,
@@ -352,6 +352,8 @@ try {
 
 }
 
+// logout function goes here
+
 
 
 // Upload thumbnail image
@@ -401,7 +403,7 @@ const fileUpload = async (req: Request, res: any) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({success: false, message: "Internal server error" });
   }
 };
 
