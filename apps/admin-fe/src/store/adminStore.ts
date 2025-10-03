@@ -1,7 +1,7 @@
 // import z from "zod";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { LoginSchema } from "@repo/shared/src"
+import { LoginSchema, type MarketData } from "@repo/shared/src"
 
 export const BACKEND_URI = import.meta.env.VITE_API_SERVER_URL;
 
@@ -11,13 +11,26 @@ interface States {
     isError: boolean,
     errorMessage: string | null,
 
+    markets: MarketData[]
+    marketFilter: {
+        status: string,
+        categories: string[]
+    }
+
     login: ({ email, password, navigate }: { email: string, password: string, navigate: (pasth: string) => void }) => Promise<void>
+    fetchAllMarkets: () => Promise<void>;
+    setMarketFilters: ({status, categories}:{status: string, categories: string[]}) => void;
 }
 
 const useAdminStore = create(persist<States>((set) => ({
     isLoading: false,
     isError: false,
     errorMessage: null,
+    markets: [],
+    marketFilter: {
+        status: "open",
+        categories: ["sports", "politics", "crypto"]
+    },
 
     login: async ({ email, password, navigate }) => {
         try {
@@ -49,7 +62,30 @@ const useAdminStore = create(persist<States>((set) => ({
         } catch (error) {
             console.log(error);
         }
+    },
+
+    fetchAllMarkets: async () => {
+        try {
+            set({isLoading: true, isError: false, errorMessage: null})
+            const sendReq = await fetch(`${BACKEND_URI}/market/get-markets`);
+
+            const res = await sendReq.json()
+
+            if (res.success) {
+                set({isLoading: false, markets: res.markets})
+            } else {
+                set({isLoading: false, isError: true, errorMessage: res.message})
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    },
+
+    setMarketFilters: ({status, categories}) => {
+        set({marketFilter: {status, categories}})
     }
+
+
 }), { name: "admin-store" }))
 
 export { useAdminStore }
