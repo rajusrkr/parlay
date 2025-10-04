@@ -41,7 +41,6 @@ export default function Console() {
     new Set(marketFilter.categories)
   );
   const [selectedFiler, setSelectedFilter] = useState(marketFilter.status);
-  console.log(Array.from(selectedKeys));
 
   const selectedValue = useMemo(
     () => Array.from(selectedKeys).join(", "),
@@ -80,6 +79,7 @@ export default function Console() {
               color="secondary"
               variant="light"
               className="flex flex-wrap"
+              defaultSelectedKey={marketFilter.status}
             >
               {marketFilters.map((filter) => (
                 <Tab

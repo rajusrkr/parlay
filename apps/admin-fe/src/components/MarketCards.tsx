@@ -7,9 +7,9 @@ import {
 import { useAdminStore } from "../store/adminStore";
 import {
   Bitcoin,
+  Calendar,
   CircleCheckBig,
   Clock1,
-  Clock10,
   Hourglass,
   Landmark,
   Lock,
@@ -103,9 +103,9 @@ export default function MarketCards() {
                   className="flex items-center text-default-500 text-xs
                 gap-0.5"
                 >
-                  <Clock10 size={15} />
+                  <Calendar size={15} />
                   <span>
-                    Opens: {dateFormater({ timestamp: market.marketStarts })}
+                    Created: {dateFormater({ timestamp: market.marketStarts })}
                   </span>
                 </p>
                 <p
@@ -114,7 +114,7 @@ export default function MarketCards() {
                 >
                   <Clock1 size={15} />
                   <span>
-                    Closes: {dateFormater({ timestamp: market.marketEnds })}
+                    Closing: {dateFormater({ timestamp: market.marketEnds })}
                   </span>
                 </p>
               </div>
@@ -214,9 +214,9 @@ export default function MarketCards() {
                     className="flex items-center text-default-500 text-xs
                 gap-0.5"
                   >
-                    <Clock10 size={15} />
+                    <Calendar size={15} />
                     <span>
-                      Opens: {dateFormater({ timestamp: market.marketStarts })}
+                      Created: {dateFormater({ timestamp: market.marketStarts })}
                     </span>
                   </p>
                   <p
@@ -225,7 +225,7 @@ export default function MarketCards() {
                   >
                     <Clock1 size={15} />
                     <span>
-                      Closes: {dateFormater({ timestamp: market.marketEnds })}
+                      Closing: {dateFormater({ timestamp: market.marketEnds })}
                     </span>
                   </p>
                 </div>

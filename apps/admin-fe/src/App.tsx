@@ -4,6 +4,7 @@ import ConsoleLayout from "./layout/ConsoleLayout"
 import Console from "./pages/console"
 import Leaderboard from "./pages/leaderboard"
 import AddNewMarket from "./pages/add-new-market"
+import MarketById from "./pages/market-id"
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/admin/console" element = {<Console />}/>
         <Route path="/admin/leaderboard" element = {<Leaderboard />}/>
         <Route path="/admin/add-new-market" element = {<AddNewMarket />}/>
+        <Route path="/admin/market/:id" element = {<MarketById />}/>
       </Route>
     </Routes>
   </BrowserRouter>
