@@ -16,13 +16,14 @@ import {
   Landmark,
   Lock,
   LockOpen,
+  RefreshCw,
   Timer,
   Trophy,
 } from "lucide-react";
 import MarketCards from "../components/MarketCards";
 
 export default function Console() {
-  const { fetchAllMarkets, setMarketFilters, marketFilter } = useAdminStore();
+  const { fetchAllMarkets, setMarketFilters, marketFilter, isLoading } = useAdminStore();
 
   const marketFilters = [
     { title: "Open", key: "open", icons: <LockOpen size={20} /> },
@@ -62,11 +63,27 @@ export default function Console() {
 
   return (
     <div>
-      <div className="mt-4">
-        <h1 className="text-4xl font-semibold">Markets</h1>
-        <p className="text-xs font-semibold mt-1 text-default-500">
-          View, Filter, Edit, Delete markets
-        </p>
+      <div className="mt-4 flex justify-between items-center">
+        <div>
+          <h1 className="text-4xl font-semibold">Markets</h1>
+          <p className="text-xs font-semibold mt-1 text-default-500">
+            View, Filter, Edit, Delete markets
+          </p>
+        </div>
+
+        <div>
+          <Button
+            variant="faded"
+            size="sm"
+            onPress={async () => {
+              await fetchAllMarkets();
+            }}
+          >
+            <span>
+              <RefreshCw className={`text-default-500 ${isLoading && "animate-spin"}`} />
+            </span>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-8">
