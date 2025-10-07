@@ -94,10 +94,10 @@ export default function MarketCards() {
               {/* title, descriptio and closing */}
               <div>
                 <h2 className="text-lg font-semibold mb-2">
-                  {market.marketTitle}
+                  {market.title}
                 </h2>
                 <p className="text-sm text-default-500 truncate mb-4">
-                  {market.marketOverview}
+                  {market.description}
                 </p>
                 <p
                   className="flex items-center text-default-500 text-xs
@@ -205,10 +205,10 @@ export default function MarketCards() {
                 {/* title, descriptio and closing */}
                 <div>
                   <h2 className="text-lg font-semibold mb-2">
-                    {market.marketTitle}
+                    {market.title}
                   </h2>
                   <p className="text-sm text-default-500 truncate mb-4">
-                    {market.marketOverview}
+                    {market.description}
                   </p>
                   <p
                     className="flex items-center text-default-500 text-xs

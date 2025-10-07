@@ -1,7 +1,7 @@
 // import z from "zod";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { LoginSchema, type MarketData } from "@repo/shared/src"
+import { LoginSchema, type MarketTypeInterface } from "@repo/shared/src"
 
 export const BACKEND_URI = import.meta.env.VITE_API_SERVER_URL;
 
@@ -11,7 +11,7 @@ interface States {
     isError: boolean,
     errorMessage: string | null,
 
-    markets: MarketData[]
+    markets: MarketTypeInterface[]
     marketFilter: {
         status: string,
         categories: string[]

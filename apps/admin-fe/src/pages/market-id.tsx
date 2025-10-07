@@ -1,4 +1,4 @@
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useAdminStore } from "../store/adminStore";
 import {
   Button,
@@ -32,6 +32,11 @@ export default function MarketById() {
   const filteredMarket = markets.filter(
     (mrkt) => mrkt.marketId === marketId
   )[0];
+
+  console.log(filteredMarket);
+  
+
+  const navigate = useNavigate()
 
   return (
     <div className="mt-4">
@@ -103,25 +108,25 @@ export default function MarketById() {
           )}
         </div>
         <div>
-          <Button size="sm" radius="full" color="secondary">
+          <Button size="sm" radius="full" color="secondary" onPress={() => navigate(`/admin/market/edit/${filteredMarket.marketId}`)}>
             <span className="font-semibold">Edit</span>
           </Button>
         </div>
       </div>
       <div>
-        <h1 className="text-3xl font-semibold">{filteredMarket.marketTitle}</h1>
-        <p className="text-default-500 mt-2">{filteredMarket.marketOverview}</p>
-        <p className="text-default-500 mt-2 capitalize">{`Settlement will be ${filteredMarket.marketSettlement}`}</p>
+        <h1 className="text-3xl font-semibold">{filteredMarket.title}</h1>
+        <p className="text-default-500 mt-2">{filteredMarket.description}</p>
+        <p className="text-default-500 mt-2 capitalize">{`Settlement will be ${filteredMarket.settlement}`}</p>
       </div>
 
       <div className="mt-4">
-        <Table className="max-w-2xl">
+        <Table className="max-w-2xl" aria-label="outcome-table">
           <TableHeader>
             <TableColumn>Outcome</TableColumn>
             <TableColumn>Price</TableColumn>
           </TableHeader>
           <TableBody>
-            {filteredMarket.outcomesAndPrices.map((fltr, i) => (
+            {filteredMarket.outcomes?.map((fltr, i) => (
               <TableRow key={i}>
                 <TableCell className="capitalize">{fltr.outcome}</TableCell>
                 <TableCell>{fltr.price}</TableCell>

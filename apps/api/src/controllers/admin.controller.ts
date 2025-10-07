@@ -11,7 +11,7 @@ import {
   startMarketQueue,
 } from "../queueProducer/marketQueue";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { RegisterSchema, LoginSchema, MarketSchema, validateEditData } from "@repo/shared/dist/src"
+import { RegisterSchema, LoginSchema, MarketSchema, validateEditData, MarketCreationSchema} from "@repo/shared/dist/src"
 
 // Admin account registration
 const adminRegister = async (req: Request, res: any) => {
@@ -143,7 +143,7 @@ const createMarket = async (req: Request, res: any) => {
   // @ts-ignore
   const adminId = req.adminId;
 
-  const validateData = MarketSchema.safeParse(data);
+  const validateData = MarketCreationSchema.safeParse(data);
   console.log(validateData);
 
 
@@ -157,26 +157,22 @@ const createMarket = async (req: Request, res: any) => {
       });
   }
 
-  const { title, marketStarts, marketEnds, settlement, overview, marketCategory, marketType, thumbnailImageUrl, outcomes } = validateData.data;
+  const { title, marketStarts, marketEnds, settlement, description, marketCategory, marketType, thumbnailImage, outcomes } = validateData.data;
 
   try {
     const [createBinaryMarket] = await db
       .insert(market)
       .values({
         marketCreatedBy: adminId,
-
         marketId: uuidv4(),
-
         marketTitle: title,
-        marketOverview: overview,
+        marketOverview: description,
         marketSettlement: settlement,
         marketCategory: marketCategory,
         marketType,
-        thumbnailImage: thumbnailImageUrl,
-
+        thumbnailImage: thumbnailImage,
         marketStarts,
         marketEnds,
-
         outcomesAndPrices: outcomes
       })
       .returning();
@@ -321,7 +317,9 @@ const editMarket = async (req: Request, res: any) => {
 
   const marketId = data.marketId
 
-  const validate = validateEditData.safeParse(data.newUpdatData)
+  const validate = validateEditData.safeParse(data)
+  console.log(validate);
+  
   if (validate.error) {
     return res.status(400).json({ success: false, message: "Invalid data received" })
   }
@@ -331,7 +329,7 @@ const editMarket = async (req: Request, res: any) => {
   console.log(marketData);
 
   const cleanData = Object.fromEntries(Object.entries(marketData).filter(([_, v]) => v !== undefined))
-  console.log(cleanData );
+  console.log(cleanData);
   
 
 

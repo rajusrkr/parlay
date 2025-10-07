@@ -9,9 +9,9 @@ const getAllMarket = async (req: Request, res: any) => {
     const markets = await db
       .select({
         marketId: market.marketId,
-        marketTitle: market.marketTitle,
-        marketOverview: market.marketOverview,
-        marketSettlement: market.marketSettlement,
+        title: market.marketTitle, 
+        description: market.marketOverview,
+        settlement: market.marketSettlement,
         thumbnailImage: market.thumbnailImage,
         marketStarts: market.marketStarts,
         marketEnds: market.marketEnds,
@@ -19,7 +19,7 @@ const getAllMarket = async (req: Request, res: any) => {
         marketCategory: market.marketCategory,
         marketType: market.marketType,
         winnerSide: market.winner,
-        outcomesAndPrices: market.outcomesAndPrices,
+        outcomes: market.outcomesAndPrices,
       })
       .from(market)
 
