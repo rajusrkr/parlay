@@ -9,7 +9,7 @@ const getAllMarket = async (req: Request, res: any) => {
     const markets = await db
       .select({
         marketId: market.marketId,
-        title: market.title, 
+        title: market.title,
         description: market.description,
         settlement: market.settlement,
         thumbnailImage: market.thumbnailImage,

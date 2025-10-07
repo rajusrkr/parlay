@@ -27,16 +27,11 @@ export default function MarketById() {
   const { markets } = useAdminStore();
 
   const marketId = useParams().id;
-  console.log(marketId);
-
   const filteredMarket = markets.filter(
     (mrkt) => mrkt.marketId === marketId
   )[0];
 
-  console.log(filteredMarket);
-  
-
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <div className="mt-4">
@@ -108,7 +103,14 @@ export default function MarketById() {
           )}
         </div>
         <div>
-          <Button size="sm" radius="full" color="secondary" onPress={() => navigate(`/admin/market/edit/${filteredMarket.marketId}`)}>
+          <Button
+            size="sm"
+            radius="full"
+            color="secondary"
+            onPress={() =>
+              navigate(`/admin/market/edit/${filteredMarket.marketId}`)
+            }
+          >
             <span className="font-semibold">Edit</span>
           </Button>
         </div>
@@ -116,7 +118,7 @@ export default function MarketById() {
       <div>
         <h1 className="text-3xl font-semibold">{filteredMarket.title}</h1>
         <p className="text-default-500 mt-2">{filteredMarket.description}</p>
-        <p className="text-default-500 mt-2 capitalize">{`Settlement will be ${filteredMarket.settlement}`}</p>
+        <p className="text-default-500 mt-2 capitalize">{`Settlement: ${filteredMarket.settlement}`}</p>
       </div>
 
       <div className="mt-4">

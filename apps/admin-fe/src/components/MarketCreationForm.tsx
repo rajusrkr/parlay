@@ -22,6 +22,7 @@ import {
 import { Loader, UploadCloud } from "lucide-react";
 import { useState } from "react";
 import { BACKEND_URI } from "../store/adminStore";
+import { useNavigate } from "react-router";
 
 export const marketCategory = [
   { key: "crypto", label: "Crypto" },
@@ -45,6 +46,8 @@ export default function MarketCreationForm() {
   const [isImageUploading, setIsImageUploading] = useState<boolean>(false);
   const [isFormSubmiting, setIsFormSubmiting] = useState(false);
   const [singleOutcome, setSingleOutcome] = useState("");
+
+  const navigate = useNavigate();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files![0];
@@ -93,11 +96,10 @@ export default function MarketCreationForm() {
     e.preventDefault();
     setErrorMessage("");
 
-    const { success, data, error } = MarketCreationSchema.safeParse(formData);
+    const { success, data } = MarketCreationSchema.safeParse(formData);
 
     if (!success) {
-      console.log("Zod validation error");
-      console.log(error);
+      setErrorMessage("Data validation error");
       return;
     }
 
@@ -132,7 +134,7 @@ export default function MarketCreationForm() {
       const res = await sendReq.json();
       if (res.success) {
         setIsFormSubmiting(false);
-        // router("/");
+        navigate("/admin/console");
       } else {
         setIsFormSubmiting(false);
         setErrorMessage(res.message);
@@ -362,8 +364,6 @@ export default function MarketCreationForm() {
                   size="lg"
                   isRequired
                   onChange={(e) => {
-                    console.log(e.target.value);
-
                     if (e.target.value === "binary") {
                       setFormData((prev) => ({
                         ...prev!,
