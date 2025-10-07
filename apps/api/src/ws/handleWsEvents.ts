@@ -145,7 +145,7 @@ export function handleWsEvents() {
 
                         // Update the market prices and outcome
                         await tx.update(market).set({
-                            outcomesAndPrices: outcomes
+                            outcomes
                         }).where(eq(market.marketId, marketId!))
 
                         // TODO: Broad cast the prices here
@@ -254,7 +254,7 @@ export function handleWsEvents() {
 
                         // Update market
                         await tx.update(market).set({
-                            outcomesAndPrices: outcomes!
+                            outcomes
                         }).where(eq(market.marketId, marketId))
                     }).then(() => {
                         return res.status(200).json({ success: true, message: "Sell order successfull" })

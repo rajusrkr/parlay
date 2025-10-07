@@ -11,7 +11,7 @@ import {
   startMarketQueue,
 } from "../queueProducer/marketQueue";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { RegisterSchema, LoginSchema, MarketSchema, validateEditData, MarketCreationSchema} from "@repo/shared/dist/src"
+import { RegisterSchema, LoginSchema, validateEditData, MarketCreationSchema, MarketEditSchema } from "@repo/shared/dist/src"
 
 // Admin account registration
 const adminRegister = async (req: Request, res: any) => {
@@ -165,15 +165,15 @@ const createMarket = async (req: Request, res: any) => {
       .values({
         marketCreatedBy: adminId,
         marketId: uuidv4(),
-        marketTitle: title,
-        marketOverview: description,
-        marketSettlement: settlement,
+        title: title,
+        description: description,
+        settlement: settlement,
         marketCategory: marketCategory,
         marketType,
         thumbnailImage: thumbnailImage,
         marketStarts,
         marketEnds,
-        outcomesAndPrices: outcomes
+        outcomes: outcomes
       })
       .returning();
     console.log("hola");
@@ -310,41 +310,37 @@ const editMarketStatus = async (req: Request, res: any) => {
 // Edit market
 const editMarket = async (req: Request, res: any) => {
   const data = req.body;
-  console.log(data);
-  
+
   // @ts-ignore
   const adminId = req.adminId
-
   const marketId = data.marketId
 
-  const validate = validateEditData.safeParse(data)
-  console.log(validate);
-  
-  if (validate.error) {
+  const validateData = MarketEditSchema.safeParse(data.changedData)
+  if (validateData.error) {
     return res.status(400).json({ success: false, message: "Invalid data received" })
   }
 
 
-  const marketData = validate.data;
-  console.log(marketData);
-
+  const marketData = validateData.data;
   const cleanData = Object.fromEntries(Object.entries(marketData).filter(([_, v]) => v !== undefined))
   console.log(cleanData);
-  
 
 
-try {
-    await db.update(market).set(cleanData).where(and(
+  try {
+    const update = await db.update(market).set(cleanData).where(and(
       eq(market.marketId, marketId),
       eq(market.marketCreatedBy, adminId)
     ))
-  
-    return res.status(200).json({success: true, message: "Updated successfully"})
-} catch (error) {
-  console.log(error);
-      return res.status(500).json({success: false, message: "Internal server error"})
 
-}
+    console.log(update);
+    
+
+    return res.status(200).json({ success: true, message: "Updated successfully" })
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false, message: "Internal server error" })
+
+  }
 
 
 
@@ -401,7 +397,7 @@ const fileUpload = async (req: Request, res: any) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({success: false, message: "Internal server error" });
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 

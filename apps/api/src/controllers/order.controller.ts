@@ -30,7 +30,7 @@ const handleOrder = async (req: Request, res: any) => {
 
   try {
     const marketDetails = await db
-      .select({ outcome: market.outcomesAndPrices })
+      .select({ outcome: market.outcomes })
       .from(market)
       .where(
         and(

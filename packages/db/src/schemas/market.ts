@@ -21,9 +21,9 @@ const market = pgTable("market", {
 
 
     // Market details
-    marketTitle: varchar("market_title", { length: 255 }).notNull(),
-    marketOverview: text("market_overview").notNull(),
-    marketSettlement: text("market_settlement").notNull(),
+    title: varchar("market_title", { length: 255 }).notNull(),
+    description: text("market_overview").notNull(),
+    settlement: text("market_settlement").notNull(),
     currentStatus: CurrentMarketStatus("current_status").default("not_started"),
     marketCategory: MarketCategory("market_category"),
     marketType: MarketType("market_type"),
@@ -35,10 +35,10 @@ const market = pgTable("market", {
 
 
     // Outcome and prices, will store latest prices
-    outcomesAndPrices: jsonb("outcome_and_price").$type<OutcomeAndPrice[]>().notNull(),
+    outcomes: jsonb("outcome_and_price").$type<OutcomeAndPrice[]>().notNull(),
 
     // Winner
-    winner: jsonb("winner"),
+    winnerSide: jsonb("winner"),
 
 
     // Timestamp
