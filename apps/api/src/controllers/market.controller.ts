@@ -1,7 +1,8 @@
 import { Request } from "express";
 
-import { db } from "@repo/db/dist/src";
+import { admin, db } from "@repo/db/dist/src";
 import { market } from "@repo/db/dist/src";
+import { eq } from "drizzle-orm"
 
 const getAllMarket = async (req: Request, res: any) => {
   try {
@@ -38,26 +39,40 @@ const getAllMarket = async (req: Request, res: any) => {
   }
 };
 
-// const getPrices = async (req: Request, res: any) => {
-//   const data = req.body;
+const getMarketById = async (req: Request, res: any) => {
+  const ids = req.query;
 
-//   try {
-//     const result = await db
-//       .select()
-//       .from(order)
-//       .orderBy(asc(order.priceUpdatedOn))
-//       .where(eq(priceData.marketId, data.marketId));
+  const marketId = ids.marketId!.toString();
 
-//     return res.status(200).json({ res: result });
-//   } catch (error) {
-//     console.log(error);
-//     return res
-//       .status(500)
-//       .json({ success: false, message: "Internal server error" });
-//   }
-// };
+  try {
+    const getMarketById = await db.select({
+      marketId: market.marketId,
+      title: market.title,
+      description: market.description,
+      settlement: market.settlement,
+      thumbnailImage: market.thumbnailImage,
+      marketStarts: market.marketStarts,
+      marketEnds: market.marketEnds,
+      currentStatus: market.currentStatus,
+      marketCategory: market.marketCategory,
+      marketType: market.marketType,
+      winnerSide: market.winnerSide,
+      outcomes: market.outcomes,
+    }).from(market).where(eq(market.marketId, marketId))
+
+    console.log(getMarketById);
+
+
+    return res.status(200).json({ message: "Market details fetched", market: getMarketById, success: true })
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false, message: "Internal server error" })
+  }
+
+}
 
 export {
   getAllMarket,
-  //  getPrices
+  getMarketById
 };

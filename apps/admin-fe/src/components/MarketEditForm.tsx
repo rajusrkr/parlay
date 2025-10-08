@@ -101,9 +101,10 @@ export default function MarketEditForm({
     e.preventDefault();
     setErrorMessage("");
 
-    const { success, data } = MarketEditSchema.safeParse(formData);
+    const { success, data,error } = MarketEditSchema.safeParse(formData);
 
     if (!success) {
+      console.log(error);
       setErrorMessage("Zod validation error");
       return;
     }
@@ -143,7 +144,6 @@ export default function MarketEditForm({
       const res = await sendReq.json();
       if (res.success) {
         setIsFormSubmiting(false);
-        // Call update that record func
         navigate(`/admin/market/${formData.marketId}`);
       } else {
         setIsFormSubmiting(false);

@@ -1,12 +1,12 @@
 import { Router } from "express";
 import {
   getAllMarket,
-  // getPrices
+  getMarketById,
 } from "../controllers/market.controller";
 
 const router = Router();
 
 router.get("/get-markets", getAllMarket);
-// router.post("/get-price", getPrices)
+router.get("/get-market-byId", getMarketById)
 
 export default router;

@@ -20,6 +20,7 @@ interface States {
     login: ({ email, password, navigate }: { email: string, password: string, navigate: (pasth: string) => void }) => Promise<void>
     fetchAllMarkets: () => Promise<void>;
     setMarketFilters: ({status, categories}:{status: string, categories: string[]}) => void;
+    getMarketById: ({marketId}: {marketId: string}) => Promise<void>
 }
 
 const useAdminStore = create(persist<States>((set) => ({
@@ -83,9 +84,34 @@ const useAdminStore = create(persist<States>((set) => ({
 
     setMarketFilters: ({status, categories}) => {
         set({marketFilter: {status, categories}})
+    },
+
+    getMarketById: async ({marketId}) => {
+        try {
+            const sendReq = await fetch(`${BACKEND_URI}/market/get-market-byId?marketId=${marketId}`)
+            const res = await sendReq.json()
+
+            const marketData = useAdminStore.getState().markets;
+            const getCurrentMarketIndex = marketData.findIndex(mrkt => mrkt.marketId === marketId);
+            marketData.splice(getCurrentMarketIndex, 1)
+            marketData.push(res.market[0])
+
+            if (res.success) {
+                console.log(marketData);
+
+                set((prev) => ({
+                    ...prev,
+                    markets: marketData
+                }))
+                
+            } else {
+                console.log(res);
+            }
+            
+        } catch (error) {
+            console.log(error);
+        }
     }
-
-
 }), { name: "admin-store" }))
 
 export { useAdminStore }
