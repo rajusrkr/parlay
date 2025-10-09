@@ -1,0 +1,195 @@
+import { useEffect, useMemo, useState } from "react";
+import { useMarketStore } from "../store/useMarketStore";
+import {
+  Button,
+  Card,
+  CardBody,
+  CardFooter,
+  Chip,
+  Divider,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Tab,
+  Tabs,
+} from "@heroui/react";
+import {
+  Bitcoin,
+  CircleCheckBig,
+  GalleryVerticalEnd,
+  Hourglass,
+  Landmark,
+  Lock,
+  LockOpen,
+  Timer,
+  Trophy,
+} from "lucide-react";
+import { dateFormater } from "../lib/utils";
+import { Link } from "react-router";
+
+export default function Market() {
+  const { fetchMarkets, markets } = useMarketStore();
+
+  const marketFilters = [
+    { title: "Open", key: "open", icons: <LockOpen size={20} /> },
+    { title: "Open soon", key: "open-soon", icons: <Timer /> },
+    { title: "Closed", key: "closed", icons: <Lock size={20} /> },
+    { title: "Settled", key: "settled", icons: <CircleCheckBig size={20} /> },
+    { title: "All", key: "all", icons: <GalleryVerticalEnd size={20} /> },
+  ];
+  const marketCategory = [
+    { title: "All", key: "all", icon: <GalleryVerticalEnd size={20} /> },
+    { title: "Sports", key: "sports", icon: <Trophy size={20} /> },
+    { title: "Politics", key: "politics", icon: <Landmark size={20} /> },
+    { title: "Crypto", key: "crypto", icon: <Bitcoin size={20} /> },
+  ];
+
+  const [selectedKeys, setSelectedKeys] = useState(new Set(["all"]));
+  console.log(selectedKeys);
+
+  const selectedValue = useMemo(
+    () => Array.from(selectedKeys).join(", "),
+    [selectedKeys]
+  );
+
+  useEffect(() => {
+    (async () => {
+      await fetchMarkets();
+    })();
+  }, []);
+
+  return (
+    <div className="mt-4">
+      {/* Head */}
+      <div className="mb-8">
+        <h1 className="text-2xl md:text-3xl font-semibold mb-2">
+          Betting Markets
+        </h1>
+        <p className="text-default-500">
+          Explore and place bets on various markets
+        </p>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Left filter section */}
+        <div>
+          <h2 className="text-lg font-medium mb-2">Filters</h2>
+          <div>
+            <Tabs
+              aria-label="market filters"
+              color="primary"
+              variant="light"
+              className="flex flex-wrap"
+            >
+              {marketFilters.map((filter) => (
+                <Tab
+                  key={filter.key}
+                  title={
+                    <div className="flex justify-center items-center gap-1">
+                      {filter.icons}
+                      <span>{filter.title}</span>
+                    </div>
+                  }
+                />
+              ))}
+            </Tabs>
+          </div>
+        </div>
+        {/* Right filter section */}
+        <div>
+          <Dropdown>
+            <DropdownTrigger>
+              <Button className="capitalize" variant="bordered">
+                {selectedValue}
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              disallowEmptySelection
+              aria-label="Multiple selection example"
+              closeOnSelect={false}
+              selectedKeys={selectedKeys}
+              selectionMode="multiple"
+              variant="flat"
+              onSelectionChange={(keys) =>
+                setSelectedKeys(new Set(keys as Iterable<string>))
+              }
+            >
+              {marketCategory.map((category) => (
+                <DropdownItem key={category.key} startContent={category.icon}>
+                  {category.title}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </Dropdown>
+        </div>
+      </div>
+      {/* market lists */}
+
+      <div className="grid md:grid-cols-3 grid-cols-1 gap-4 mt-4 p-1">
+        {markets.map((market, i) => (
+          <Card key={i}>
+            <CardBody>
+              {/* status and category */}
+              <div className="flex justify-between mb-2">
+                <Chip>
+                  <span className="capitalize">{market.currentStatus}</span>
+                </Chip>
+                <Chip>
+                  <span className="capitalize">{market.marketCategory}</span>
+                </Chip>
+              </div>
+              {/* title, descriptio and closing */}
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold mb-2">
+                  {market.title}
+                </h2>
+                <p className="text-sm text-default-500 truncate mb-4">
+                  {market.description}
+                </p>
+                <p
+                  className="flex items-center text-default-500 text-xs
+                gap-0.5"
+                >
+                  <Hourglass size={14} />
+                  <span>
+                    Closes: {dateFormater({ timestamp: market.marketEnds })}
+                  </span>
+                </p>
+              </div>
+
+              {/* outcomes and prices*/}
+              <div className="flex flex-col space-y-3">
+                {market.outcomes.slice(0, 2).map((outcms) => (
+                  <Button key={outcms.outcome} variant="bordered">
+                    <span className="capitalize">{outcms.outcome}</span>
+                  </Button>
+                ))}
+              </div>
+              <div className="mt-1">
+                <Chip color="default" variant="light" radius="sm" className="hover:bg-default-100 transition-all">
+                  <span>
+                    {market.outcomes.length > 3 && (
+                      <Link to={"/market/id"}>
+                        <span className="text-primary font-semibold text-xs">
+                          View more options
+                        </span>
+                      </Link>
+                    )}
+                  </span>
+                </Chip>
+              </div>
+            </CardBody>
+
+            {/* Footer */}
+            <Divider className="my-2" />
+            <CardFooter className="mt-auto">
+              <Button className="">Place bet</Button>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
