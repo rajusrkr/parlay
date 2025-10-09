@@ -125,26 +125,75 @@ export default function Market() {
           </Dropdown>
         </div>
       </div>
-      {/* market lists */}
 
+      {/* market lists */}
       <div className="grid md:grid-cols-3 grid-cols-1 gap-4 mt-4 p-1">
         {markets.map((market, i) => (
           <Card key={i}>
             <CardBody>
               {/* status and category */}
               <div className="flex justify-between mb-2">
-                <Chip>
-                  <span className="capitalize">{market.currentStatus}</span>
-                </Chip>
-                <Chip>
-                  <span className="capitalize">{market.marketCategory}</span>
-                </Chip>
+                {market.currentStatus === "open" && (
+                  <Chip color="success" variant="flat">
+                    <span className="capitalize flex items-center gap-1">
+                      <LockOpen size={18} /> {market.currentStatus}
+                    </span>
+                  </Chip>
+                )}
+
+                {market.currentStatus === "settled" && (
+                  <Chip color="secondary" variant="flat">
+                    <span className="capitalize flex items-center gap-1">
+                      <CircleCheckBig size={18} /> {market.currentStatus}
+                    </span>
+                  </Chip>
+                )}
+                {market.currentStatus === "closed" && (
+                  <Chip color="danger" variant="flat">
+                    <span className="capitalize flex items-center gap-1">
+                      <Lock size={18} /> {market.currentStatus}
+                    </span>
+                  </Chip>
+                )}
+
+                 {market.currentStatus === "open-soon" && (
+                  <Chip color="danger" variant="flat">
+                    <span className="capitalize flex items-center gap-1">
+                      <Timer size={18} /> {market.currentStatus}
+                    </span>
+                  </Chip>
+                )}
+
+
+                  {market.marketCategory === "sports" && (
+                  <Chip variant="flat">
+                    <span className="capitalize flex items-center gap-0.5">
+                      <Trophy size={16} />
+                      {market.marketCategory}
+                    </span>
+                  </Chip>
+                )}
+                {market.marketCategory === "crypto" && (
+                  <Chip variant="flat">
+                    <span className="capitalize flex items-center gap-0.5">
+                      <Bitcoin size={16} />
+                      {market.marketCategory}
+                    </span>
+                  </Chip>
+                )}
+
+                {market.marketCategory === "politics" && (
+                  <Chip variant="flat">
+                    <span className="capitalize flex items-center gap-0.5">
+                      <Landmark size={16} />
+                      {market.marketCategory}
+                    </span>
+                  </Chip>
+                )}
               </div>
               {/* title, descriptio and closing */}
               <div className="mb-4">
-                <h2 className="text-lg font-semibold mb-2">
-                  {market.title}
-                </h2>
+                <h2 className="text-lg font-semibold mb-2">{market.title}</h2>
                 <p className="text-sm text-default-500 truncate mb-4">
                   {market.description}
                 </p>
@@ -168,7 +217,12 @@ export default function Market() {
                 ))}
               </div>
               <div className="mt-1">
-                <Chip color="default" variant="light" radius="sm" className="hover:bg-default-100 transition-all">
+                <Chip
+                  color="default"
+                  variant="light"
+                  radius="sm"
+                  className="hover:bg-default-100 transition-all"
+                >
                   <span>
                     {market.outcomes.length > 3 && (
                       <Link to={"/market/id"}>
