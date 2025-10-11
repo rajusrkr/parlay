@@ -1,9 +1,4 @@
-import {
-  Card,
-  CardBody,
-  CardFooter,
-  Chip,
-} from "@heroui/react";
+import { Card, CardBody, CardFooter, Chip } from "@heroui/react";
 import { useAdminStore } from "../store/adminStore";
 import {
   Bitcoin,
@@ -14,13 +9,14 @@ import {
   Landmark,
   Lock,
   LockOpen,
+  Trash2,
   Trophy,
 } from "lucide-react";
 import { dateFormater } from "../utils/lib";
 import { Link } from "react-router";
 
 export default function MarketCards() {
-  const { markets, marketFilter } = useAdminStore();
+  const { markets, marketFilter, deleteMarketById } = useAdminStore();
   return (
     <div className="grid md:grid-cols-3 grid-cols-1 gap-4 mt-4 p-1">
       {markets
@@ -35,7 +31,7 @@ export default function MarketCards() {
               {/* status and category */}
               <div className="flex justify-between mb-2">
                 {/* MARKET STATUS */}
-                {market.currentStatus === "not_started" && (
+                {market.currentStatus === "open_soon" && (
                   <Chip color="default" variant="flat">
                     <span className="capitalize flex items-center">
                       <Hourglass size={16} /> Open soon
@@ -93,9 +89,7 @@ export default function MarketCards() {
               </div>
               {/* title, descriptio and closing */}
               <div>
-                <h2 className="text-lg font-semibold mb-2">
-                  {market.title}
-                </h2>
+                <h2 className="text-lg font-semibold mb-2">{market.title}</h2>
                 <p className="text-sm text-default-500 truncate mb-4">
                   {market.description}
                 </p>
@@ -120,17 +114,36 @@ export default function MarketCards() {
               </div>
             </CardBody>
 
-            <CardFooter>
-              <Link to={`/admin/market/${market.marketId}`}>
+            <CardFooter className="flex justify-between">
+              <div>
+                <Link to={`/admin/market/${market.marketId}`}>
+                  <Chip
+                    radius="sm"
+                    color="primary"
+                    variant="light"
+                    className="hover:bg-primary-50 transition-all"
+                  >
+                    Details
+                  </Chip>
+                </Link>
+              </div>
+
+              <div>
                 <Chip
-                  radius="sm"
-                  color="primary"
                   variant="light"
-                  className="hover:bg-primary-50 transition-all"
+                  size="sm"
+                  radius="full"
+                  className="hover:cursor-pointer"
+                  onClick={async () => {
+                    await deleteMarketById({ marketId: market.marketId! });
+                  }}
                 >
-                  Details
+                  <Trash2
+                    size={18}
+                    className="text-danger-300 hover:text-danger-500 transition-all"
+                  />
                 </Chip>
-              </Link>
+              </div>
             </CardFooter>
           </Card>
         ))}
@@ -146,7 +159,7 @@ export default function MarketCards() {
                 {/* status and category */}
                 <div className="flex justify-between mb-2">
                   {/* MARKET STATUS */}
-                  {market.currentStatus === "not_started" && (
+                  {market.currentStatus === "open_soon" && (
                     <Chip color="default" variant="flat">
                       <span className="capitalize flex items-center">
                         <Hourglass size={16} /> Open soon
@@ -204,9 +217,7 @@ export default function MarketCards() {
                 </div>
                 {/* title, descriptio and closing */}
                 <div>
-                  <h2 className="text-lg font-semibold mb-2">
-                    {market.title}
-                  </h2>
+                  <h2 className="text-lg font-semibold mb-2">{market.title}</h2>
                   <p className="text-sm text-default-500 truncate mb-4">
                     {market.description}
                   </p>
@@ -216,7 +227,8 @@ export default function MarketCards() {
                   >
                     <Calendar size={15} />
                     <span>
-                      Created: {dateFormater({ timestamp: market.marketStarts })}
+                      Created:{" "}
+                      {dateFormater({ timestamp: market.marketStarts })}
                     </span>
                   </p>
                   <p
@@ -230,17 +242,36 @@ export default function MarketCards() {
                   </p>
                 </div>
               </CardBody>
-              <CardFooter>
-                <Link to={`/admin/market/${market.marketId}`}>
+              <CardFooter className="flex justify-between">
+                <div>
+                  <Link to={`/admin/market/${market.marketId}`}>
+                    <Chip
+                      radius="sm"
+                      color="primary"
+                      variant="light"
+                      className="hover:bg-primary-50 transition-all"
+                    >
+                      Details
+                    </Chip>
+                  </Link>
+                </div>
+
+                <div>
                   <Chip
-                    radius="sm"
-                    color="primary"
                     variant="light"
-                    className="hover:bg-primary-50 transition-all"
+                    size="sm"
+                    radius="full"
+                    className="hover:cursor-pointer"
+                    onClick={async () => {
+                      await deleteMarketById({ marketId: market.marketId! });
+                    }}
                   >
-                    Details
+                    <Trash2
+                      size={18}
+                      className="text-danger-300 hover:text-danger-500 transition-all"
+                    />
                   </Chip>
-                </Link>
+                </div>
               </CardFooter>
             </Card>
           ))}
