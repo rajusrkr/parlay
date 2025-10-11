@@ -1,15 +1,9 @@
 import { bigint, jsonb, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { admin } from "./admin";
+import {type OutcomeInterface} from "@repo/shared/src/index"
 
-export const CurrentMarketStatus = pgEnum("current_status", ["not_started", "open", "settled", "cancelled"]);
+export const CurrentMarketStatus = pgEnum("current_status", ["open_soon", "open", "settled", "cancelled"]);
 export const MarketCategory = pgEnum("market_category", ["sports", "crypto", "politics", "regular"]);
-export const MarketType = pgEnum("market_type", ["binary", "other"])
-
-export interface OutcomeAndPrice {
-    outcome: string,
-    price: string,
-    tradedQty: number
-}
 
 const market = pgTable("market", {
     // Market identity
@@ -24,18 +18,15 @@ const market = pgTable("market", {
     title: varchar("market_title", { length: 255 }).notNull(),
     description: text("market_overview").notNull(),
     settlement: text("market_settlement").notNull(),
-    currentStatus: CurrentMarketStatus("current_status").default("not_started"),
+    currentStatus: CurrentMarketStatus("current_status").default("open_soon"),
     marketCategory: MarketCategory("market_category"),
-    marketType: MarketType("market_type"),
-    thumbnailImage: text("market_thumbnail_image_url").notNull(),
 
     // Timing
     marketStarts: bigint("market_starts", { mode: "number" }).notNull(),
     marketEnds: bigint("market_ends", { mode: "number" }).notNull(),
 
-
     // Outcome and prices, will store latest prices
-    outcomes: jsonb("outcome_and_price").$type<OutcomeAndPrice[]>().notNull(),
+    outcomes: jsonb("outcome_and_price").$type<OutcomeInterface[]>().notNull(),
 
     // Winner
     winnerSide: jsonb("winner"),

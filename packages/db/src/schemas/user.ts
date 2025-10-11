@@ -18,7 +18,7 @@ const user = pgTable("user", {
 
     // Wallet & Balance
     walletBalance: decimal("wallet_balance", { precision: 12, scale: 2 }).default("50000.00"),
-    currencyCode: CurrencyCode().default("USD"),
+    currencyCode: CurrencyCode().default("INR"),
 
 
     // Timestamp
