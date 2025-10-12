@@ -1,10 +1,12 @@
 import { useParams } from "react-router";
 import {
+  Button,
   Card,
   CardBody,
   CardHeader,
   Chip,
   Divider,
+  Input,
   Progress,
   Tab,
   Tabs,
@@ -24,8 +26,11 @@ import {
   Trophy,
 } from "lucide-react";
 import { dateFormater } from "../lib/utils";
-import { type MarketByIdInterface } from "@repo/shared/src";
-import { useEffect, useState } from "react";
+import {
+  type MarketByIdInterface,
+  type OutcomeInterface,
+} from "@repo/shared/src";
+import { useEffect, useMemo, useState } from "react";
 import { useUserStore } from "../store/userStore";
 
 function PageHeader({ market }: { market: MarketByIdInterface }) {
@@ -171,7 +176,7 @@ function ContentTabs({ market }: { market: MarketByIdInterface }) {
   }
 
   return (
-    <div className="mt-8">
+    <div className="md:col-span-2">
       <div>
         <Card className="max-w-3xl">
           <CardHeader>
@@ -218,6 +223,123 @@ function ContentTabs({ market }: { market: MarketByIdInterface }) {
   );
 }
 
+function OrderPanel({
+  marketId,
+  outcomes,
+}: {
+  marketId: string;
+  outcomes: OutcomeInterface[];
+}) {
+  const [selectedOutcome, setSelectedOutcome] = useState<string | undefined>(
+    undefined
+  );
+  const [betQty, setBetQty] = useState<number | undefined>(undefined);
+
+  // Get btn status => btn disabled or not
+  const isBetBtnDisabled = useMemo(() => {
+    if (
+      typeof selectedOutcome === "undefined" ||
+      typeof betQty === "undefined" ||
+      betQty < 1
+    ) {
+      return true;
+    }
+    return false;
+  }, [selectedOutcome, betQty]);
+
+  return (
+    <div className="flex-1">
+      <Card className="max-w-3xl">
+        <CardHeader className="text-lg font-semibold">
+          Place Your Bet
+        </CardHeader>
+        <Divider />
+        <CardBody>
+          <h4 className="font-semibold text-default-500">Select an outcome:</h4>
+          <div className="flex flex-col gap-2 mt-2">
+            {outcomes.map((otcms, i) => (
+              <Button
+                key={i}
+                className="w-full justify-between"
+                variant={selectedOutcome === otcms.title ? "solid" : "bordered"}
+                color={selectedOutcome === otcms.title ? "primary" : "default"}
+                onPress={() => {
+                  setSelectedOutcome(otcms.title);
+                }}
+              >
+                <span>{otcms.title}</span>
+                <Chip
+                  color={
+                    selectedOutcome === otcms.title ? "primary" : "default"
+                  }
+                  variant={selectedOutcome === otcms.title ? "faded" : "solid"}
+                >
+                  {otcms.price}
+                </Chip>
+              </Button>
+            ))}
+          </div>
+          <Divider className="my-4" />
+          <div>
+            <h4 className="font-semibold text-default-500">Bet Qty:</h4>
+            <div className="grid grid-cols-3 gap-3 mt-2">
+              {[50, 100, 150, 200, 250, 300].map((bqty, i) => (
+                <Button
+                  key={i}
+                  variant={betQty === bqty ? "solid" : "light"}
+                  color={betQty === bqty ? "primary" : "default"}
+                  onPress={() => {
+                    setBetQty(bqty);
+                  }}
+                >
+                  {bqty}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <h4 className="font-semibold text-default-500">
+              Enter custom Qty:
+            </h4>
+            <Input
+              type="number"
+              placeholder="Enter your qty"
+              className="mt-2"
+              value={betQty?.toString()}
+              onChange={(e) => {
+                setBetQty(Number(e.target.value));
+              }}
+            />
+          </div>
+            <div className="mt-4 text-default-500 font-semibold text-sm">
+            {
+              typeof selectedOutcome !== "undefined" && typeof betQty !== "undefined" && (
+                <div>
+                  <p>Your selection is: {selectedOutcome}</p>
+                  <p>Your Quantity is: {betQty}</p>
+                </div>
+              )
+            }
+          </div>
+
+          <div className="mt-4">
+            <Button
+              className="w-full font-semibold"
+              color="primary"
+              isDisabled={isBetBtnDisabled}
+            >
+              Place Bet
+            </Button>
+          </div>
+
+        
+        </CardBody>
+      </Card>
+    </div>
+  );
+}
+
 export default function MarketById() {
   const { fetchMarketById, marketById, isMarketFetching } = useUserStore();
   const matketId = useParams().id;
@@ -232,12 +354,16 @@ export default function MarketById() {
     <div>
       {isMarketFetching && <p>Loading...</p>}
       {typeof marketById === "undefined" && <p>Error happened</p>}
-      {typeof marketById !== "undefined" && (
-        <PageHeader market={marketById} />
-      )}
+      {typeof marketById !== "undefined" && <PageHeader market={marketById} />}
 
       {typeof marketById !== "undefined" && (
-        <ContentTabs market={marketById} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-8">
+          <ContentTabs market={marketById} />
+          <OrderPanel
+            marketId={marketById.marketId}
+            outcomes={marketById.outcomes}
+          />
+        </div>
       )}
     </div>
   );
