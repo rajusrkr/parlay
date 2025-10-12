@@ -7,106 +7,60 @@ import {
   DatePicker,
   Form,
   Input,
-  Listbox,
-  ListboxItem,
-  ListboxSection,
   Select,
   SelectItem,
   Textarea,
 } from "@heroui/react";
-import { getLocalTimeZone, now } from "@internationalized/date";
+import { CalendarDateTime } from "@internationalized/date";
 import {
-  type MarketTypeInterface,
   MarketCreationSchema,
+  type MarketCreationInterface,
 } from "@repo/shared/src";
-import { Loader, UploadCloud } from "lucide-react";
 import { useState } from "react";
 import { BACKEND_URI } from "../store/adminStore";
 import { useNavigate } from "react-router";
+import { Trash2 } from "lucide-react";
 
 export const marketCategory = [
   { key: "crypto", label: "Crypto" },
   { key: "sports", label: "Sports" },
   { key: "politics", label: "Politics" },
 ];
-export const marketType = [
-  { key: "binary", label: "Binary Outcomes" },
-  { key: "other", label: "Other Outcomes" },
-];
-export const ListboxWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="w-full border-small px-1 py-2 rounded-small border-default-200 dark:border-default-100">
-    {children}
-  </div>
-);
 
 export default function MarketCreationForm() {
-  const [formData, setFormData] = useState<MarketTypeInterface>();
+  const [formData, setFormData] = useState<MarketCreationInterface>();
+
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [isImageUploaded, setIsImageUploaded] = useState<boolean>(false);
-  const [isImageUploading, setIsImageUploading] = useState<boolean>(false);
   const [isFormSubmiting, setIsFormSubmiting] = useState(false);
   const [singleOutcome, setSingleOutcome] = useState("");
+  const [singleOutcomeError, setSingleOutcomeError] = useState("");
+  const [startDateError, setStartDateError] = useState("");
+  const [endDateError, setEndDateError] = useState("");
 
   const navigate = useNavigate();
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files![0];
-
-    if (typeof file !== "object") {
-      return;
-    }
-
-    const allowedFileTypes = [
-      "image/png",
-      "image/jpeg",
-      "image/jpg",
-      "image/webp",
-      "image/gif",
-    ];
-
-    if (!allowedFileTypes.includes(file.type)) {
-      window.alert(`Invalid file type, ${file.type} not allowed`);
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      setIsImageUploading(true);
-      const sendReq = await fetch(`${BACKEND_URI}/admin/thumbnail-upload`, {
-        method: "POST",
-        body: formData,
-      });
-      const res = await sendReq.json();
-      if (res.success) {
-        setFormData((prev) => ({ ...prev!, thumbnailImage: res.fileUrl }));
-        setIsImageUploaded(true);
-        setIsImageUploading(false);
-      } else {
-        setIsImageUploading(false);
-        setErrorMessage(res.message);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage("");
+    setStartDateError("");
+    setEndDateError("");
 
-    const { success, data } = MarketCreationSchema.safeParse(formData);
+    const { success, data, error } = MarketCreationSchema.safeParse(formData);
 
     if (!success) {
-      setErrorMessage("Data validation error");
+      const errorM =
+        error.issues[0].message +
+        " at " +
+        error.issues[0].path[0].toString() +
+        " field";
+      setErrorMessage(errorM);
       return;
     }
 
     // Compare dates
     const currentDateAndTime = Math.floor(new Date().getTime() / 1000);
     if (data!.marketStarts < currentDateAndTime) {
-      setErrorMessage("Start date and time should not be in past");
+      setStartDateError("Start date and time should not be in past");
       return;
     }
 
@@ -114,9 +68,14 @@ export default function MarketCreationForm() {
       data!.marketEnds < currentDateAndTime ||
       data!.marketEnds < data!.marketStarts
     ) {
-      setErrorMessage(
-        "End date and time should not be in future or should greater than Start date and time"
+      setEndDateError(
+        "End date and time should not be in past or should not be smaller than Start date and time"
       );
+      return;
+    }
+
+    if (data.outcomes.length < 2) {
+      setErrorMessage("Atleast 2 outcomes needed");
       return;
     }
 
@@ -145,7 +104,7 @@ export default function MarketCreationForm() {
   };
 
   return (
-    <div>
+    <div className="py-8">
       <Card className="max-w-3xl mx-auto py-2">
         <CardHeader>
           <Chip radius="md" variant="dot" color="secondary">
@@ -205,20 +164,20 @@ export default function MarketCreationForm() {
                 <DatePicker
                   hideTimeZone
                   showMonthAndYearPickers
-                  defaultValue={now(getLocalTimeZone())}
                   label="Market starts"
                   labelPlacement="outside"
                   variant="faded"
                   size="lg"
+                  granularity="minute"
                   isRequired
                   onChange={(e) => {
-                    // setStartDateError("");
+                    const values = e as CalendarDateTime;
                     const date = new Date(
-                      e!.year,
-                      e!.month - 1,
-                      e!.day,
-                      e!.hour,
-                      e!.minute,
+                      values.year,
+                      values.month - 1,
+                      values.day,
+                      values.hour,
+                      values.minute,
                       0,
                       0
                     );
@@ -229,25 +188,29 @@ export default function MarketCreationForm() {
                     }));
                   }}
                 />
+                <p className="text-xs text-danger">
+                  {startDateError.length !== 0 && startDateError}
+                </p>
               </div>
 
               <div className="flex flex-col w-full">
                 <DatePicker
                   hideTimeZone
                   showMonthAndYearPickers
-                  defaultValue={now(getLocalTimeZone())}
                   label="Market ends"
                   labelPlacement="outside"
                   variant="faded"
                   size="lg"
                   isRequired
+                  granularity="minute"
                   onChange={(e) => {
+                    const values = e as CalendarDateTime;
                     const date = new Date(
-                      e!.year,
-                      e!.month - 1,
-                      e!.day,
-                      e!.hour,
-                      e!.minute,
+                      values.year,
+                      values.month - 1,
+                      values.day,
+                      values.hour,
+                      values.minute,
                       0,
                       0
                     );
@@ -258,72 +221,13 @@ export default function MarketCreationForm() {
                     }));
                   }}
                 />
+                <p className="text-xs text-danger">
+                  {endDateError.length !== 0 && endDateError}
+                </p>
               </div>
             </div>
-            {/* Image upload and market category */}
+            {/* Market category */}
             <div className="w-full flex flex-col md:flex-row gap-2">
-              {isImageUploaded ? (
-                <>
-                  <div className="w-full">
-                    <p className="text-sm font-semibold text-gray-500">
-                      Thumbnail image
-                    </p>
-                    <div className="flex">
-                      {formData?.thumbnailImage.length !== 0 && (
-                        <img
-                          src={formData?.thumbnailImage}
-                          alt="thumbnail"
-                          className="rounded-lg object-contain w-20 h-20"
-                        />
-                      )}
-                      <div>
-                        <Button
-                          size="sm"
-                          color="danger"
-                          variant="light"
-                          onPress={() => {
-                            setFormData((prev) => ({
-                              ...prev!,
-                              thumbnailImage: "",
-                            }));
-                            setIsImageUploaded(false);
-                          }}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="w-full flex flex-col">
-                    <Input
-                      type="file"
-                      label="Thumbnail"
-                      labelPlacement="outside"
-                      variant="faded"
-                      size="lg"
-                      isRequired
-                      startContent={<UploadCloud />}
-                      onChange={handleImageUpload}
-                    />
-                    <p className="text-sm font-semibold text-gray-500 flex items-center">
-                      {isImageUploading && (
-                        <>
-                          uploading...
-                          <Loader size={16} className="animate-spin" />
-                        </>
-                      )}
-                      {isImageUploading && (
-                        <span className="text-xs text-red-500 font-semibold">
-                          {errorMessage}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                </>
-              )}
               <div className="w-full">
                 <Select
                   label="Market category"
@@ -352,143 +256,101 @@ export default function MarketCreationForm() {
                 </Select>
               </div>
             </div>
-            {/* Market type and outcomes */}
-            <div className="flex flex-col md:flex-row w-full gap-6">
-              <div className="w-full">
-                <Select
-                  label="Market type"
-                  labelPlacement="outside"
-                  placeholder="Select market type"
-                  selectionMode="single"
-                  variant="faded"
-                  size="lg"
-                  isRequired
-                  onChange={(e) => {
-                    if (e.target.value === "binary") {
-                      setFormData((prev) => ({
-                        ...prev!,
-                        marketType: e.target.value as "binary" | "other",
-                        outcomes: [
-                          { outcome: "yes", price: "0", tradedQty: 0 },
-                          { outcome: "no", price: "0", tradedQty: 0 },
-                        ],
-                      }));
-                      return;
-                    }
-                    setFormData((prev) => ({
-                      ...prev!,
-                      marketType: e.target.value as "binary" | "other",
-                      outcomes: [],
-                    }));
-                  }}
-                >
-                  {marketType.map((mrktType) => (
-                    <SelectItem key={mrktType.key}>{mrktType.label}</SelectItem>
-                  ))}
-                </Select>
-              </div>
-              <div className="w-full">
-                {/* Outcomes for binary market type */}
-                <div>
-                  {formData?.marketType === "binary" && (
-                    <ListboxWrapper>
-                      <Listbox
-                        aria-label="Listbox with binary outcomes"
-                        variant="light"
-                      >
-                        <ListboxSection
-                          title={`Outcomes for ${formData.marketType} market`}
-                        >
-                          {formData.outcomes.map((otcm, i) => (
-                            <ListboxItem key={i}>
-                              <span className="capitalize">{`${1 + i}. ${otcm.outcome}`}</span>
-                            </ListboxItem>
-                          ))}
-                        </ListboxSection>
-                      </Listbox>
-                    </ListboxWrapper>
-                  )}
-                </div>
-                {/* Outcomes for other */}
-                <div>
-                  {formData?.marketType === "other" && (
-                    <>
-                      <ListboxWrapper>
-                        <Listbox
-                          aria-label="Listbox with binary outcomes"
-                          variant="light"
-                        >
-                          <ListboxSection
-                            title={`Outcomes for ${formData.marketType} market`}
-                          >
-                            {formData.outcomes.length === 0 ? (
-                              <>
-                                <ListboxItem>
-                                  <span className="capitalize">
-                                    Add outcomes
-                                  </span>
-                                </ListboxItem>
-                              </>
-                            ) : (
-                              <>
-                                {formData.outcomes.map((otcm, i) => (
-                                  <ListboxItem key={i}>
-                                    <span className="capitalize">
-                                      <span className="capitalize">{`${1 + i}. ${otcm.outcome}`}</span>
-                                    </span>
-                                  </ListboxItem>
-                                ))}
-                              </>
-                            )}
-                          </ListboxSection>
-                          <ListboxSection>
-                            <ListboxItem>
-                              <div className="flex gap-2">
-                                <Input
-                                  placeholder="Add outcomes"
-                                  className="w-48"
-                                  isRequired
-                                  variant="bordered"
-                                  onChange={(e) =>
-                                    setSingleOutcome(e.target.value)
-                                  }
-                                />
-                                <Button
-                                  color="secondary"
-                                  variant="flat"
-                                  onPress={() => {
-                                    setFormData((prev) => ({
-                                      ...prev!,
-                                      outcomes: [
-                                        ...prev!.outcomes,
-                                        {
-                                          outcome: singleOutcome,
-                                          price: "0",
-                                          tradedQty: 0,
-                                        },
-                                      ],
-                                    }));
-                                  }}
-                                >
-                                  Add
-                                </Button>
-                              </div>
-                            </ListboxItem>
-                          </ListboxSection>
-                        </Listbox>
-                      </ListboxWrapper>
-                    </>
-                  )}
-                </div>
-              </div>
+            {/* Outcomes */}
+            <div className="w-full">
+              <p className="mb-1">
+                Outcomes <span className="text-danger">*</span>
+              </p>
+              <Card className="bg-default-100 border-2 border-default-200 shadow-none">
+                <CardHeader className="text-default-500">
+                  Add outcomes below
+                </CardHeader>
+                <CardBody>
+                  <div className="mb-4">
+                    {typeof formData?.outcomes !== "undefined" &&
+                      formData?.outcomes.map((otcms, i) => (
+                        <div key={i}>
+                          <p className="capitalize font-semibold text-default-500  flex justify-between items-center w-80">
+                            <span>{`${i + 1}. ${otcms.title}`}</span>{" "}
+                            <span>
+                              <Trash2
+                                size={18}
+                                className="hover:text-danger hover:cursor-pointer transition-all"
+                                onClick={() => {
+                                  setFormData((prev) => ({
+                                    ...prev!,
+                                    outcomes: [
+                                      ...prev!.outcomes.filter(
+                                        (otcm) => otcm.title !== otcms.title
+                                      ),
+                                    ],
+                                  }));
+                                }}
+                              />
+                            </span>
+                          </p>
+                        </div>
+                      ))}
+                  </div>
+                  <div className="flex flex-row gap-1">
+                    <Input
+                      value={singleOutcome}
+                      placeholder="Enter outcome"
+                      variant="bordered"
+                      onChange={(e) => {
+                        setSingleOutcomeError("");
+                        setSingleOutcome(e.target.value);
+                      }}
+                    />
+                    <Button
+                      color="secondary"
+                      variant="bordered"
+                      onPress={() => {
+                        if (singleOutcome.length === 0) {
+                          setSingleOutcomeError("Empty field is not allowed");
+                          return;
+                        }
+
+                        if (
+                          formData?.outcomes.some(
+                            (ot) => ot.title === singleOutcome
+                          )
+                        ) {
+                          setSingleOutcomeError(
+                            "Same outcome is not allowed twice"
+                          );
+                          return;
+                        }
+                        setFormData((prev) => ({
+                          ...prev!,
+                          outcomes: [
+                            ...(prev?.outcomes ?? []),
+                            {
+                              title: singleOutcome,
+                              price: 0,
+                              totalActiveBet: 0,
+                              totalActiveVolume: 0,
+                              tradedQty: 0,
+                            },
+                          ],
+                        }));
+                        setSingleOutcome("");
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </div>
+
+                  <div className="ml-1 mt-0.5">
+                    <p className="text-xs font-semibold text-danger">
+                      {singleOutcomeError.length !== 0 && singleOutcomeError}
+                      {errorMessage.length !== 0 && errorMessage}
+                    </p>
+                  </div>
+                </CardBody>
+              </Card>
             </div>
-            <div>
-              {errorMessage.length !== 0 && (
-                <p className="text-sm text-danger font-semibold">
-                  Error: {errorMessage}
-                </p>
-              )}
-            </div>
+            <div></div>
             <div className="w-full mt-2">
               <Button
                 className="w-full"
