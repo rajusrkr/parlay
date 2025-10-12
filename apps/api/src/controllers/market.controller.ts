@@ -4,21 +4,19 @@ import { admin, db } from "@repo/db/dist/src";
 import { market } from "@repo/db/dist/src";
 import { eq } from "drizzle-orm"
 
+// Get all markets
 const getAllMarket = async (req: Request, res: any) => {
   try {
-    // get markets
     const markets = await db
       .select({
         marketId: market.marketId,
         title: market.title,
         description: market.description,
         settlement: market.settlement,
-        thumbnailImage: market.thumbnailImage,
         marketStarts: market.marketStarts,
         marketEnds: market.marketEnds,
         currentStatus: market.currentStatus,
         marketCategory: market.marketCategory,
-        marketType: market.marketType,
         winnerSide: market.winnerSide,
         outcomes: market.outcomes,
       })
@@ -39,6 +37,7 @@ const getAllMarket = async (req: Request, res: any) => {
   }
 };
 
+// Get market by id
 const getMarketById = async (req: Request, res: any) => {
   const ids = req.query;
 
@@ -50,12 +49,10 @@ const getMarketById = async (req: Request, res: any) => {
       title: market.title,
       description: market.description,
       settlement: market.settlement,
-      thumbnailImage: market.thumbnailImage,
       marketStarts: market.marketStarts,
       marketEnds: market.marketEnds,
       currentStatus: market.currentStatus,
       marketCategory: market.marketCategory,
-      marketType: market.marketType,
       winnerSide: market.winnerSide,
       outcomes: market.outcomes,
     }).from(market).where(eq(market.marketId, marketId))

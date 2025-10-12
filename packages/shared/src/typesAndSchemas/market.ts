@@ -1,12 +1,13 @@
 import { z } from "zod";
 
 const MarketCategoryEnum = z.enum(["sports", "politics", "crypto", "regular"])
-const MarketType = z.enum(["binary", "other"])
 
 const outcome = z.object({
-    outcome: z.string(),
-    price: z.string(),
-    tradedQty: z.number()
+    title: z.string(),
+    price: z.number(),
+    tradedQty: z.number(),
+    totalActiveBet: z.number(),
+    totalActiveVolume: z.number()
 })
 
 export const MarketCreationSchema = z.object({
@@ -14,32 +15,34 @@ export const MarketCreationSchema = z.object({
     description: z.string().max(500),
     settlement: z.string().max(500),
     marketCategory: MarketCategoryEnum,
-    marketType: MarketType,
     marketStarts: z.number(),
     marketEnds: z.number(),
     outcomes: z.array(outcome),
-    thumbnailImage: z.string()
 }).strict()
 
 export const MarketEditSchema = z.object({
-    marketId: z.string().optional(),
     title: z.string().max(200).optional(),
     description: z.string().max(500).optional(),
     settlement: z.string().max(500).optional(),
-    currentStatus: z.string().optional(),
     marketCategory: MarketCategoryEnum.optional(),
-    marketType: MarketType.optional(),
+    currentStatus: z.string().optional(),
     marketStarts: z.number().optional(),
     marketEnds: z.number().optional(),
-    outcomes: z.array(outcome).optional(),
-    thumbnailImage: z.string().optional(),
     winnerSide: z.string().nullable().optional()
 }).strict()
 
 
-export type marketType = "binary" | "other"; 
-export type marketCategory = "sports" |"politics" |"crypto" |"regular"; 
+export type marketCategory = "sports" | "politics" | "crypto" | "regular";
 
+export interface OutcomeInterface {
+    title: string,
+    price: number,
+    tradedQty: number
+    totalActiveBet: number,
+    totalActiveVolume: number
+}
+
+// Not needed
 export interface MarketTypeInterface {
     marketId?: string
     title: string
@@ -47,14 +50,59 @@ export interface MarketTypeInterface {
     settlement: string
     currentStatus?: string
     marketCategory: marketCategory
-    marketType: marketType
     marketStarts: number
     marketEnds: number
-    winnerSide? : string,
+    winnerSide?: string,
     outcomes: {
         outcome: string
         price: string
         tradedQty: number
     }[],
     thumbnailImage: string
+}
+
+export interface MarketCreationInterface {
+    title: string
+    description: string
+    settlement: string
+    currentStatus: string
+    marketCategory: marketCategory
+    marketStarts: number
+    marketEnds: number
+    outcomes: {
+        title: string,
+        price: number,
+        tradedQty: number
+        totalActiveBet: number,
+        totalActiveVolume: number
+    }[]
+}
+
+export interface MarketsInterface {
+    marketId: string
+    title: string
+    description: string
+    currentStatus: string
+    marketCategory: string
+    marketStarts: number
+    marketEnds: number
+    outcomes?: OutcomeInterface[]
+}
+
+export interface MarketByIdInterface {
+    marketId: string
+    title: string
+    description: string
+    currentStatus: string
+    marketCategory: string
+    marketStarts: number
+    marketEnds: number
+    outcomes: OutcomeInterface[]
+    settlement: string
+    winnerSide: string
+    orderHistory: {
+        personName: string
+        orderQty: number,
+        orderExecutionPrice: number
+    }
 }

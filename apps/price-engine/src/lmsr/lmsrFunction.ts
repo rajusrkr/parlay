@@ -1,8 +1,6 @@
-type Outcome = {
-    outcome: string;
-    price: string;
-    tradedQty: number
-}
+
+
+import { type OutcomeInterface } from "@repo/shared/dist/src"
 
 
 // We need a cost calculation function and a price calculation function to get LMSR price
@@ -16,7 +14,7 @@ function lmsrCostFunc({ q, b }: { q: number[], b: number }): number {
     // e^qi/b - maxQ 
     const sumExp = q.map((qty) => Math.exp(qty / b - maxQ)).reduce((acc, val) => acc + val, 0);
 
-    const cost =b * (maxQ + Math.log(sumExp))
+    const cost = b * (maxQ + Math.log(sumExp))
 
     return cost;
 }
@@ -37,7 +35,7 @@ function lmsrPriceFunc({ q, b }: { q: number[], b: number }): number[] {
 }
 
 
-function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes: Outcome[], b: number, outcomeIndex: number, qty: number, orderType: string }): { calculatedOutcome: Outcome[], tradeCost?: number, returnToUser?: number } {
+function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes: OutcomeInterface[], b: number, outcomeIndex: number, qty: number, orderType: string }): { calculatedOutcome: OutcomeInterface[], tradeCost?: number, returnToUser?: number } {
 
     // Get the qty array
     const providedQty = outcomes.map((otcms) => otcms.tradedQty);
@@ -56,9 +54,9 @@ function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes:
             const tradeCost = (Number(costAfter) - Number(costBefore))
             const newPrices = lmsrPriceFunc({ q: addedQty, b })
 
-            const updatedOutcomes: Outcome[] = outcomes.map((otcms, i) => ({
+            const updatedOutcomes: OutcomeInterface[] = outcomes.map((otcms, i) => ({
                 ...otcms,
-                price: (newPrices[i]).toString(),
+                price: (newPrices[i]),
                 tradedQty: addedQty[i]
             }))
 
@@ -74,9 +72,9 @@ function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes:
             const returnToUser = (Number(costBefore) - Number(costAfterSubstraction));
             const newPricesAfterSubstraction = lmsrPriceFunc({ q: substractedQty, b })
 
-            const newOutcomesAfterSubstraction: Outcome[] = outcomes.map((otcms, i) => ({
+            const newOutcomesAfterSubstraction: OutcomeInterface[] = outcomes.map((otcms, i) => ({
                 ...otcms,
-                price: (newPricesAfterSubstraction[i]).toString(),
+                price: (newPricesAfterSubstraction[i]),
                 tradedQty: substractedQty[i]
             }))
 

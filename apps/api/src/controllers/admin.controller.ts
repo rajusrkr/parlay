@@ -10,8 +10,7 @@ import {
   closeMarketQueue,
   startMarketQueue,
 } from "../queueProducer/marketQueue";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { RegisterSchema, LoginSchema, validateEditData, MarketCreationSchema, MarketEditSchema } from "@repo/shared/dist/src"
+import { RegisterSchema, LoginSchema, MarketCreationSchema, MarketEditSchema } from "@repo/shared/dist/src"
 
 // Admin account registration
 const adminRegister = async (req: Request, res: any) => {
@@ -157,43 +156,38 @@ const createMarket = async (req: Request, res: any) => {
       });
   }
 
-  const { title, marketStarts, marketEnds, settlement, description, marketCategory, marketType, thumbnailImage, outcomes } = validateData.data;
+  const { title, marketStarts, marketEnds, settlement, description, outcomes, marketCategory } = validateData.data;
 
   try {
-    const [createBinaryMarket] = await db
+    const [createNewMarket] = await db
       .insert(market)
       .values({
-        marketCreatedBy: adminId,
         marketId: uuidv4(),
-        title: title,
-        description: description,
-        settlement: settlement,
-        marketCategory: marketCategory,
-        marketType,
-        thumbnailImage: thumbnailImage,
+        title,
+        description,
+        settlement,
         marketStarts,
         marketEnds,
-        outcomes: outcomes
+        outcomes: outcomes,
+        marketCategory,
+        marketCreatedBy: adminId
       })
       .returning();
-    console.log("hola");
-    console.log(createBinaryMarket.marketStarts);
 
-    console.log(createBinaryMarket.marketStarts - (Math.floor(new Date().getTime() / 1000)))
 
 
     // market start queue
     await startMarketQueue.add(
       "start_market",
-      { id: createBinaryMarket.marketId },
-      { delay: ((createBinaryMarket.marketStarts) - (Math.floor(new Date().getTime() / 1000))) * 1000 }
+      { id: createNewMarket.marketId },
+      { delay: ((createNewMarket.marketStarts) - (Math.floor(new Date().getTime() / 1000))) * 1000 }
     );
 
     // market close queue
     await closeMarketQueue.add(
       "close_market",
-      { id: createBinaryMarket.marketId },
-      { delay: ((createBinaryMarket.marketEnds) - (Math.floor(new Date().getTime() / 1000))) * 1000 }
+      { id: createNewMarket.marketId },
+      { delay: ((createNewMarket.marketEnds) - (Math.floor(new Date().getTime() / 1000))) * 1000 }
     );
 
     return res
@@ -240,65 +234,7 @@ const deleteMarket = async (req: Request, res: any) => {
 
     return res
       .status(200)
-      .json({ success: true, message: `Delete success for ${marketId}` });
-  } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
-  }
-};
-
-const editMarketStatus = async (req: Request, res: any) => {
-  const data = req.query.status;
-  const marketId = req.query.marketId;
-  // @ts-ignore
-  const adminId = req.adminId;
-
-  const allowedInputs = [
-    "not_started",
-    "open",
-    "settled",
-    "cancelled",
-  ] as const;
-
-  const status = allowedInputs.find(
-    (s) => s === data!.toString()
-  );
-
-  if (!status || typeof status === "undefined") {
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid status code" });
-  }
-
-  try {
-    const updateMarket = await db
-      .update(market)
-      .set({
-        currentStatus: status,
-      })
-      .where(
-        and(
-          eq(market.marketId, marketId!.toString()),
-          eq(market.marketCreatedBy, adminId)
-        )
-      )
-      .returning();
-
-    if (updateMarket.length === 0) {
-      return res
-        .status(200)
-        .json({ success: false, message: "Unable change the status" });
-    }
-
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Update success",
-        current_status: updateMarket[0].currentStatus,
-      });
+      .json({ success: true, message: `Market deleted, id: ${marketId}` });
   } catch (error) {
     console.log(error);
     return res
@@ -315,7 +251,7 @@ const editMarket = async (req: Request, res: any) => {
   const adminId = req.adminId
   const marketId = data.marketId
 
-  const validateData = MarketEditSchema.safeParse(data.changedData)
+  const validateData = MarketEditSchema.safeParse(data.data)
   if (validateData.error) {
     return res.status(400).json({ success: false, message: "Invalid data received" })
   }
@@ -333,7 +269,7 @@ const editMarket = async (req: Request, res: any) => {
     ))
 
     console.log(update);
-    
+
 
     return res.status(200).json({ success: true, message: "Updated successfully" })
   } catch (error) {
@@ -346,67 +282,11 @@ const editMarket = async (req: Request, res: any) => {
 
 }
 
-// logout function goes here
-
-
-
-// Upload thumbnail image
-const fileUpload = async (req: Request, res: any) => {
-  const file = req.file;
-
-  if (typeof file !== "object") {
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid file type received" });
-  }
-
-  const s3Client = new S3Client({
-    region: "auto",
-    endpoint: `${process.env.CLOUDFLARE_ENDPOINT}`,
-    credentials: {
-      accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID || "",
-      secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY || "",
-    },
-    forcePathStyle: true,
-  });
-
-  const fileName = new Date().getTime() + "_" + file.originalname;
-
-  const uploadParams = {
-    Bucket: process.env.CLOUDFLARE_BUCKET_NAME,
-    Key: fileName,
-    Body: Buffer.from(file.buffer),
-    ContentType: file.mimetype,
-  };
-
-  // TODO: Implement image resize using Sharp before uplaoding it to r2
-  try {
-    const upload = await s3Client.send(new PutObjectCommand(uploadParams));
-
-    if (upload.$metadata.httpStatusCode === 200) {
-      return res.status(201).json({
-        success: true,
-        message: "Thumbnail image uploaded successfully",
-        fileUrl: `${process.env.CLOUDFLARE_CDN_URL}/${fileName}`,
-      });
-    }
-    // if failed, status code is not 200
-    return res.status(400).json({
-      success: false,
-      message: "Thumbnail image upload failed",
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ success: false, message: "Internal server error" });
-  }
-};
 
 export {
   adminRegister,
   adminLogin,
   createMarket,
   deleteMarket,
-  // editMarketStatus,
-  fileUpload,
   editMarket
 };

@@ -5,4 +5,4 @@ export { validateEditData, type MarketData } from "./zSchemas/market"
 export { OrderSchema } from "./zSchemas/order";
 export { RegisterSchema } from "./zSchemas/register";
 
-export { MarketCreationSchema, MarketEditSchema, type MarketTypeInterface } from "./typesAndSchemas/market"
+export { MarketCreationSchema, MarketEditSchema, type MarketTypeInterface, type OutcomeInterface, type MarketCreationInterface, type MarketsInterface, type MarketByIdInterface } from "./typesAndSchemas/market"

@@ -4,13 +4,13 @@ import { db } from "@repo/db/dist/src"
 import { market } from "@repo/db/dist/src"
 import { eq, and } from "drizzle-orm";
 import { OrderSchema } from "@repo/shared/dist/src"
-import { OutcomeAndPrice } from "@repo/db/dist/src/schemas/market";
+import { OutcomeInterface } from "@repo/shared/dist/src"
 import { sendOrderToWsServer } from "../ws/sendOrderToWsServer";
 
 // create a new map
 export const pendingRequests = new Map<
   string,
-  { res: Response; userId: string; marketId: string; orderType: string; userOrderQty: number; outcomesAndPrices: OutcomeAndPrice[]; votedOutcomeIndex: number; votedOutcome: string; wsResponse: any }
+  { res: Response; userId: string; marketId: string; orderType: string; userOrderQty: number; outcomesAndPrices: OutcomeInterface[]; votedOutcomeIndex: number; votedOutcome: string; wsResponse: any }
 >();
 
 const handleOrder = async (req: Request, res: any) => {
@@ -45,7 +45,7 @@ const handleOrder = async (req: Request, res: any) => {
         .json({ success: false, message: "Check market status, market is not open or no market exists with this id" });
     }
 
-    const indexForVotedOutcome = marketDetails[0].outcome.findIndex((outcms) => outcms.outcome === votedOutcome)
+    const indexForVotedOutcome = marketDetails[0].outcome.findIndex((outcms) => outcms.title === votedOutcome)
     if (indexForVotedOutcome < 0) {
       return res.status(400).json({ success: false, message: "Voted outcome is not valid." })
     }

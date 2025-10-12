@@ -1,12 +1,8 @@
-interface Outcome {
-    outcome: string,
-    price: string,
-    tradedQty: number
-}
+import {type OutcomeInterface} from "../index"
 
 interface Data {
     // data for price calculation
-    outcomes?: Outcome[],
+    outcomes?: OutcomeInterface[],
     votedOutcomeIndex?: number,
     qty?: number,
     orderType?: string,
