@@ -99,7 +99,7 @@ export default function MarketCards() {
                 >
                   <Calendar size={15} />
                   <span>
-                    Created: {dateFormater({ timestamp: market.marketStarts })}
+                    Opens: {dateFormater({ timestamp: market.marketStarts })}
                   </span>
                 </p>
                 <p
@@ -227,7 +227,7 @@ export default function MarketCards() {
                   >
                     <Calendar size={15} />
                     <span>
-                      Created:{" "}
+                      Opens:{" "}
                       {dateFormater({ timestamp: market.marketStarts })}
                     </span>
                   </p>

@@ -7,16 +7,12 @@ import {
   DatePicker,
   Form,
   Input,
-  Listbox,
-  ListboxItem,
-  ListboxSection,
   Select,
   SelectItem,
   Textarea,
 } from "@heroui/react";
 import { CalendarDateTime } from "@internationalized/date";
-import { type MarketTypeInterface, MarketEditSchema } from "@repo/shared/src";
-import { Loader, UploadCloud } from "lucide-react";
+import { MarketEditSchema, type MarketByIdInterface } from "@repo/shared/src";
 import { useState } from "react";
 import { BACKEND_URI } from "../store/adminStore";
 import { isEqual } from "lodash";
@@ -27,97 +23,33 @@ export const marketCategory = [
   { key: "sports", label: "Sports" },
   { key: "politics", label: "Politics" },
 ];
-export const marketType = [
-  { key: "binary", label: "Binary Outcomes" },
-  { key: "other", label: "Other Outcomes" },
-];
-export const ListboxWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="w-full border-small px-1 py-2 rounded-small border-default-200 dark:border-default-100">
-    {children}
-  </div>
-);
 
 export default function MarketEditForm({
   marketData,
 }: {
-  marketData: MarketTypeInterface;
+  marketData: MarketByIdInterface;
 }) {
-  const [formData, setFormData] = useState<MarketTypeInterface>(marketData);
+  const [formData, setFormData] = useState<MarketByIdInterface>(marketData);
 
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [isImageUploaded, setIsImageUploaded] = useState<boolean>(true);
-  const [isImageUploading, setIsImageUploading] = useState<boolean>(false);
   const [isFormSubmiting, setIsFormSubmiting] = useState(false);
-  const [singleOutcome, setSingleOutcome] = useState("");
 
   const sTime = new Date(formData.marketStarts * 1000);
   const eTime = new Date(formData.marketEnds * 1000);
   const navigate = useNavigate();
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files![0];
-
-    if (typeof file !== "object") {
-      return;
-    }
-
-    const allowedFileTypes = [
-      "image/png",
-      "image/jpeg",
-      "image/jpg",
-      "image/webp",
-      "image/gif",
-    ];
-
-    if (!allowedFileTypes.includes(file.type)) {
-      window.alert(`Invalid file type, ${file.type} not allowed`);
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      setIsImageUploading(true);
-      const sendReq = await fetch(`${BACKEND_URI}/admin/thumbnail-upload`, {
-        method: "POST",
-        body: formData,
-      });
-      const res = await sendReq.json();
-      if (res.success) {
-        setFormData((prev) => ({ ...prev!, thumbnailImage: res.fileUrl }));
-        setIsImageUploaded(true);
-        setIsImageUploading(false);
-      } else {
-        setIsImageUploading(false);
-        setErrorMessage(res.message);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const [startDateError, setStartDateError] = useState("");
+  const [endDateError, setEndDateError] = useState("");
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage("");
+    setStartDateError("");
+    setEndDateError("");
 
-    const { success, data,error } = MarketEditSchema.safeParse(formData);
-
-    if (!success) {
-      console.log(error);
-      setErrorMessage("Zod validation error");
-      return;
-    }
-
-    if (data!.marketEnds! < data!.marketStarts!) {
-      setErrorMessage(
-        "End date and time should greater than Start date and time"
-      );
-      return;
-    }
     // Check changes
     const changedData: any = {};
-    for (const key of Object.keys(formData) as (keyof MarketTypeInterface)[]) {
+    for (const key of Object.keys(formData) as (keyof MarketByIdInterface)[]) {
       if (!isEqual(formData[key], marketData[key])) {
         changedData[key] = formData[key];
       }
@@ -128,7 +60,46 @@ export default function MarketEditForm({
       return;
     }
 
-    const updateData = { marketId: formData.marketId, changedData };
+    const { success, data, error } = MarketEditSchema.safeParse(changedData);
+
+    if (!success) {
+      const errorM =
+        error.issues[0].message +
+        " at " +
+        error.issues[0].path[0].toString() +
+        " field";
+      setErrorMessage(errorM);
+      return;
+    }
+
+    // Compare dates
+    const currentDateAndTime = Math.floor(new Date().getTime() / 1000);
+    if (
+      data.marketStarts! < currentDateAndTime ||
+      data.marketStarts! > data.marketEnds! ||
+      data.marketStarts! > formData.marketEnds
+    ) {
+      setStartDateError(
+        "Start date and time should not be in past or should not be greater than end date"
+      );
+      return;
+    }
+
+    if (
+      data.marketEnds! < currentDateAndTime ||
+      data.marketEnds! < formData.marketStarts ||
+      data.marketEnds! < data.marketStarts!
+    ) {
+      setEndDateError(
+        "End date and time should not be in past or should not be smaller than Start date and time"
+      );
+      return;
+    }
+    const updateData = { marketId: formData.marketId, data };
+
+    console.log(updateData.data);
+
+    // return;
 
     try {
       setIsFormSubmiting(true);
@@ -155,7 +126,7 @@ export default function MarketEditForm({
   };
 
   return (
-    <div>
+    <div className="py-8">
       <Card className="max-w-3xl mx-auto py-2">
         <CardHeader>
           <Chip radius="md" variant="dot" color="secondary">
@@ -218,6 +189,12 @@ export default function MarketEditForm({
                 <DatePicker
                   hideTimeZone
                   showMonthAndYearPickers
+                  label="Market starts"
+                  labelPlacement="outside"
+                  variant="faded"
+                  size="lg"
+                  granularity="minute"
+                  isRequired
                   defaultValue={
                     new CalendarDateTime(
                       sTime.getFullYear(),
@@ -227,18 +204,14 @@ export default function MarketEditForm({
                       sTime.getMinutes()
                     )
                   }
-                  label="Market starts"
-                  labelPlacement="outside"
-                  variant="faded"
-                  size="lg"
-                  isRequired
                   onChange={(e) => {
+                    const values = e as CalendarDateTime;
                     const date = new Date(
-                      e!.year,
-                      e!.month - 1,
-                      e!.day,
-                      e!.hour,
-                      e!.minute,
+                      values.year,
+                      values.month - 1,
+                      values.day,
+                      values.hour,
+                      values.minute,
                       0,
                       0
                     );
@@ -249,12 +222,21 @@ export default function MarketEditForm({
                     }));
                   }}
                 />
+                <p className="text-xs text-danger">
+                  {startDateError.length !== 0 && startDateError}
+                </p>
               </div>
 
               <div className="flex flex-col w-full">
                 <DatePicker
                   hideTimeZone
                   showMonthAndYearPickers
+                  label="Market ends"
+                  labelPlacement="outside"
+                  variant="faded"
+                  size="lg"
+                  isRequired
+                  granularity="minute"
                   defaultValue={
                     new CalendarDateTime(
                       eTime.getFullYear(),
@@ -264,18 +246,14 @@ export default function MarketEditForm({
                       eTime.getMinutes()
                     )
                   }
-                  label="Market ends"
-                  labelPlacement="outside"
-                  variant="faded"
-                  size="lg"
-                  isRequired
                   onChange={(e) => {
+                    const values = e as CalendarDateTime;
                     const date = new Date(
-                      e!.year,
-                      e!.month - 1,
-                      e!.day,
-                      e!.hour,
-                      e!.minute,
+                      values.year,
+                      values.month - 1,
+                      values.day,
+                      values.hour,
+                      values.minute,
                       0,
                       0
                     );
@@ -286,72 +264,13 @@ export default function MarketEditForm({
                     }));
                   }}
                 />
+                <p className="text-xs text-danger">
+                  {endDateError.length !== 0 && endDateError}
+                </p>
               </div>
             </div>
-            {/* Image upload and market category */}
+            {/* Market category */}
             <div className="w-full flex flex-col md:flex-row gap-2">
-              {isImageUploaded ? (
-                <>
-                  <div className="w-full">
-                    <p className="text-sm font-semibold text-gray-500">
-                      Thumbnail image
-                    </p>
-                    <div className="flex">
-                      {formData?.thumbnailImage.length !== 0 && (
-                        <img
-                          src={formData?.thumbnailImage}
-                          alt="thumbnail"
-                          className="rounded-lg object-contain w-20 h-20"
-                        />
-                      )}
-                      <div>
-                        <Button
-                          size="sm"
-                          color="danger"
-                          variant="light"
-                          onPress={() => {
-                            setFormData((prev) => ({
-                              ...prev!,
-                              thumbnailImage: "",
-                            }));
-                            setIsImageUploaded(false);
-                          }}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="w-full flex flex-col">
-                    <Input
-                      type="file"
-                      label="Thumbnail"
-                      labelPlacement="outside"
-                      variant="faded"
-                      size="lg"
-                      isRequired
-                      startContent={<UploadCloud />}
-                      onChange={handleImageUpload}
-                    />
-                    <p className="text-sm font-semibold text-gray-500 flex items-center">
-                      {isImageUploading && (
-                        <>
-                          uploading...
-                          <Loader size={16} className="animate-spin" />
-                        </>
-                      )}
-                      {isImageUploading && (
-                        <span className="text-xs text-red-500 font-semibold">
-                          {errorMessage}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                </>
-              )}
               <div className="w-full">
                 <Select
                   label="Market category"
@@ -381,143 +300,31 @@ export default function MarketEditForm({
                 </Select>
               </div>
             </div>
-            {/* Market type and outcomes */}
-            <div className="flex flex-col md:flex-row w-full gap-6">
-              <div className="w-full">
-                <Select
-                  label="Market type"
-                  labelPlacement="outside"
-                  placeholder="Select market type"
-                  selectionMode="single"
-                  variant="faded"
-                  size="lg"
-                  isRequired
-                  defaultSelectedKeys={[formData.marketType]}
-                  onChange={(e) => {
-                    if (e.target.value === "binary") {
-                      setFormData((prev) => ({
-                        ...prev!,
-                        marketType: e.target.value as "binary" | "other",
-                        outcomes: [
-                          { outcome: "yes", price: "0", tradedQty: 0 },
-                          { outcome: "no", price: "0", tradedQty: 0 },
-                        ],
-                      }));
-                      return;
-                    }
-                    setFormData((prev) => ({
-                      ...prev!,
-                      marketType: e.target.value as "binary" | "other",
-                      outcomes: [],
-                    }));
-                  }}
-                >
-                  {marketType.map((mrktType) => (
-                    <SelectItem key={mrktType.key}>{mrktType.label}</SelectItem>
-                  ))}
-                </Select>
-              </div>
-              <div className="w-full">
-                {/* Outcomes for binary market type */}
-                <div>
-                  {formData?.marketType === "binary" && (
-                    <ListboxWrapper>
-                      <Listbox
-                        aria-label="Listbox with binary outcomes"
-                        variant="light"
-                      >
-                        <ListboxSection
-                          title={`Outcomes for ${formData.marketType} market`}
-                        >
-                          {formData.outcomes?.map((otcm, i) => (
-                            <ListboxItem key={i} textValue="Outcomes">
-                              <span className="capitalize">{`${1 + i}. ${otcm.outcome}`}</span>
-                            </ListboxItem>
-                          ))}
-                        </ListboxSection>
-                      </Listbox>
-                    </ListboxWrapper>
-                  )}
-                </div>
-                {/* Outcomes for other */}
-                <div>
-                  {formData?.marketType === "other" && (
-                    <>
-                      <ListboxWrapper>
-                        <Listbox
-                          aria-label="Listbox with binary outcomes"
-                          variant="light"
-                        >
-                          <ListboxSection
-                            title={`Outcomes for ${formData.marketType} market`}
-                          >
-                            {formData.outcomes.length === 0 ? (
-                              <>
-                                <ListboxItem textValue="add-outcomes">
-                                  <span className="capitalize">
-                                    Add outcomes
-                                  </span>
-                                </ListboxItem>
-                              </>
-                            ) : (
-                              <>
-                                {formData.outcomes.map((otcm, i) => (
-                                  <ListboxItem key={i}>
-                                    <span className="capitalize">
-                                      <span className="capitalize">{`${1 + i}. ${otcm.outcome}`}</span>
-                                    </span>
-                                  </ListboxItem>
-                                ))}
-                              </>
-                            )}
-                          </ListboxSection>
-                          <ListboxSection>
-                            <ListboxItem>
-                              <div className="flex gap-2">
-                                <Input
-                                  placeholder="Add outcomes"
-                                  className="w-48"
-                                  isRequired
-                                  variant="bordered"
-                                  onChange={(e) =>
-                                    setSingleOutcome(e.target.value)
-                                  }
-                                />
-                                <Button
-                                  color="secondary"
-                                  variant="flat"
-                                  onPress={() => {
-                                    setFormData((prev) => ({
-                                      ...prev!,
-                                      outcomes: [
-                                        ...prev!.outcomes,
-                                        {
-                                          outcome: singleOutcome,
-                                          price: "0",
-                                          tradedQty: 0,
-                                        },
-                                      ],
-                                    }));
-                                  }}
-                                >
-                                  Add
-                                </Button>
-                              </div>
-                            </ListboxItem>
-                          </ListboxSection>
-                        </Listbox>
-                      </ListboxWrapper>
-                    </>
-                  )}
-                </div>
-              </div>
+            {/* Outcomes */}
+            <div className="w-full">
+              <p className="mb-1">{`Outcomes (outcomes can't be modified)`}</p>
+              <Card className="bg-default-100 border-2 border-default-200 shadow-none">
+                <CardHeader className="text-default-500">
+                  {`Outcomes`}
+                </CardHeader>
+                <CardBody>
+                  <div className="mb-4">
+                    {typeof formData?.outcomes !== "undefined" &&
+                      formData?.outcomes.map((otcms, i) => (
+                        <div key={i}>
+                          <p className="capitalize font-semibold text-default-500  flex justify-between items-center w-80">
+                            <span>{`${i + 1}. ${otcms.title}`}</span>
+                          </p>
+                        </div>
+                      ))}
+                  </div>
+                </CardBody>
+              </Card>
             </div>
             <div>
-              {errorMessage.length !== 0 && (
-                <p className="text-sm text-danger font-semibold">
-                  Error: {errorMessage}
-                </p>
-              )}
+              <p className="text-xs text-danger">
+                {errorMessage.length !== 0 && errorMessage}
+              </p>
             </div>
             <div className="w-full mt-2">
               <Button

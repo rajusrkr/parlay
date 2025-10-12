@@ -312,7 +312,7 @@ export default function MarketCreationForm() {
                         }
 
                         if (
-                          formData?.outcomes.some(
+                          formData?.outcomes?.some(
                             (ot) => ot.title === singleOutcome
                           )
                         ) {
