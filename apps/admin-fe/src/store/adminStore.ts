@@ -1,7 +1,6 @@
-// import z from "zod";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { LoginSchema, type MarketTypeInterface } from "@repo/shared/src"
+import { LoginSchema, type MarketsInterface, type MarketByIdInterface } from "@repo/shared/src"
 
 export const BACKEND_URI = import.meta.env.VITE_API_SERVER_URL;
 
@@ -10,8 +9,10 @@ interface States {
     isLoading: boolean,
     isError: boolean,
     errorMessage: string | null,
+    isMarketFetching: boolean,
 
-    markets: MarketTypeInterface[]
+    marketById: MarketByIdInterface | undefined,
+    markets: MarketsInterface[]
     marketFilter: {
         status: string,
         categories: string[]
@@ -20,14 +21,16 @@ interface States {
     login: ({ email, password, navigate }: { email: string, password: string, navigate: (pasth: string) => void }) => Promise<void>
     fetchAllMarkets: () => Promise<void>;
     setMarketFilters: ({ status, categories }: { status: string, categories: string[] }) => void;
-    getMarketById: ({ marketId }: { marketId: string }) => Promise<void>
+    fetchMarketById: ({ marketId }: { marketId: string }) => Promise<void>
     deleteMarketById: ({ marketId }: { marketId: string }) => Promise<void>
 }
 
 const useAdminStore = create(persist<States>((set) => ({
     isLoading: false,
     isError: false,
+    isMarketFetching: false,
     errorMessage: null,
+    marketById: undefined,
     markets: [],
     marketFilter: {
         status: "open",
@@ -84,18 +87,18 @@ const useAdminStore = create(persist<States>((set) => ({
         }
     },
 
-    getMarketById: async ({ marketId }) => {
+    fetchMarketById: async ({ marketId }) => {
         try {
+            set({ isMarketFetching: true })
             const sendReq = await fetch(`${BACKEND_URI}/market/get-market-byId?marketId=${marketId}`)
             const res = await sendReq.json()
 
             if (res.success) {
-                set((prev) => ({
-                    markets: prev.markets.map((mrkt) => mrkt.marketId === marketId ? { ...res.market[0] } : mrkt)
-                }))
+                set({ marketById: res.market[0], isMarketFetching: false })
 
             } else {
                 console.log(res);
+                set({ isMarketFetching: false })
             }
 
         } catch (error) {
@@ -123,7 +126,7 @@ const useAdminStore = create(persist<States>((set) => ({
             } else {
                 console.log(res);
             }
-           
+
         } catch (error) {
             console.log(error);
         }

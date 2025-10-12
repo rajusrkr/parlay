@@ -27,7 +27,7 @@ export default function Console() {
 
   const marketFilters = [
     { title: "Open", key: "open", icons: <LockOpen size={20} /> },
-    { title: "Open soon", key: "not_started", icons: <Timer /> },
+    { title: "Open soon", key: "open_soon", icons: <Timer /> },
     { title: "Closed", key: "closed", icons: <Lock size={20} /> },
     { title: "Settled", key: "settled", icons: <CircleCheckBig size={20} /> },
     { title: "All", key: "all", icons: <GalleryVerticalEnd size={20} /> },
