@@ -7,6 +7,7 @@ import MarketLayout from "./layouts/market-layout";
 import Market from "./pages/market";
 import Positions from "./pages/positions";
 import Orders from "./pages/orders";
+import MarketById from "./pages/market-byId";
 
 export default function App() {
   return (
@@ -15,10 +16,11 @@ export default function App() {
         <Route element={<HomeLayout />}>
           <Route path="/" element={<LandingPage />} />
         </Route>
-        <Route element = {<MarketLayout />}>
-          <Route path="/market" element = {<Market />}/>
-          <Route path="/positions" element = {<Positions />}/>
-          <Route path="/orders" element = {<Orders />}/>
+        <Route element={<MarketLayout />}>
+          <Route path="/market" element={<Market />} />
+          <Route path="/market/:id" element={<MarketById />} />
+          <Route path="/positions" element={<Positions />} />
+          <Route path="/orders" element={<Orders />} />
         </Route>
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
