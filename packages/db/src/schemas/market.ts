@@ -19,7 +19,7 @@ const market = pgTable("market", {
     description: text("market_overview").notNull(),
     settlement: text("market_settlement").notNull(),
     currentStatus: CurrentMarketStatus("current_status").default("open_soon"),
-    marketCategory: MarketCategory("market_category"),
+    marketCategory: MarketCategory("market_category").notNull(),
 
     // Timing
     marketStarts: bigint("market_starts", { mode: "number" }).notNull(),

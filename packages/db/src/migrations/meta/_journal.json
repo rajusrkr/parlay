@@ -15,6 +15,13 @@
       "when": 1760209034004,
       "tag": "0001_married_shotgun",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1760251188258,
+      "tag": "0002_loose_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }
