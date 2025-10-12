@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMarketStore } from "../store/useMarketStore";
 import {
   Button,
   Card,
@@ -27,9 +26,10 @@ import {
 } from "lucide-react";
 import { dateFormater } from "../lib/utils";
 import { Link } from "react-router";
+import { useUserStore } from "../store/userStore";
 
 export default function Market() {
-  const { fetchMarkets, markets } = useMarketStore();
+  const { markets, fetchAllMarkets } = useUserStore();
 
   const marketFilters = [
     { title: "Open", key: "open", icons: <LockOpen size={20} /> },
@@ -55,7 +55,7 @@ export default function Market() {
 
   useEffect(() => {
     (async () => {
-      await fetchMarkets();
+      await fetchAllMarkets();
     })();
   }, []);
 
@@ -193,7 +193,7 @@ export default function Market() {
               </div>
               {/* title, descriptio and closing */}
               <div className="mb-4">
-                <h2 className="text-lg font-semibold mb-2">{market.title}</h2>
+                <Link to={`/market/${market.marketId}`}><span className="text-lg font-semibold mb-2 hover:underline">{market.title}</span></Link>
                 <p className="text-sm text-default-500 truncate mb-4">
                   {market.description}
                 </p>
@@ -210,9 +210,9 @@ export default function Market() {
 
               {/* outcomes and prices*/}
               <div className="flex flex-col space-y-3">
-                {market.outcomes.slice(0, 2).map((outcms) => (
-                  <Button key={outcms.outcome} variant="bordered">
-                    <span className="capitalize">{outcms.outcome}</span>
+                {market.outcomes!.slice(0, 2).map((outcms) => (
+                  <Button key={outcms.title} variant="bordered">
+                    <span className="capitalize">{outcms.title}</span>
                   </Button>
                 ))}
               </div>
@@ -224,7 +224,7 @@ export default function Market() {
                   className="hover:bg-default-100 transition-all"
                 >
                   <span>
-                    {market.outcomes.length > 3 && (
+                    {market.outcomes!.length > 2 && (
                       <Link to={"/market/id"}>
                         <span className="text-primary font-semibold text-xs">
                           View more options
