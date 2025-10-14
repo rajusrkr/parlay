@@ -29,6 +29,8 @@ import { dateFormater } from "../lib/utils";
 import {
   type MarketByIdInterface,
   type OutcomeInterface,
+  type OrderInterface,
+  BuyOrderSchema,
 } from "@repo/shared/src";
 import { useEffect, useMemo, useState } from "react";
 import { useUserStore } from "../store/userStore";
@@ -230,22 +232,22 @@ function OrderPanel({
   marketId: string;
   outcomes: OutcomeInterface[];
 }) {
-  const [selectedOutcome, setSelectedOutcome] = useState<string | undefined>(
-    undefined
-  );
-  const [betQty, setBetQty] = useState<number | undefined>(undefined);
+  const { placeOrder } = useUserStore();
+
+  const [orderData, setOrderData] = useState<OrderInterface>({
+    betQty: 0,
+    betType: "buy",
+    marketId: marketId,
+    selectedOutcome: "",
+  });
 
   // Get btn status => btn disabled or not
   const isBetBtnDisabled = useMemo(() => {
-    if (
-      typeof selectedOutcome === "undefined" ||
-      typeof betQty === "undefined" ||
-      betQty < 1
-    ) {
+    if (orderData.selectedOutcome.length === 0 || orderData.betQty < 1) {
       return true;
     }
     return false;
-  }, [selectedOutcome, betQty]);
+  }, [orderData]);
 
   return (
     <div className="flex-1">
@@ -261,18 +263,35 @@ function OrderPanel({
               <Button
                 key={i}
                 className="w-full justify-between"
-                variant={selectedOutcome === otcms.title ? "solid" : "bordered"}
-                color={selectedOutcome === otcms.title ? "primary" : "default"}
+                variant={
+                  orderData.selectedOutcome === otcms.title
+                    ? "solid"
+                    : "bordered"
+                }
+                color={
+                  orderData.selectedOutcome === otcms.title
+                    ? "primary"
+                    : "default"
+                }
                 onPress={() => {
-                  setSelectedOutcome(otcms.title);
+                  setOrderData((prev) => ({
+                    ...prev,
+                    selectedOutcome: otcms.title,
+                  }));
                 }}
               >
                 <span>{otcms.title}</span>
                 <Chip
                   color={
-                    selectedOutcome === otcms.title ? "primary" : "default"
+                    orderData.selectedOutcome === otcms.title
+                      ? "primary"
+                      : "default"
                   }
-                  variant={selectedOutcome === otcms.title ? "faded" : "solid"}
+                  variant={
+                    orderData.selectedOutcome === otcms.title
+                      ? "faded"
+                      : "solid"
+                  }
                 >
                   {otcms.price}
                 </Chip>
@@ -286,10 +305,10 @@ function OrderPanel({
               {[50, 100, 150, 200, 250, 300].map((bqty, i) => (
                 <Button
                   key={i}
-                  variant={betQty === bqty ? "solid" : "light"}
-                  color={betQty === bqty ? "primary" : "default"}
+                  variant={orderData.betQty === bqty ? "solid" : "light"}
+                  color={orderData.betQty === bqty ? "primary" : "default"}
                   onPress={() => {
-                    setBetQty(bqty);
+                    setOrderData((prev) => ({ ...prev, betQty: bqty }));
                   }}
                 >
                   {bqty}
@@ -306,21 +325,31 @@ function OrderPanel({
               type="number"
               placeholder="Enter your qty"
               className="mt-2"
-              value={betQty?.toString()}
+              value={orderData.betQty?.toString()}
               onChange={(e) => {
-                setBetQty(Number(e.target.value));
+                setOrderData((prev) => ({
+                  ...prev,
+                  betQty: Number(e.target.value),
+                }));
               }}
             />
           </div>
-            <div className="mt-4 text-default-500 font-semibold text-sm">
-            {
-              typeof selectedOutcome !== "undefined" && typeof betQty !== "undefined" && (
+          <div className="mt-4 text-default-500 font-semibold text-sm">
+            {orderData.selectedOutcome.length !== 0 &&
+              orderData.betQty !== 0 && (
                 <div>
-                  <p>Your selection is: {selectedOutcome}</p>
-                  <p>Your Quantity is: {betQty}</p>
+                  <p>
+                    Your selection is:{" "}
+                    <span className="text-primary">
+                      {orderData.selectedOutcome}
+                    </span>
+                  </p>
+                  <p>
+                    Your Quantity is:{" "}
+                    <span className="text-primary">{orderData.betQty}</span>
+                  </p>
                 </div>
-              )
-            }
+              )}
           </div>
 
           <div className="mt-4">
@@ -328,12 +357,24 @@ function OrderPanel({
               className="w-full font-semibold"
               color="primary"
               isDisabled={isBetBtnDisabled}
+              onPress={async () => {
+                const validateData = BuyOrderSchema.safeParse(orderData);
+
+                const { success, data, error } = validateData;
+
+                if (!success) {
+                  // Todo: Show error in UI later
+                  console.log(error);
+                  return;
+                }
+                await placeOrder({
+                  orderData: data,
+                });
+              }}
             >
               Place Bet
             </Button>
           </div>
-
-        
         </CardBody>
       </Card>
     </div>

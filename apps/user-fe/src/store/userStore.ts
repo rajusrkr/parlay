@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { BACKEND_URI } from "../lib/utils";
-import type { MarketByIdInterface, MarketsInterface } from "@repo/shared/src";
+import type { MarketByIdInterface, MarketsInterface, OrderInterface } from "@repo/shared/src";
 
 interface States {
     isLoading: boolean,
@@ -15,6 +15,7 @@ interface States {
     login: ({ email, password }: { email: string, password: string, navigate: (path: string) => void }) => Promise<void>
     fetchMarketById: ({ marketId }: { marketId: string }) => Promise<void>
     fetchAllMarkets: () => Promise<void>;
+    placeOrder: ({ orderData }: { orderData: OrderInterface }) => Promise<void>
 }
 
 const useUserStore = create(persist<States>((set) => ({
@@ -86,6 +87,24 @@ const useUserStore = create(persist<States>((set) => ({
             console.log(error);
         }
     },
+
+    placeOrder: async ({ orderData }) => {
+        try {
+            const sendReq = await fetch(`${BACKEND_URI}/user/handle-order`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify(orderData)
+            })
+
+            const res = await sendReq.json()
+            console.log(res);
+        } catch (error) {
+            console.log(error);
+        }
+    }
 }), { name: "user-store" }))
 
 export { useUserStore }
