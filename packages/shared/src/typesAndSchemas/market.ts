@@ -42,24 +42,6 @@ export interface OutcomeInterface {
     totalActiveVolume: number
 }
 
-// Not needed
-export interface MarketTypeInterface {
-    marketId?: string
-    title: string
-    description: string
-    settlement: string
-    currentStatus?: string
-    marketCategory: marketCategory
-    marketStarts: number
-    marketEnds: number
-    winnerSide?: string,
-    outcomes: {
-        outcome: string
-        price: string
-        tradedQty: number
-    }[],
-    thumbnailImage: string
-}
 
 export interface MarketCreationInterface {
     title: string
