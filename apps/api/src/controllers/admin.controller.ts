@@ -143,8 +143,6 @@ const createMarket = async (req: Request, res: any) => {
   const adminId = req.adminId;
 
   const validateData = MarketCreationSchema.safeParse(data);
-  console.log(validateData);
-
 
   if (!validateData.success) {
     return res
@@ -259,16 +257,12 @@ const editMarket = async (req: Request, res: any) => {
 
   const marketData = validateData.data;
   const cleanData = Object.fromEntries(Object.entries(marketData).filter(([_, v]) => v !== undefined))
-  console.log(cleanData);
-
 
   try {
-    const update = await db.update(market).set(cleanData).where(and(
+    await db.update(market).set(cleanData).where(and(
       eq(market.marketId, marketId),
       eq(market.marketCreatedBy, adminId)
     ))
-
-    console.log(update);
 
 
     return res.status(200).json({ success: true, message: "Updated successfully" })

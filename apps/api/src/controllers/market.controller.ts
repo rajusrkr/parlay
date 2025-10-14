@@ -57,9 +57,6 @@ const getMarketById = async (req: Request, res: any) => {
       outcomes: market.outcomes,
     }).from(market).where(eq(market.marketId, marketId))
 
-    console.log(getMarketById);
-
-
     return res.status(200).json({ message: "Market details fetched", market: getMarketById, success: true })
 
   } catch (error) {

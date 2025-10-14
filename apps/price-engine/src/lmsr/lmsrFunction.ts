@@ -1,21 +1,13 @@
-
-
 import { type OutcomeInterface } from "@repo/shared/dist/src"
-
-
-// We need a cost calculation function and a price calculation function to get LMSR price
-
 
 // LMSR cost function
 function lmsrCostFunc({ q, b }: { q: number[], b: number }): number {
     // This is for terminating the number overflow
     const maxQ = Math.max(...q.map((qty) => qty / b)); // [5,-3,2,3]
-
     // e^qi/b - maxQ 
     const sumExp = q.map((qty) => Math.exp(qty / b - maxQ)).reduce((acc, val) => acc + val, 0);
 
     const cost = b * (maxQ + Math.log(sumExp))
-
     return cost;
 }
 
@@ -24,16 +16,12 @@ function lmsrCostFunc({ q, b }: { q: number[], b: number }): number {
 function lmsrPriceFunc({ q, b }: { q: number[], b: number }): number[] {
     // Get the maxq
     const maxQ = Math.max(...q.map((qty) => qty / b));
-
     const expVals = q.map((qty) => Math.exp(qty / b - maxQ))
-
     const sumExp = expVals.reduce((acc, val) => acc + val, 0)
 
     const prices = expVals.map((val) => (val / Number(sumExp)))
-
     return prices
 }
-
 
 function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes: OutcomeInterface[], b: number, outcomeIndex: number, qty: number, orderType: string }): { calculatedOutcome: OutcomeInterface[], tradeCost?: number, returnToUser?: number } {
 

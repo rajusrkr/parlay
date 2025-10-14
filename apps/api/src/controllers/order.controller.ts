@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4, validate } from "uuid";
 import { db } from "@repo/db/dist/src"
 import { market } from "@repo/db/dist/src"
 import { eq, and } from "drizzle-orm";
-import { OrderSchema } from "@repo/shared/dist/src"
-import { OutcomeInterface } from "@repo/shared/dist/src"
+import { OutcomeInterface, BuyOrderSchema } from "@repo/shared/dist/src"
 import { sendOrderToWsServer } from "../ws/sendOrderToWsServer";
 
 // create a new map
@@ -14,19 +13,17 @@ export const pendingRequests = new Map<
 >();
 
 const handleOrder = async (req: Request, res: any) => {
-  const data = req.body;
-
+  const orderData = req.body;
   // @ts-ignore
   const userId = req.userId;
 
+  const validateData = BuyOrderSchema.safeParse(orderData)
+  const { success, data, error } = validateData
 
-  const validateData = OrderSchema.safeParse(data)
-
-  if (!validateData.success) {
-    return res.status(400).json({ message: "Invalid data received", error: validateData.error })
+  if (!success) {
+    console.log(error);
+    return res.status(400).json({ success: false, message: "Invalid data received, send data in correct format, Zod validation error" })
   }
-
-  const { marketId, votedOutcome, orderType, qty } = validateData.data
 
   try {
     const marketDetails = await db
@@ -42,24 +39,22 @@ const handleOrder = async (req: Request, res: any) => {
     if (marketDetails.length === 0) {
       return res
         .status(400)
-        .json({ success: false, message: "Check market status, market is not open or no market exists with this id" });
+        .json({ success: false, message: "Error: market does not exists or market status is not OPEN" });
     }
 
-    const indexForVotedOutcome = marketDetails[0].outcome.findIndex((outcms) => outcms.title === votedOutcome)
-    if (indexForVotedOutcome < 0) {
-      return res.status(400).json({ success: false, message: "Voted outcome is not valid." })
-    }
+    const indexForVotedOutcome = marketDetails[0].outcome.findIndex((outcms) => outcms.title === data.selectedOutcome)
+
     const requestId = uuidv4();
 
     pendingRequests.set(requestId, {
       res,
       userId,
-      marketId,
-      orderType,
-      userOrderQty: qty,
+      marketId: data.marketId,
+      orderType: data.betType,
+      userOrderQty: data.betQty,
       outcomesAndPrices: marketDetails[0].outcome,
       votedOutcomeIndex: indexForVotedOutcome,
-      votedOutcome,
+      votedOutcome: data.selectedOutcome,
       wsResponse: null,
     });
 
@@ -69,8 +64,8 @@ const handleOrder = async (req: Request, res: any) => {
       requestId,
       data: {
         outcomes: marketDetails[0].outcome,
-        qty,
-        orderType,
+        qty: data.betQty,
+        orderType: data.betType,
         votedOutcomeIndex: indexForVotedOutcome
       },
     });
