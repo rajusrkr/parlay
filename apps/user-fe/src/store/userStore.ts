@@ -29,7 +29,7 @@ const useUserStore = create(persist<States>((set) => ({
     login: async ({ email, password, navigate }) => {
         try {
             set({ isLoading: true, isError: false, errorMessage: null })
-            const sendReq = await fetch(`${BACKEND_URI}/api/v0/user/auth/login`, {
+            const sendReq = await fetch(`${BACKEND_URI}/user/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -90,7 +90,7 @@ const useUserStore = create(persist<States>((set) => ({
 
     placeOrder: async ({ orderData }) => {
         try {
-            const sendReq = await fetch(`${BACKEND_URI}/user/handle-order`, {
+            const sendReq = await fetch(`${BACKEND_URI}/user/bet`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

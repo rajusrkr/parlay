@@ -6,4 +6,4 @@ export { MarketCreationSchema, MarketEditSchema, type OutcomeInterface, type Mar
 
 export { type OrderInterface, BuyOrderSchema } from "./typesAndSchemas/order"
 
-export {type newBetPayload} from "./typesAndSchemas/ws"
+export { type buyOrderlmsrCalculationInterfaceData, type sellOrderlmsrCalculationInterfaceData, type newBetData, type wsData, type eventTypeEnum  } from "./typesAndSchemas/ws"
