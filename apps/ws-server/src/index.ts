@@ -1,7 +1,8 @@
-import { WsPayload } from "@repo/shared/dist/src";
+import { wsData, WsPayload } from "@repo/shared/dist/src";
 import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { authAckData, handShakeData } from "@repo/shared/dist/src/typesAndSchemas/ws";
 
 dotenv.config();
 
@@ -58,14 +59,15 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
     console.log("Client disconnected", ws.clientRole, "🔴");
     connectedClients.delete(ws);
   });
-
-  // handle messages
+  // ==========================
+  // Handle messages
+  // ==========================
   ws.on("message", (msg) => {
     try {
       const parsedMessage = JSON.parse(msg.toString());
       console.log(parsedMessage);
 
-      const { eventType, data, marketId } = parsedMessage;
+      const { eventType, data } = parsedMessage as wsData;
 
       // ==============================================
       // Switch case implemntation for various events
@@ -75,28 +77,25 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
         // Handle handshake
         // ==================
         case "handShake":
+          const { authToken } = data as handShakeData
           try {
-            console.log(`JWT secret from root env ${process.env.JWT_SECRET}`);
-            console.log(`Auth token from ${data.authToken}`);
-            
-            const decode: any = jwt.verify(data.authToken, process.env.JWT_SECRET!);
+            const decode: any = jwt.verify(authToken, process.env.JWT_SECRET!);
             if (typeof decode !== "object" || !decode.role) {
               throw new Error(
                 "Invalid auth token provided, unable to do handshake"
               );
             }
-            // Set role
             ws.clientRole = decode.role;
             console.log(`Client: ${ws.clientRole}, has been authorized 🔐`);
 
             // ==========================
             // Send auth ack to clients
             // ==========================
-            const authMessage: WsPayload = {
+            const authMessage: wsData = {
               eventType: "authAck",
               data: {
-                message: `Hey ${ws.clientRole} Auth success, bi-directional data transform can be perform now`,
-              },
+                message: `Hey ${ws.clientRole} auth success, bi-directional data transform can be perform now`,
+              } as authAckData,
             };
             ws.send(JSON.stringify(authMessage));
             connectedClients.set(ws, ws.clientRole!);
@@ -107,51 +106,79 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             );
           }
           break;
-
-        // ==================
-        // Receive new order
-        // ==================
-        case "newOrder":
+        // ======================
+        // Receive new buy order
+        // ======================
+        case "newBuyBet":
           for (const [client, clientRole] of connectedClients.entries()) {
             if (
               clientRole === "PriceEngine" &&
               client.readyState === WebSocket.OPEN
             ) {
+              // Direct send the parsed message, price engine needs to know about the bet type
               client.send(JSON.stringify(parsedMessage));
             }
           }
           break;
-
+        // ======================
+        // Receive new sell order
+        // ======================
+        case "newSellBet":
+          for (const [client, clientRole] of connectedClients.entries()) {
+            if (
+              clientRole === "PriceEngine" &&
+              client.readyState === WebSocket.OPEN
+            ) {
+              // Direct send the parsed message, price engine needs to know about the bet type
+              client.send(JSON.stringify(parsedMessage));
+            }
+          }
+          break;
         // ========================================
-        // Receive price update from Price engine
+        // Receive lmsr buy calc from Price engine
         // ========================================
-        case "priceUpdate":
-          console.log("Price update received from Price Engine");
+        case "lmsrBuyCalculation":
           for (const [client, clientRole] of connectedClients.entries()) {
             if (
               clientRole === "ApiServer" &&
               client.readyState === WebSocket.OPEN
             ) {
+              // Send the parsed message directly
               client.send(JSON.stringify(parsedMessage));
             }
           }
           break;
 
-        // ====================================== 
-        // Price update to ui afte db operation
-        // ======================================
-        case "priceBroadCast":
+        // ========================================
+        // Receive lmsr sell calc from Price engine
+        // ========================================
+        case "lmsrSellCalculation":
+          for (const [client, clientRole] of connectedClients.entries()) {
+            if (
+              clientRole === "ApiServer" &&
+              client.readyState === WebSocket.OPEN
+            ) {
+              // Send the parsed message directly
+              client.send(JSON.stringify(parsedMessage));
+            }
+          }
+          break;
+
+        // ==============================================================
+        // Price update to ui afte db operation, WILL COMPLETE IT LATER
+        // ==============================================================
+        case "priceUpdateUI":
           console.log("Final price uodate received from Platform Api");
 
-          console.log("marketId", marketId);
+          console.log("marketId", "marketId");
 
 
           const finalPriceMessage = {
             eventType: "finalPriceUpdate",
 
             data: {
-              marketId: marketId,
-              outcomes: data.outcomes
+              marketId: "marketId",
+              outcomes: "data.outcomes"
 
             },
           };
@@ -169,6 +196,7 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
         // default
         default:
           console.log("Unknown update received", ws.clientRole);
+          break;
       }
     } catch (error) {
       throw new Error(
