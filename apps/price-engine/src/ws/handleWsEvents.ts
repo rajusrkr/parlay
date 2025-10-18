@@ -1,87 +1,43 @@
-import { WsPayload } from "@repo/shared/dist/src";
+import { buyOrderlmsrCalculationInterfaceData, newBetData, sellOrderlmsrCalculationInterfaceData, wsData, WsPayload } from "@repo/shared/dist/src";
 import { ws } from "./wsConnection";
 import { buySellShare } from "../lmsr/lmsrFunction";
+// import {type newBetPayload} from "@repo/shared/dist/src"
 
 export function handleWsEvents(): Promise<any> {
   return new Promise((resolve, reject) => {
     ws.on("message", (msg) => {
-
       // Parse the message
       const parsedMessage = JSON.parse(msg.toString());
+      console.log(parsedMessage);
 
 
-      const { eventType, requestId, data } = parsedMessage
-      // Extract fields from data
-      const { votedOutcomeIndex, orderType, qty, outcomes } = data;
-      console.log(data);
-      
+      const { eventType, data } = parsedMessage as wsData;
 
       // Switch case implementation for different events
       switch (eventType) {
         // Auth event
         case "authAck":
           console.log("Event type:", eventType);
-          console.log("Message:", data.message);
           break
-        // New order event
-        case "newOrder":
+        // New buy bet
+        case "newBuyBet":
+          const { betId, betQty, betType, outcomes, selectedOutcomeIndex } = data as newBetData;
           // Liquidity parameter
-          console.log(parsedMessage.data.outcomes);
-          
           const b = 1000;
-
-          // Get the calculated price
-          // Prepare update object
-          // Send the update object
-          if (orderType === "buy") {
-            const { calculatedOutcome, tradeCost } = buySellShare({ b, orderType, outcomeIndex: votedOutcomeIndex, outcomes, qty })
-            console.log(tradeCost);
-            
-            console.log("calculations");
-            console.log(calculatedOutcome);
-            console.log(tradeCost);
-            
-            
-
-            const update: WsPayload = {
-              eventType: "priceUpdate",
-              requestId,
-              data: {
-                tradeCost,
-                outcomes: calculatedOutcome,
-                votedOutcomeIndex,
-                orderType,
-                qty,
-              }
-            }
-            ws.send(JSON.stringify(update))
-            resolve(update)
-            return
-          } else if (orderType === "sell") {
-            const { calculatedOutcome, returnToUser } = buySellShare({ b, orderType, outcomeIndex: votedOutcomeIndex, outcomes, qty })
-
-
-            
-            const update: WsPayload = {
-              eventType: "priceUpdate",
-              requestId,
-              data: {
-                returnToUser,
-                outcomes: calculatedOutcome,
-                votedOutcomeIndex,
-                orderType,
-                qty
-              }
-            }
-
-            ws.send(JSON.stringify(update))
-            resolve(update)
-
-          } else {
-            console.log(`Unknow order type received ${orderType}`);
-            throw new Error(`Order type ${orderType} is not allowed`)
+          const { calculatedOutcome, tradeCost } = buySellShare({ b, orderType: betType, outcomeIndex: selectedOutcomeIndex, outcomes: outcomes, qty: betQty })
+          const socketPayload: wsData = {
+            eventType: "lmsrBuyCalculation",
+            data: {
+              betCost: tradeCost,
+              betId,
+              betQty,
+              betType,
+              outcome: calculatedOutcome
+            } as buyOrderlmsrCalculationInterfaceData
           }
-
+          // Send the socket payload
+          ws.send(JSON.stringify(socketPayload))
+          resolve(socketPayload)
           break
 
         default:

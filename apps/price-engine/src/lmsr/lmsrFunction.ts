@@ -45,7 +45,9 @@ function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes:
             const updatedOutcomes: OutcomeInterface[] = outcomes.map((otcms, i) => ({
                 ...otcms,
                 price: (newPrices[i]),
-                tradedQty: addedQty[i]
+                tradedQty: addedQty[i],
+                totalActiveBet: ++otcms.totalActiveBet,
+                totalActiveVolume: (otcms.totalActiveVolume + tradeCost)
             }))
 
             return { calculatedOutcome: updatedOutcomes, tradeCost }
