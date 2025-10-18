@@ -1,6 +1,7 @@
 import { type OutcomeInterface } from "../index"
+import { type betTypeEnum } from "./order";
 
-export type eventTypeEnum = "newBuyBet" | "newSellBet" | "priceUpdateUI" | "lmsrBuyCalculation" | "lmsrSellCalculation" | "authAck" | "handShake"
+type eventTypeEnum = "newBuyBet" | "newSellBet" | "priceUpdateUI" | "lmsrBuyCalculation" | "lmsrSellCalculation" | "authAck" | "handShake";
 
 // Handshake interface
 interface handShakeData {
@@ -16,7 +17,7 @@ interface authAckData {
 interface newBetData {
     outcomes: OutcomeInterface[]
     betQty: number
-    betType: string
+    betType: betTypeEnum
     selectedOutcomeIndex: number
     betId: string
 }
@@ -45,4 +46,4 @@ interface wsData {
     data: {}
 }
 
-export { type wsData, type sellOrderlmsrCalculationInterfaceData, type buyOrderlmsrCalculationInterfaceData, type newBetData, type handShakeData, type authAckData }
+export { type wsData, type sellOrderlmsrCalculationInterfaceData, type buyOrderlmsrCalculationInterfaceData, type newBetData, type handShakeData, type authAckData, type eventTypeEnum }
