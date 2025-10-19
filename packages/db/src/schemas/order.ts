@@ -1,4 +1,4 @@
-import { bigint, decimal, integer, jsonb, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import { decimal, integer, jsonb, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 import { user } from "./user";
 import { market } from "./market";
 

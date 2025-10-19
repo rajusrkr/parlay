@@ -15,4 +15,4 @@ I can easily add pl in position and I can use the updated from order schema. By 
 
 #### Update:
 1. add pl in position schema
-2. get latest/old/all time prices from order schema
+2. get latest/old/all time prices from order schema => which I am doing already
