@@ -1,13 +1,44 @@
-import { Request } from "express";
+/**
+ * This file is for performing
+ * User registration
+ * User login
+ * Add dummy money
+ * Get all position for the perticular user
+ * Placing bets
+ * and Storing pending requests
+ */
+
+import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 
-import { db } from "@repo/db/dist/src";
+import { db, market } from "@repo/db/dist/src";
 import { position, user } from "@repo/db/dist/src";
-import { eq } from "drizzle-orm";
-import { RegisterSchema, LoginSchema } from "@repo/shared/dist/src";
+import { and, eq } from "drizzle-orm";
+import { RegisterSchema, LoginSchema, BuyOrderSchema, type OutcomeInterface, type wsData, newBetData } from "@repo/shared/dist/src";
+import { ws } from "../lib/ws/wsConnection";
+import { NewOrder, orderProducer } from "../lib/redis/producer/orderProducer";
+import { OrderStore, orderStore } from "../lib/redis/store/orderStore";
 
+// Pending bets interface
+interface pendingBet {
+  userId: string
+  marketId: string
+  betType: string
+  betQty: number
+  outcomes: OutcomeInterface[]
+  selectedOutcome: string
+  selectedOutcomeIndex: number
+  res: Response
+}
+
+// Store pending bets
+export const pendingBets = new Map<string, pendingBet>();
+
+// ===================
+// User registration
+// ===================
 const userRegister = async (req: Request, res: any) => {
   const data = req.body;
 
@@ -63,6 +94,9 @@ const userRegister = async (req: Request, res: any) => {
   }
 };
 
+// ===================
+// User login
+// ===================
 const userLogin = async (req: Request, res: any) => {
   const data = req.body;
 
@@ -138,6 +172,9 @@ const userLogin = async (req: Request, res: any) => {
   }
 };
 
+// ===================
+// Add dummy money
+// ===================
 const addMoney = async (req: Request, res: any) => {
   const data = req.body;
 
@@ -148,7 +185,7 @@ const addMoney = async (req: Request, res: any) => {
     const deposit = await db
       .update(user)
       .set({
-        walletBalance: Math.round((data.amount)).toString(),
+        walletBalance: data.amount,
       })
       .where(eq(user.userId, userId))
       .returning();
@@ -166,6 +203,9 @@ const addMoney = async (req: Request, res: any) => {
   }
 };
 
+// ===========================================
+// Get all positions for the perticular user
+// ===========================================
 const getAllPositions = async (req: Request, res: any) => {
   // @ts-ignore
   const userId = req.userId;
@@ -193,4 +233,67 @@ const getAllPositions = async (req: Request, res: any) => {
   }
 };
 
-export { userRegister, userLogin, addMoney, getAllPositions };
+// ===============
+// Place bets
+// ===============
+const placeBet = async (req: Request, res: any) => {
+
+  const data = req.body;// betQty, betType, marketId, selectedOutcome
+ 
+  
+  // @ts-ignore
+  const userId = req.userId
+
+  try {
+    const [marketData] = await db.select().from(market).where(and(
+      eq(market.marketId, data.marketId),
+      eq(market.currentStatus, "open")
+    ))
+
+    if (!marketData) {
+      return res.status(400).json({ success: true, message: "Error: market status is not open or the market with the provided id does not exists" })
+    }
+
+    // Generate order id
+    const orderId = uuidv4()
+
+    // Get outcomes
+    const outcomes = marketData.outcomes;
+    
+    // Get the index
+    const selectedOutcomeIndex = outcomes.findIndex((otcm) => otcm.title === data.selectedOutcome)
+
+    // New order data, will be streamed to price engine
+    const newOrderData: NewOrder = {
+      betQty: data.betQty,
+      betType: data.betType,
+      orderId: orderId,
+      outcomes,
+      selectedOutcomeIndex
+    }
+
+    // Order store, will be stored in Redis in memory
+    const orderStoreData: OrderStore = {
+      betQty: data.betQty,
+      betType: data.betType,
+      marketId: data.marketId,
+      orderId,
+      outcomes,
+      selectedOutcome: data.selectedOutcome,
+      selectedOutcomeIndex,
+      userId
+    }
+
+    await orderStore({ order: orderStoreData })
+    await orderProducer({ orderData: newOrderData })
+
+    return res.status(200).json({ success: true, message: "Order received" })
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false, message: "Internal server error" })
+  }
+
+}
+
+export { userRegister, userLogin, addMoney, getAllPositions, placeBet };

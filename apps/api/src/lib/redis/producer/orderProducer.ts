@@ -1,9 +1,11 @@
-interface NewOrder {
-    orderType: string,
-    outcomeIndex: number,
+export interface NewOrder {
+    orderId: string,
+    betType: string,
+    selectedOutcomeIndex: number,
     outcomes: any,
-    qty: number
+    betQty: number
 }
+
 import { redis } from "../redisClient";
 async function orderProducer({ orderData }: { orderData: NewOrder }) {
     const streamKey = "order:new";
