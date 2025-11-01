@@ -37,6 +37,9 @@ export type marketCategory = "sports" | "politics" | "crypto" | "regular";
 export interface OutcomeInterface {
     title: string,
     price: number,
+    tradedQty: number,
+    totalActiveBet: number,
+    totalActiveVolume: number
 }
 
 

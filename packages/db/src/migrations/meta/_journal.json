@@ -57,6 +57,20 @@
       "when": 1761943107806,
       "tag": "0007_graceful_morg",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1761991599848,
+      "tag": "0008_public_tenebrous",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1761997066920,
+      "tag": "0009_hot_boomerang",
+      "breakpoints": true
     }
   ]
 }

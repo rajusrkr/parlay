@@ -27,8 +27,6 @@ const market = pgTable("market", {
 
     // Outcome and prices, will store latest prices
     outcomes: jsonb("outcome_and_price").$type<OutcomeInterface[]>().notNull(),
-    activeBets: integer("active_bets").notNull(),
-    volumes: integer("volumes").notNull(),
 
 
     // Winner
