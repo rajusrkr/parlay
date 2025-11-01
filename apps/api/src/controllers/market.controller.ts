@@ -1,6 +1,6 @@
 import { Request } from "express";
 
-import { admin, db } from "@repo/db/dist/src";
+import { db } from "@repo/db/dist/src";
 import { market } from "@repo/db/dist/src";
 import { eq } from "drizzle-orm"
 

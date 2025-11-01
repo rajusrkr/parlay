@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/lmsr/lmsrFunction.ts","./src/ws/handleWsEvents.ts","./src/ws/wsAuthAndConnect.ts","./src/ws/wsConnection.ts"],"version":"5.8.3"}
+{"root":["./src/index.ts","./src/lib/lmsr/lmsrFunction.ts","./src/lib/redis/redisClient.ts","./src/lib/redis/consumer/newOrder.consumer.ts","./src/lib/redis/producer/calculations.producer.ts"],"version":"5.9.2"}

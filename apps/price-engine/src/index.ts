@@ -1,8 +1,3 @@
-import dotenv from "dotenv"
-import { authAndConnectToWsServer } from "./ws/wsAuthAndConnect"
+import { consumeNewOrder } from "./lib/redis/consumer/newOrder.consumer";
 
-dotenv.config();
-
-(() => {
-    authAndConnectToWsServer()
-})();
+consumeNewOrder()

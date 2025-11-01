@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b",
-    "dev": "node dist/index.js"
+    "dev": "node dist/index.js",
+    "worker": "node dist/lib/redis/redisWorker.js"
   },
   "keywords": [],
   "author": "",
@@ -23,8 +24,7 @@
     "ioredis": "^5.8.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
-    "uuid": "^13.0.0",
-    "ws": "^8.18.3"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@repo/shared": "*",
@@ -34,7 +34,6 @@
     "@types/dotenv": "^8.2.3",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/multer": "^2.0.0",
-    "@types/ws": "^8.18.1"
+    "@types/multer": "^2.0.0"
   }
 }

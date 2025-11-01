@@ -1,0 +1,1 @@
+ALTER TABLE "order" ALTER COLUMN "order_plced_for" SET DATA TYPE varchar(255);

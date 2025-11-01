@@ -20,12 +20,12 @@ const position = pgTable("position", {
 
     // Position details
     positionTakenIn: varchar("position_taken_in", { length: 36 }).references(() => market.marketId, { onDelete: "cascade" }).notNull(), // Market id
-    positionTakenFor: varchar("position_taken_for", { length: 12 }).notNull(), // Selected outcome
+    positionTakenFor: varchar("position_taken_for", { length: 255 }).notNull(), // Selected outcome
     totalQtyAndAvgPrice: jsonb("total_qty_&_avg_price").$type<TotalQtyAndAvgPrice>().notNull(),
     isPositionSettled: boolean("is_position_settles").default(false),
 
     // PnL
-    pnL: decimal("pnL", { precision: 12, scale: 2 }),
+    pnL: decimal("pnL", { precision: 12, scale: 4, mode: "number" }),
 
 
     // Timestamp

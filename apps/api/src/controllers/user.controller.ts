@@ -17,9 +17,8 @@ import { db, market } from "@repo/db/dist/src";
 import { position, user } from "@repo/db/dist/src";
 import { and, eq } from "drizzle-orm";
 import { RegisterSchema, LoginSchema, BuyOrderSchema, type OutcomeInterface, type wsData, newBetData } from "@repo/shared/dist/src";
-import { ws } from "../lib/ws/wsConnection";
-import { NewOrder, orderProducer } from "../lib/redis/producer/orderProducer";
-import { OrderStore, orderStore } from "../lib/redis/store/orderStore";
+import { NewOrder, orderProducer } from "../lib/redis/producer/order.producer";
+import { OrderStore, orderStore } from "../lib/redis/rStore/orderStore";
 
 // Pending bets interface
 interface pendingBet {
@@ -239,8 +238,8 @@ const getAllPositions = async (req: Request, res: any) => {
 const placeBet = async (req: Request, res: any) => {
 
   const data = req.body;// betQty, betType, marketId, selectedOutcome
- 
-  
+
+
   // @ts-ignore
   const userId = req.userId
 
@@ -259,7 +258,7 @@ const placeBet = async (req: Request, res: any) => {
 
     // Get outcomes
     const outcomes = marketData.outcomes;
-    
+
     // Get the index
     const selectedOutcomeIndex = outcomes.findIndex((otcm) => otcm.title === data.selectedOutcome)
 
@@ -284,8 +283,10 @@ const placeBet = async (req: Request, res: any) => {
       userId
     }
 
+    // Storing and streaming data
     await orderStore({ order: orderStoreData })
     await orderProducer({ orderData: newOrderData })
+
 
     return res.status(200).json({ success: true, message: "Order received" })
 

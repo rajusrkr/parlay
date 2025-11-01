@@ -12,13 +12,6 @@
   "license": "ISC",
   "dependencies": {
     "@repo/shared": "*",
-    "dotenv": "^17.2.3",
-    "jsonwebtoken": "^9.0.2",
-    "ws": "^8.18.3"
-  },
-  "devDependencies": {
-    "@types/dotenv": "^8.2.3",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/ws": "^8.18.1"
+    "ioredis": "^5.8.2"
   }
 }

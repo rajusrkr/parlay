@@ -1,4 +1,4 @@
-import { wsData, WsPayload } from "@repo/shared/dist/src";
+import { wsData } from "@repo/shared/dist/src";
 import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
@@ -138,6 +138,8 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
         // Receive lmsr buy calc from Price engine
         // ========================================
         case "lmsrBuyCalculation":
+          console.log("sending buy cal ti api");
+
           for (const [client, clientRole] of connectedClients.entries()) {
             if (
               clientRole === "ApiServer" &&
@@ -145,6 +147,8 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             ) {
               // Send the parsed message directly
               client.send(JSON.stringify(parsedMessage));
+              console.log("sent buy cal ti api");
+
             }
           }
           break;
@@ -163,36 +167,6 @@ wss.on("connection", (ws: ExtendedWebsocket) => {
             }
           }
           break;
-
-        // ==============================================================
-        // Price update to ui afte db operation, WILL COMPLETE IT LATER
-        // ==============================================================
-        case "priceUpdateUI":
-          console.log("Final price uodate received from Platform Api");
-
-          console.log("marketId", "marketId");
-
-
-          const finalPriceMessage = {
-            eventType: "finalPriceUpdate",
-
-            data: {
-              marketId: "marketId",
-              outcomes: "data.outcomes"
-
-            },
-          };
-
-          for (const [client, clientRole] of connectedClients) {
-            if (
-              clientRole === "userFe" &&
-              client.readyState === WebSocket.OPEN
-            ) {
-              client.send(JSON.stringify(finalPriceMessage));
-            }
-          }
-          break;
-
         // default
         default:
           console.log("Unknown update received", ws.clientRole);

@@ -168,6 +168,8 @@ const createMarket = async (req: Request, res: any) => {
         marketEnds,
         outcomes: outcomes,
         marketCategory,
+        activeBets: 0,
+        volumes: 0,
         marketCreatedBy: adminId
       })
       .returning();

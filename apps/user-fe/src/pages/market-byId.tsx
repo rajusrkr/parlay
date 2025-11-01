@@ -241,6 +241,9 @@ function OrderPanel({
     selectedOutcome: "",
   });
 
+  console.log(orderData);
+  
+
   // Get btn status => btn disabled or not
   const isBetBtnDisabled = useMemo(() => {
     if (orderData.selectedOutcome.length === 0 || orderData.betQty < 1) {
@@ -383,11 +386,13 @@ function OrderPanel({
 
 export default function MarketById() {
   const { fetchMarketById, marketById, isMarketFetching } = useUserStore();
-  const matketId = useParams().id;
+  const marketId = useParams().id;
+
+  
 
   useEffect(() => {
     (async () => {
-      await fetchMarketById({ marketId: matketId! });
+      await fetchMarketById({ marketId: marketId! });
     })();
   }, []);
 
@@ -401,7 +406,7 @@ export default function MarketById() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-8">
           <ContentTabs market={marketById} />
           <OrderPanel
-            marketId={marketById.marketId}
+            marketId={marketId!}
             outcomes={marketById.outcomes}
           />
         </div>

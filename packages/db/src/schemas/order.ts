@@ -16,10 +16,10 @@ const order = pgTable("order", {
 
     // Order details
     orderTakenIn: varchar("order_taken_id", { length: 36 }).references(() => market.marketId, { onDelete: "cascade" }).notNull(),
-    orderPlacedFor: varchar("order_plced_for", { length: 12 }), // order outcome
+    orderPlacedFor: varchar("order_plced_for", { length: 255 }), // order outcome
     orderType: OrderType().notNull(), // buy or sell
     orderQty: integer("order_qty").notNull(),
-    averageTradedPrice: decimal("average_traded_price", { precision: 12, scale: 2 }),
+    averageTradedPrice: decimal("average_traded_price", { precision: 12, scale: 4, mode: "number" }),
 
     // New updated price, will be used as price data
     updatedPrices: jsonb("updated_prices").notNull(),

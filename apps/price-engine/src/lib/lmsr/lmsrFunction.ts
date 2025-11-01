@@ -11,7 +11,6 @@ function lmsrCostFunc({ q, b }: { q: number[], b: number }): number {
     return cost;
 }
 
-
 // Price calculation function
 function lmsrPriceFunc({ q, b }: { q: number[], b: number }): number[] {
     // Get the maxq
@@ -39,7 +38,7 @@ function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes:
 
             const costAfter = lmsrCostFunc({ q: addedQty, b });
 
-            const tradeCost = (Number(costAfter) - Number(costBefore))
+            const tradeCost = costAfter - costBefore
             const newPrices = lmsrPriceFunc({ q: addedQty, b })
 
             const updatedOutcomes: OutcomeInterface[] = outcomes.map((otcms, i) => ({
@@ -47,7 +46,7 @@ function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes:
                 price: (newPrices[i]),
                 tradedQty: addedQty[i],
                 totalActiveBet: ++otcms.totalActiveBet,
-                totalActiveVolume: (otcms.totalActiveVolume + tradeCost)
+                totalActiveVolume: otcms.totalActiveVolume + tradeCost
             }))
 
             return { calculatedOutcome: updatedOutcomes, tradeCost }
@@ -59,7 +58,7 @@ function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes:
             substractedQty[outcomeIndex] -= qty;
 
             const costAfterSubstraction = lmsrCostFunc({ q: substractedQty, b });
-            const returnToUser = (Number(costBefore) - Number(costAfterSubstraction));
+            const returnToUser = costBefore - costAfterSubstraction
             const newPricesAfterSubstraction = lmsrPriceFunc({ q: substractedQty, b })
 
             const newOutcomesAfterSubstraction: OutcomeInterface[] = outcomes.map((otcms, i) => ({
@@ -73,7 +72,6 @@ function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes:
 
         default:
             throw new Error("Unknown order type")
-
     }
 }
 

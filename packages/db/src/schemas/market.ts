@@ -1,6 +1,6 @@
-import { bigint, jsonb, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { bigint, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { admin } from "./admin";
-import {type OutcomeInterface} from "@repo/shared/src/index"
+import { type OutcomeInterface } from "@repo/shared/src/index"
 
 export const CurrentMarketStatus = pgEnum("current_status", ["open_soon", "open", "settled", "cancelled"]);
 export const MarketCategory = pgEnum("market_category", ["sports", "crypto", "politics", "regular"]);
@@ -27,6 +27,9 @@ const market = pgTable("market", {
 
     // Outcome and prices, will store latest prices
     outcomes: jsonb("outcome_and_price").$type<OutcomeInterface[]>().notNull(),
+    activeBets: integer("active_bets").notNull(),
+    volumes: integer("volumes").notNull(),
+
 
     // Winner
     winnerSide: jsonb("winner"),
