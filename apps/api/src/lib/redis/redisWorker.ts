@@ -1,4 +1,4 @@
-import { calcConsume } from "./consumer/calc.consumer";
+import { calcConsume } from "./rConsumer/calc.consumer";
 
 (async () => {
     const calcs = await calcConsume()
