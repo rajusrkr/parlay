@@ -1,14 +1,7 @@
 import { buySellShare } from "../../lmsr/lmsrFunction";
 import { redis } from "../redisClient";
 import { calculationProducer } from "../producer/calculations.producer";
-
-export interface NewOrder {
-    orderId: string,
-    betType: string,
-    selectedOutcomeIndex: number,
-    outcomes: any,
-    betQty: number
-}
+import { OrderProducer } from "@repo/shared/src"
 
 function extractOrderData({ data }: { data: any }) {
     const orderData: Record<string, any> = {}
@@ -44,13 +37,11 @@ async function consumeNewOrder() {
             continue;
         }
 
-        const orderData = extractOrderData({ data: res })
+        const orderData: OrderProducer = extractOrderData({ data: res }).order
 
-        const { betQty, betType, orderId, outcomes, selectedOutcomeIndex } = orderData.order as NewOrder
+        const { betQty, betType, orderId, outcomes, selectedOutcomeIndex } = orderData
 
         if (betType === "buy") {
-            console.log("this is a buy order");
-
             const { calculatedOutcome, tradeCost } = buySellShare({ b: 1000, orderType: betType, outcomeIndex: selectedOutcomeIndex, outcomes, qty: betQty })
 
             const calcs = {
@@ -58,11 +49,8 @@ async function consumeNewOrder() {
                 tradeCost,
                 orderId,
             }
-
             calculationProducer({ calculations: calcs })
         } else if (betType === "sell") {
-            console.log("this is a sell order");
-
             const { calculatedOutcome, returnToUser } = buySellShare({ b: 1000, orderType: betType, outcomeIndex: selectedOutcomeIndex, outcomes, qty: betQty })
 
             const calcs = {

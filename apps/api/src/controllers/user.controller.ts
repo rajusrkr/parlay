@@ -16,24 +16,12 @@ import jwt from "jsonwebtoken";
 import { db, market } from "@repo/db/dist/src";
 import { position, user } from "@repo/db/dist/src";
 import { and, eq } from "drizzle-orm";
-import { RegisterSchema, LoginSchema, BuyOrderSchema, type OutcomeInterface, type wsData, newBetData } from "@repo/shared/dist/src";
-import { NewOrder, orderProducer } from "../lib/redis/producer/order.producer";
-import { OrderStore, orderStore } from "../lib/redis/rStore/orderStore";
+import { RegisterSchema, LoginSchema, BuyOrderSchema, type OutcomeInterface, type wsData, newBetData, placeBetValidation } from "@repo/shared/dist/src";
+import { orderProducer } from "../lib/redis/rProducer/order.producer";
 
-// Pending bets interface
-interface pendingBet {
-  userId: string
-  marketId: string
-  betType: string
-  betQty: number
-  outcomes: OutcomeInterface[]
-  selectedOutcome: string
-  selectedOutcomeIndex: number
-  res: Response
-}
+import { OrderProducer, OrderStore } from "@repo/shared/src";
+import { orderStore } from "../lib/redis/rStore/orderStore";
 
-// Store pending bets
-export const pendingBets = new Map<string, pendingBet>();
 
 // ===================
 // User registration
@@ -236,16 +224,22 @@ const getAllPositions = async (req: Request, res: any) => {
 // Place bets
 // ===============
 const placeBet = async (req: Request, res: any) => {
+  const userOrderData = req.body;
 
-  const data = req.body;// betQty, betType, marketId, selectedOutcome
+  const { success, data } = placeBetValidation.safeParse(userOrderData)
 
+  if (!success) {
+    console.log("date validation error");
+    return res.status(400).json({ success: false, message: "Zod validation error with data." })
+  }
 
+  const { betQty, betType, marketId, selectedOutcome } = data;
   // @ts-ignore
   const userId = req.userId
 
   try {
     const [marketData] = await db.select().from(market).where(and(
-      eq(market.marketId, data.marketId),
+      eq(market.marketId, marketId),
       eq(market.currentStatus, "open")
     ))
 
@@ -260,12 +254,18 @@ const placeBet = async (req: Request, res: any) => {
     const outcomes = marketData.outcomes;
 
     // Get the index
-    const selectedOutcomeIndex = outcomes.findIndex((otcm) => otcm.title === data.selectedOutcome)
+    const selectedOutcomeIndex = outcomes.findIndex((otcm) => otcm.title === selectedOutcome)
+    console.log(selectedOutcomeIndex);
+
+    if (selectedOutcomeIndex < 0) {
+      return res.status(400).json({ success: false, message: "Invalid outcome selectedu" })
+    }
+
 
     // New order data, will be streamed to price engine
-    const newOrderData: NewOrder = {
-      betQty: data.betQty,
-      betType: data.betType,
+    const newOrderData: OrderProducer = {
+      betQty: betQty,
+      betType: betType,
       orderId: orderId,
       outcomes,
       selectedOutcomeIndex
@@ -273,12 +273,12 @@ const placeBet = async (req: Request, res: any) => {
 
     // Order store, will be stored in Redis in memory
     const orderStoreData: OrderStore = {
-      betQty: data.betQty,
-      betType: data.betType,
-      marketId: data.marketId,
+      betQty: betQty,
+      betType: betType,
+      marketId: marketId,
       orderId,
       outcomes,
-      selectedOutcome: data.selectedOutcome,
+      selectedOutcome: selectedOutcome,
       selectedOutcomeIndex,
       userId
     }

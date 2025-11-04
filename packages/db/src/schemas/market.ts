@@ -1,4 +1,4 @@
-import { bigint, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { bigint, jsonb, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { admin } from "./admin";
 import { type OutcomeInterface } from "@repo/shared/src/index"
 

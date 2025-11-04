@@ -80,7 +80,7 @@ const useAdminStore = create(persist<States>((set) => ({
             if (res.success) {
                 set({ isLoading: false, markets: res.markets })
             } else {
-                set({ isLoading: false, isError: true, errorMessage: res.message })
+                set({ isLoading: false, isError: true, errorMessage: res.message, markets: [] })
             }
         } catch (error) {
             console.log(error);

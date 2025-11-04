@@ -1,13 +1,8 @@
+import { OrderCalc } from "@repo/shared/src";
 import { redis } from "../redisClient";
 
-interface Calculation {
-    calculatedOutcome: any,
-    tradeCost?: number,
-    returnToUser?: number,
-    orderId: string
-}
 
-async function calculationProducer({ calculations }: { calculations: Calculation }) {
+async function calculationProducer({ calculations }: { calculations: OrderCalc }) {
     const streamKey = "order:calc";
     const data = calculations;
 

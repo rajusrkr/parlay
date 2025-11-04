@@ -4,8 +4,8 @@ import { market } from "./market";
 
 interface TotalQtyAndAvgPrice {
     totalQty: number,
-    avgPrice: string
-    atTotalCost: string,
+    avgPrice: number
+    atTotalCost: number,
 }
 
 const position = pgTable("position", {

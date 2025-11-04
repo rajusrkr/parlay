@@ -1,9 +1,9 @@
-import { calcConsume } from "./rConsumer/calc.consumer";
+import { calConsume } from "./rConsumer/calc.consumer";
+import { marketWorker } from "./bQueue/market.worker";
 
 (async () => {
-    const calcs = await calcConsume()
+    const calcs = await calConsume()
     console.log(calcs);
 })()
 
-
-
+marketWorker()

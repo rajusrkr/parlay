@@ -6,11 +6,9 @@ import jwt from "jsonwebtoken";
 import { db } from "@repo/db/dist/src";
 import { admin, market } from "@repo/db/dist/src";
 import { and, eq } from "drizzle-orm";
-import {
-  closeMarketQueue,
-  startMarketQueue,
-} from "../queueProducer/marketQueue";
+
 import { RegisterSchema, LoginSchema, MarketCreationSchema, MarketEditSchema } from "@repo/shared/dist/src"
+import { startMarketQueue } from "../lib/redis/bQueue/market.queue";
 
 // Admin account registration
 const adminRegister = async (req: Request, res: any) => {
@@ -136,7 +134,7 @@ const adminLogin = async (req: Request, res: any) => {
 };
 
 // Create a new market
-const createMarket = async (req: Request, res: any) => {
+const addNewMarket = async (req: Request, res: any) => {
   const data = req.body;
 
   // @ts-ignore
@@ -168,28 +166,16 @@ const createMarket = async (req: Request, res: any) => {
         marketEnds,
         outcomes: outcomes,
         marketCategory,
-        activeBets: 0,
-        volumes: 0,
         marketCreatedBy: adminId
       })
       .returning();
 
-
-
-    // market start queue
-    await startMarketQueue.add(
-      "start_market",
-      { id: createNewMarket.marketId },
-      { delay: ((createNewMarket.marketStarts) - (Math.floor(new Date().getTime() / 1000))) * 1000 }
-    );
-
-    // market close queue
-    await closeMarketQueue.add(
-      "close_market",
-      { id: createNewMarket.marketId },
-      { delay: ((createNewMarket.marketEnds) - (Math.floor(new Date().getTime() / 1000))) * 1000 }
-    );
-
+    const queueDelayTime = (createNewMarket.marketStarts - Math.floor((Date.now() / 1000))) * 1000;
+    await startMarketQueue.add("start_market",
+      { marketId: createNewMarket.marketId },
+      { delay: queueDelayTime }
+    )
+    
     return res
       .status(200)
       .json({ success: true, message: "Market created successfully" });
@@ -282,7 +268,7 @@ const editMarket = async (req: Request, res: any) => {
 export {
   adminRegister,
   adminLogin,
-  createMarket,
+  addNewMarket,
   deleteMarket,
   editMarket
 };
