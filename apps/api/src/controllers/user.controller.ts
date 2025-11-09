@@ -19,6 +19,7 @@ import { and, eq } from "drizzle-orm";
 import { RegisterSchema, LoginSchema } from "@repo/shared/dist/src";
 import { order as orderValidation } from "@repo/types/dist/src"
 import { LMSRLogic } from "../lib/lmsr-logic";
+import { Producer } from "../lib/redis/pub";
 
 
 // ===================
@@ -229,7 +230,8 @@ const placeBet = async (req: Request, res: any) => {
   const { success, data, error } = orderValidation.safeParse(userOrderData)
 
   if (!success) {
-    return res.status(400).json({ success: false, message: "Zod validation error.", error })
+    const errorMessage = `${error.issues[0].path} ${error.issues[0].message}`
+    return res.status(400).json({ success: false, message: `Zod validation error, ${errorMessage}` })
   }
 
   const { betQty, betType, marketId, selectedOutcome } = data;
@@ -324,6 +326,18 @@ const placeBet = async (req: Request, res: any) => {
         await tx.update(market).set({
           outcomes: calculatedOutcomes
         }).where(eq(market.marketId, marketId))
+        /**
+         * Do redis pub sub from here
+         * Data:
+         * calculated outcomes
+         * market id
+         */
+        const messageData = {
+          calculatedOutcomes,
+          marketId
+        }
+        const messagePublish = new Producer(messageData)
+        messagePublish.publishUpdatedPrices()
         // =====================
         // BUY ORDER ENDS HERE
         // =====================          
@@ -394,7 +408,18 @@ const placeBet = async (req: Request, res: any) => {
         await tx.update(market).set({
           outcomes: calculatedOutcomes
         }).where(eq(market.marketId, marketId))
-
+        /**
+         * Do redis pub sub from here
+         * Data:
+         * calculated outcomes
+         * market id
+         */
+        const messageData = {
+          calculatedOutcomes,
+          marketId
+        }
+        const messagePublish = new Producer(messageData)
+        messagePublish.publishUpdatedPrices()
         // =====================
         // SELL ORDER ENDS HERE
         // =====================   
