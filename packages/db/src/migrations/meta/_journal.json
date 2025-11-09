@@ -71,6 +71,13 @@
       "when": 1761997066920,
       "tag": "0009_hot_boomerang",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1762692717784,
+      "tag": "0010_curvy_spyke",
+      "breakpoints": true
     }
   ]
 }

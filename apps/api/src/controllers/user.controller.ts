@@ -8,19 +8,16 @@
  * and Storing pending requests
  */
 
-import { Request, Response } from "express";
+import { Request } from "express";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 
-import { db, market } from "@repo/db/dist/src";
+import { db, market, order } from "@repo/db/dist/src";
 import { position, user } from "@repo/db/dist/src";
 import { and, eq } from "drizzle-orm";
-import { RegisterSchema, LoginSchema, BuyOrderSchema, type OutcomeInterface, type wsData, newBetData, placeBetValidation } from "@repo/shared/dist/src";
-import { orderProducer } from "../lib/redis/rProducer/order.producer";
-
-import { OrderProducer, OrderStore } from "@repo/shared/src";
-import { orderStore } from "../lib/redis/rStore/orderStore";
+import { RegisterSchema, LoginSchema } from "@repo/shared/dist/src";
+import { order as orderValidation } from "@repo/types/dist/src"
 import { LMSRLogic } from "../lib/lmsr-logic";
 
 
@@ -226,77 +223,190 @@ const getAllPositions = async (req: Request, res: any) => {
 // ===============
 const placeBet = async (req: Request, res: any) => {
   const userOrderData = req.body;
-
-  const { success, data } = placeBetValidation.safeParse(userOrderData)
-
-  if (!success) {
-    console.log("date validation error");
-    return res.status(400).json({ success: false, message: "Zod validation error with data." })
-  }
-
-  const { betQty, betType, marketId, selectedOutcome } = data;
   // @ts-ignore
   const userId = req.userId
 
-  try {
-    const [marketData] = await db.select().from(market).where(and(
-      eq(market.marketId, marketId),
-      eq(market.currentStatus, "open")
-    ))
+  const { success, data, error } = orderValidation.safeParse(userOrderData)
 
-    if (!marketData) {
-      return res.status(400).json({ success: true, message: "Error: market status is not open or the market with the provided id does not exists" })
-    }
-
-    // Generate order id
-    const orderId = uuidv4()
-
-    // Get outcomes
-    const outcomes = marketData.outcomes;
-
-    // Get the index
-    const selectedOutcomeIndex = outcomes.findIndex((otcm) => otcm.title === selectedOutcome)
-    console.log(selectedOutcomeIndex);
-
-    if (selectedOutcomeIndex < 0) {
-      return res.status(400).json({ success: false, message: "Invalid outcome selectedu" })
-    }
-
-
-    // New order data, will be streamed to price engine
-    // const newOrderData: OrderProducer = {
-    //   betQty: betQty,
-    //   betType: betType,
-    //   orderId: orderId,
-    //   outcomes,
-    //   selectedOutcomeIndex
-    // }
-
-    // // Order store, will be stored in Redis in memory
-    // const orderStoreData: OrderStore = {
-    //   betQty: betQty,
-    //   betType: betType,
-    //   marketId: marketId,
-    //   orderId,
-    //   outcomes,
-    //   selectedOutcome: selectedOutcome,
-    //   selectedOutcomeIndex,
-    //   userId
-    // }
-
-    // Storing and streaming data
-    // await orderStore({ order: orderStoreData })
-    // await orderProducer({ orderData: newOrderData })
-
-    const lmsr = new LMSRLogic(outcomes, selectedOutcomeIndex, betQty)
-    const buyO = lmsr.buy()
-
-    return res.status(200).json({ success: true, message: "Order received", buyO })
-
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ success: false, message: "Internal server error" })
+  if (!success) {
+    return res.status(400).json({ success: false, message: "Zod validation error.", error })
   }
+
+  const { betQty, betType, marketId, selectedOutcome } = data;
+
+  try {
+    await db.transaction(async (tx) => {
+      // 1. Get market details
+      const [marketDetails] = await tx.select().from(market).where(and(
+        eq(market.marketId, marketId),
+        eq(market.currentStatus, "open")
+      ))
+
+      const { outcomes } = marketDetails;
+
+      const selectedOutcomeIndex = outcomes.findIndex((outcome) => outcome.title === selectedOutcome)
+
+      // 2. Get user details
+      const [userDetails] = await tx.select().from(user).where(eq(user.userId, userId))
+
+      // 3. Call lmst logic
+      const lmsrCalculation = new LMSRLogic(outcomes, selectedOutcomeIndex, betQty);
+
+
+      // 4. buy order
+      if (betType === "buy") {
+        // 5. User wallet balance check and update
+        const { calculatedOutcomes, tradeCost } = lmsrCalculation.buy()
+        if (userDetails.walletBalance < tradeCost) {
+          throw new Error("Insufficient balance to complete this order")
+        }
+        const newWalletBalance = userDetails.walletBalance - tradeCost;
+        await tx.update(user).set({
+          walletBalance: newWalletBalance
+        }).where(eq(user.userId, userId))
+
+        /**
+         * 6. Check prev position for same market and same
+         * outcome. If exists update that else create a new
+         * position
+         */
+        const [prevPosition] = await tx.select().from(position).where(and(
+          eq(position.positionTakenBy, userId),
+          eq(position.positionTakenFor, selectedOutcome),
+          eq(position.positionTakenIn, marketId)
+        ))
+
+        if (prevPosition) {
+          const newQty = prevPosition.totalQtyAndAvgPrice.totalQty + betQty;
+          const newAtTotalCost = prevPosition.totalQtyAndAvgPrice.atTotalCost + tradeCost;
+          const newAvgPrice = newAtTotalCost / newQty;
+
+          await tx.update(position).set({
+            totalQtyAndAvgPrice: {
+              atTotalCost: newAtTotalCost,
+              avgPrice: newAvgPrice,
+              totalQty: newQty
+            }
+          }).where(and(
+            eq(position.positionTakenBy, userId),
+            eq(position.positionTakenFor, selectedOutcome),
+            eq(position.positionTakenIn, marketId)
+          ))
+        } else {
+          const avgPrice = tradeCost / betQty;
+          await tx.insert(position).values({
+            positionId: uuidv4(),
+            positionTakenBy: userId,
+            positionTakenFor: selectedOutcome,
+            positionTakenIn: marketId,
+            totalQtyAndAvgPrice: {
+              totalQty: betQty,
+              avgPrice,
+              atTotalCost: tradeCost
+            },
+            pnL: 0
+          })
+        }
+
+        // 7. Create a new order
+        const avgPrice = tradeCost / betQty
+        await tx.insert(order).values({
+          orderId: uuidv4(),
+          orderPlacedBy: userId,
+          orderQty: betQty,
+          orderTakenIn: marketId,
+          orderType: betType,
+          updatedPrices: calculatedOutcomes,
+          averageTradedPrice: avgPrice,
+          orderPlacedFor: selectedOutcome
+        })
+        //8. Update market
+        await tx.update(market).set({
+          outcomes: calculatedOutcomes
+        }).where(eq(market.marketId, marketId))
+        // =====================
+        // BUY ORDER ENDS HERE
+        // =====================          
+      } else if (betType === "sell") {
+        // 1. Check old position and perform checks
+        const [prevPosition] = await tx.select().from(position).where(and(
+          eq(position.positionTakenIn, marketId),
+          eq(position.positionTakenBy, userId),
+          eq(position.positionTakenFor, selectedOutcome)
+        ))
+
+        if (!prevPosition) {
+          throw new Error("You don't have any quantity to sell")
+        }
+
+        if (prevPosition.totalQtyAndAvgPrice.totalQty < betQty) {
+          throw new Error("Quantity is not enough to sell")
+        }
+
+        // 2.Get user
+        const [userDetails] = await tx.select().from(user).where(eq(user.userId, userId));
+
+        // 3. lmsr logic 
+        const { calculatedOutcomes, returnToTheUser } = lmsrCalculation.sell()
+        // 4. New wallet balance and update wallet balance
+        const newWalletBalance = userDetails.walletBalance + returnToTheUser;
+        await tx.update(user).set({
+          walletBalance: newWalletBalance
+        }).where(eq(user.userId, userId))
+
+        // 5. Update position
+        const newQty = prevPosition.totalQtyAndAvgPrice.totalQty - betQty;
+        const newAvgPrice = prevPosition.totalQtyAndAvgPrice.avgPrice;
+        const newAtTotalCost = newQty * newAvgPrice;
+        await tx.update(position).set({
+          totalQtyAndAvgPrice: {
+            totalQty: newQty,
+            avgPrice: newAvgPrice,
+            atTotalCost: newAtTotalCost
+          }
+        }).where(and(
+          eq(position.positionTakenIn, marketId),
+          eq(position.positionTakenBy, userId),
+          eq(position.positionTakenFor, selectedOutcome)
+        ))
+        // 6. Insert order
+        function getSellOrderAvgPrice(): number {
+          const avgPrice = returnToTheUser / betQty;
+
+          if (avgPrice < 0) {
+            const positiveAvgPrice = avgPrice * -1
+            return positiveAvgPrice
+          }
+          return avgPrice
+        }
+
+        await tx.insert(order).values({
+          orderId: uuidv4(),
+          orderPlacedBy: userId,
+          orderQty: betQty,
+          orderTakenIn: marketId,
+          orderType: betType,
+          updatedPrices: calculatedOutcomes,
+          averageTradedPrice: getSellOrderAvgPrice(),
+          orderPlacedFor: selectedOutcome
+        })
+        // 7. Update market
+        await tx.update(market).set({
+          outcomes: calculatedOutcomes
+        }).where(eq(market.marketId, marketId))
+
+        // =====================
+        // SELL ORDER ENDS HERE
+        // =====================   
+
+      }
+    })
+    return res.status(200).json({ success: true, message: "Order placed successfully" })
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Internal server error", error })
+  }
+
+
 
 }
 

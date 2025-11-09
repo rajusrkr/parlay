@@ -17,7 +17,7 @@ const user = pgTable("user", {
 
 
     // Wallet & Balance
-    walletBalance: decimal("wallet_balance", { precision: 12, scale: 4, mode: "number" }).default(50000.0000),
+    walletBalance: decimal("wallet_balance", { precision: 12, scale: 4, mode: "number" }).default(50000.0000).notNull(),
     currencyCode: CurrencyCode().default("INR"),
 
 

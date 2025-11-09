@@ -1,0 +1,1 @@
+ALTER TABLE "user" ALTER COLUMN "wallet_balance" SET NOT NULL;
