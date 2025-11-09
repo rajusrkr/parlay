@@ -2,6 +2,8 @@ import { db, market, order, position, user } from "@repo/db/dist/src";
 import { redis } from "../redisClient";
 import { and, avg, eq } from "drizzle-orm"
 import { validateLMSRCalculations, fullOrderValidation } from "@repo/shared/dist/src"
+import { type OrderStatus, orderStatus } from "../rProducer/order.producer";
+import { PVBUpdate } from "../rProducer/price.producer";
 async function calConsume() {
     const group = "api-server";
     const consumer = "api-server-cons";
@@ -61,46 +63,48 @@ async function processMessage({ orderData }: { orderData: any }) {
 
     // DB transactions
     try {
+        // 1. Checking market
         const marketDetails = await db.select().from(market).where(and(
             eq(market.currentStatus, "open"),
             eq(market.marketId, mergedData.marketId)
         ))
-
         if (!marketDetails) {
             console.log("No market details found");
             return
         }
 
+        // 2. Checking user
         const [userDetails] = await db.select().from(user).where(eq(user.userId, mergedData.userId));
         if (!userDetails) {
             console.log("No user found");
             return
         }
 
+        // 3. If buy order
         if (mergedData.betType === "buy") {
+            console.log("going for buy order");
+
+            // 4. Wallet balance things
             if (userDetails.walletBalance! < mergedData.tradeCost!) {
                 console.log("Balance is not suffiecient for this order");
                 return
             }
-
             const newWalletBalance = userDetails.walletBalance! - mergedData.tradeCost!;
-
             await db.update(user).set({
                 walletBalance: newWalletBalance
             }).where(eq(user.userId, mergedData.userId))
 
+            // 5. Checking prev positions
             const [prevPosition] = await db.select().from(position).where(and(
                 eq(position.positionTakenBy, mergedData.userId),
                 eq(position.positionTakenFor, mergedData.selectedOutcome),
                 eq(position.positionTakenIn, mergedData.marketId)
             ))
-
+            // 6. If prev position exists
             if (prevPosition) {
                 const newQty = prevPosition.totalQtyAndAvgPrice.totalQty + mergedData.betQty;
                 const newAtTotalCost = prevPosition.totalQtyAndAvgPrice.atTotalCost + mergedData.tradeCost!;
                 const newAvgPrice = newAtTotalCost / newQty;
-
-
                 await db.update(position).set({
                     totalQtyAndAvgPrice: {
                         atTotalCost: newAtTotalCost,
@@ -112,7 +116,7 @@ async function processMessage({ orderData }: { orderData: any }) {
                     eq(position.positionTakenFor, mergedData.selectedOutcome),
                     eq(position.positionTakenIn, mergedData.marketId)
                 ))
-
+                // 7. Else create a new position
             } else {
                 const avgPrice = mergedData.tradeCost! / mergedData.betQty
                 await db.insert(position).values({
@@ -129,8 +133,8 @@ async function processMessage({ orderData }: { orderData: any }) {
                 })
             }
 
+            // 8. Create order entry
             const avgPrice = mergedData.tradeCost! / mergedData.betQty
-
             await db.insert(order).values({
                 orderId: mergedData.orderId,
                 orderPlacedBy: mergedData.userId,
@@ -143,34 +147,48 @@ async function processMessage({ orderData }: { orderData: any }) {
 
             })
 
-            console.log("Successfully performed buy transactions");
+            // await db.update(market).set({
+            //     outcomes: mergedData.calculatedOutcome
+            // })
+            console.log("Successfully performed buy transactions, sending order status");
+
+            const orderStatusDetails: OrderStatus = {
+                message: "Buy order completed successfully",
+                orderId: mergedData.orderId,
+                qty: mergedData.betQty,
+                tradedPrice: mergedData.tradeCost! / mergedData.betQty
+            }
+            // await PVBUpdate({ pricesUpdateData: [{ price: 123, title: "dckkjh", totalActiveBet: 123, totalActiveVolume: 123, tradedQty: 123 }] })
+            await orderStatus({ orderStatus: orderStatusDetails })
+            console.log("sent order status");
+
+            // 9. Sell order
         } else if (mergedData.betType === "sell") {
+            // 10. Check if prev position exists
             const [prevPosition] = await db.select().from(position).where(and(
                 eq(position.positionTakenIn, mergedData.marketId),
                 eq(position.positionTakenBy, mergedData.userId),
                 eq(position.positionTakenFor, mergedData.selectedOutcome)
             ))
-
             if (!prevPosition) {
                 console.log("No position found");
                 return
             }
-
             if (prevPosition.totalQtyAndAvgPrice.totalQty < mergedData.betQty) {
                 console.log("Not enough qty to sell");
                 return
             }
 
+            // 11. Wallet things
             const newWalletBalance = userDetails.walletBalance! + mergedData.returnToUser!
-
             await db.update(user).set({
                 walletBalance: newWalletBalance
             }).where(eq(user.userId, mergedData.userId))
 
+            // 12. Position update
             const newQty = prevPosition.totalQtyAndAvgPrice.totalQty - mergedData.betQty;
             const newAvgPrice = prevPosition.totalQtyAndAvgPrice.avgPrice;
             const newAtTotalCost = newAvgPrice * newQty
-
             await db.update(position).set({
                 totalQtyAndAvgPrice: {
                     totalQty: newQty,
@@ -179,7 +197,18 @@ async function processMessage({ orderData }: { orderData: any }) {
                 }
             })
 
-            const avgPrice = mergedData.returnToUser! / mergedData.betQty;
+            // 13. Create new order
+            function getSellOrderAvgPrice() {
+                const avgPrice = mergedData.returnToUser! / mergedData.betQty;
+
+                if (avgPrice < 0) {
+                    const multiplyByMinusOne = -1
+                    const positiveAvgPrice = avgPrice * multiplyByMinusOne;
+
+                    return positiveAvgPrice
+                }
+                return avgPrice;
+            }
             await db.insert(order).values({
                 orderId: mergedData.orderId,
                 orderPlacedBy: mergedData.userId,
@@ -187,10 +216,14 @@ async function processMessage({ orderData }: { orderData: any }) {
                 orderTakenIn: mergedData.marketId,
                 orderType: mergedData.betType,
                 updatedPrices: mergedData.calculatedOutcome,
-                averageTradedPrice: avgPrice,
+                averageTradedPrice: getSellOrderAvgPrice(),
                 orderPlacedFor: mergedData.selectedOutcome,
 
             })
+
+            // await db.update(market).set({
+            //     outcomes: mergedData.calculatedOutcome
+            // })
             console.log("Successfully performed SELL transactions");
 
         } else {
@@ -198,9 +231,7 @@ async function processMessage({ orderData }: { orderData: any }) {
             return
         }
 
-        await db.update(market).set({
-            outcomes: mergedData.calculatedOutcome
-        })
+
 
 
         // Stream three this from here
@@ -214,14 +245,6 @@ async function processMessage({ orderData }: { orderData: any }) {
         console.log(error);
     }
 
-
-
-    /**
-     * Perform db operation
-     * send an alert to the user about the order => goes to ws server
-     * send portfolio update => goes to ws server
-     * send update => goes to ws server
-     */
 }
 
 export { calConsume }

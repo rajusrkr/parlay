@@ -7,8 +7,9 @@ import { db } from "@repo/db/dist/src";
 import { admin, market } from "@repo/db/dist/src";
 import { and, eq } from "drizzle-orm";
 
-import { RegisterSchema, LoginSchema, MarketCreationSchema, MarketEditSchema } from "@repo/shared/dist/src"
+import { RegisterSchema, LoginSchema } from "@repo/shared/dist/src"
 import { startMarketQueue } from "../lib/redis/bQueue/market.queue";
+import { createMarket, editMarket } from "@repo/types/dist/src"
 
 // Admin account registration
 const adminRegister = async (req: Request, res: any) => {
@@ -140,7 +141,7 @@ const addNewMarket = async (req: Request, res: any) => {
   // @ts-ignore
   const adminId = req.adminId;
 
-  const validateData = MarketCreationSchema.safeParse(data);
+  const validateData = createMarket.safeParse(data);
 
   if (!validateData.success) {
     return res
@@ -164,7 +165,7 @@ const addNewMarket = async (req: Request, res: any) => {
         settlement,
         marketStarts,
         marketEnds,
-        outcomes: outcomes,
+        outcomes,
         marketCategory,
         marketCreatedBy: adminId
       })
@@ -175,7 +176,7 @@ const addNewMarket = async (req: Request, res: any) => {
       { marketId: createNewMarket.marketId },
       { delay: queueDelayTime }
     )
-    
+
     return res
       .status(200)
       .json({ success: true, message: "Market created successfully" });
@@ -230,14 +231,14 @@ const deleteMarket = async (req: Request, res: any) => {
 };
 
 // Edit market
-const editMarket = async (req: Request, res: any) => {
+const marketModify = async (req: Request, res: any) => {
   const data = req.body;
 
   // @ts-ignore
   const adminId = req.adminId
   const marketId = data.marketId
 
-  const validateData = MarketEditSchema.safeParse(data.data)
+  const validateData = editMarket.safeParse(data.data)
   if (validateData.error) {
     return res.status(400).json({ success: false, message: "Invalid data received" })
   }
@@ -259,16 +260,12 @@ const editMarket = async (req: Request, res: any) => {
     return res.status(500).json({ success: false, message: "Internal server error" })
 
   }
-
-
-
 }
-
 
 export {
   adminRegister,
   adminLogin,
   addNewMarket,
   deleteMarket,
-  editMarket
+  marketModify
 };

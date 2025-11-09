@@ -15,6 +15,7 @@
     "@internationalized/date": "^3.9.0",
     "@repo/db": "*",
     "@repo/shared": "*",
+    "@repo/types": "*",
     "@tailwindcss/vite": "^4.1.13",
     "framer-motion": "^12.23.22",
     "lodash": "^4.17.21",

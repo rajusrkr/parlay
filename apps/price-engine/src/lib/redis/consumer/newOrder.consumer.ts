@@ -37,6 +37,10 @@ async function consumeNewOrder() {
             continue;
         }
 
+        console.log(res);
+        
+        
+
         const orderData: OrderProducer = extractOrderData({ data: res }).order
 
         const { betQty, betType, orderId, outcomes, selectedOutcomeIndex } = orderData

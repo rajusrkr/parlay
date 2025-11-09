@@ -12,6 +12,7 @@
   "dependencies": {
     "@heroui/react": "^2.8.5",
     "@repo/shared": "*",
+    "@repo/types": "*",
     "@tailwindcss/vite": "^4.1.13",
     "framer-motion": "^12.23.22",
     "lucide-react": "^0.545.0",

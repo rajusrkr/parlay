@@ -12,10 +12,10 @@ import {
   Textarea,
 } from "@heroui/react";
 import { CalendarDateTime } from "@internationalized/date";
-import {
-  MarketCreationSchema,
-  type MarketCreationInterface,
-} from "@repo/shared/src";
+
+import { type Market, createMarket } from "@repo/types/src";
+
+import {} from "@repo/types/src";
 import { useState } from "react";
 import { BACKEND_URI } from "../store/adminStore";
 import { useNavigate } from "react-router";
@@ -28,7 +28,7 @@ export const marketCategory = [
 ];
 
 export default function MarketCreationForm() {
-  const [formData, setFormData] = useState<MarketCreationInterface>();
+  const [formData, setFormData] = useState<Market>();
 
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isFormSubmiting, setIsFormSubmiting] = useState(false);
@@ -45,7 +45,7 @@ export default function MarketCreationForm() {
     setStartDateError("");
     setEndDateError("");
 
-    const { success, data, error } = MarketCreationSchema.safeParse(formData);
+    const { success, data, error } = createMarket.safeParse(formData);
 
     if (!success) {
       const errorM =
@@ -328,9 +328,7 @@ export default function MarketCreationForm() {
                             {
                               title: singleOutcome,
                               price: 0,
-                              totalActiveBet: 0,
-                              totalActiveVolume: 0,
-                              tradedQty: 0,
+                              totalActiveTradingVolume: 0,
                             },
                           ],
                         }));

@@ -18,9 +18,18 @@ console.log(`WS-SERVER is listening on port ${8002}`);
 // Handle heart beat
 // ===================
 const heartbeat_interval = 15000;
+
+
 const heartbeatInterval = setInterval(() => {
   wss.clients.forEach((ws) => {
     const client = ws as ExtendedWebsocket;
+
+    if (client.clientRole === "userFe") {
+      console.log("Logging for user fe");
+      
+    }
+
+    
 
     if (!client.isAlive) {
       console.log("Terminating inactive client:", client.clientRole);

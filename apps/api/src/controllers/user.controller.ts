@@ -21,6 +21,7 @@ import { orderProducer } from "../lib/redis/rProducer/order.producer";
 
 import { OrderProducer, OrderStore } from "@repo/shared/src";
 import { orderStore } from "../lib/redis/rStore/orderStore";
+import { LMSRLogic } from "../lib/lmsr-logic";
 
 
 // ===================
@@ -263,32 +264,34 @@ const placeBet = async (req: Request, res: any) => {
 
 
     // New order data, will be streamed to price engine
-    const newOrderData: OrderProducer = {
-      betQty: betQty,
-      betType: betType,
-      orderId: orderId,
-      outcomes,
-      selectedOutcomeIndex
-    }
+    // const newOrderData: OrderProducer = {
+    //   betQty: betQty,
+    //   betType: betType,
+    //   orderId: orderId,
+    //   outcomes,
+    //   selectedOutcomeIndex
+    // }
 
-    // Order store, will be stored in Redis in memory
-    const orderStoreData: OrderStore = {
-      betQty: betQty,
-      betType: betType,
-      marketId: marketId,
-      orderId,
-      outcomes,
-      selectedOutcome: selectedOutcome,
-      selectedOutcomeIndex,
-      userId
-    }
+    // // Order store, will be stored in Redis in memory
+    // const orderStoreData: OrderStore = {
+    //   betQty: betQty,
+    //   betType: betType,
+    //   marketId: marketId,
+    //   orderId,
+    //   outcomes,
+    //   selectedOutcome: selectedOutcome,
+    //   selectedOutcomeIndex,
+    //   userId
+    // }
 
     // Storing and streaming data
-    await orderStore({ order: orderStoreData })
-    await orderProducer({ orderData: newOrderData })
+    // await orderStore({ order: orderStoreData })
+    // await orderProducer({ orderData: newOrderData })
 
+    const lmsr = new LMSRLogic(outcomes, selectedOutcomeIndex, betQty)
+    const buyO = lmsr.buy()
 
-    return res.status(200).json({ success: true, message: "Order received" })
+    return res.status(200).json({ success: true, message: "Order received", buyO })
 
   } catch (error) {
     console.log(error);

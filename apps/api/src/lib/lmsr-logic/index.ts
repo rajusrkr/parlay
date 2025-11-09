@@ -1,12 +1,12 @@
-import { type Outcomes } from "@repo/types/dist/src"
+import { type Outcome } from "@repo/types/dist/src"
 
 class LMSRLogic {
     private readonly b: number = 1000;
 
-    private outcomes: Outcomes[];
+    private outcomes: Outcome[];
     private selectedOutcomeIndex: number;
     private orderedQty: number
-    constructor(outcomes: Outcomes[], selectedOutcomeIndex: number, orderedQty: number) {
+    constructor(outcomes: Outcome[], selectedOutcomeIndex: number, orderedQty: number) {
         this.outcomes = outcomes;
         this.selectedOutcomeIndex = selectedOutcomeIndex;
         this.orderedQty = orderedQty
@@ -37,33 +37,43 @@ class LMSRLogic {
         return prices
     }
 
-    buy(): { returnThingsToUser: Outcomes[], tradeCost: number } {
-        const providedQty = this.outcomes.map((outcome) => outcome.tradedQty);
+    buy(): { calculatedOutcomes: Outcome[], tradeCost: number } {
+        const providedQty = this.outcomes.map((outcome) => outcome.totalActiveTradingVolume);
         const addedQty = [...providedQty];
         addedQty[this.selectedOutcomeIndex] += this.orderedQty
 
         const tradeCost = (this.cost(addedQty) - this.cost(providedQty))
         const newPrices = this.price(addedQty)
-        const newActiveVolume = this.outcomes[this.selectedOutcomeIndex].totalActiveVolume + tradeCost;
+        const newActiveVolume = this.outcomes[this.selectedOutcomeIndex].totalActiveTradingVolume + this.orderedQty;
 
-        const returnThingsToUser = this.outcomes.map((outcome, i) => ({
+        const calculatedOutcomes = this.outcomes.map((outcome, i) => ({
             ...outcome,
             price: newPrices[i],
-            tradedQty: addedQty[i],
-            totalActiveVolume: i === this.selectedOutcomeIndex ? newActiveVolume : this.outcomes[i].totalActiveVolume
+            totalActiveTradingVolume: i === this.selectedOutcomeIndex ? newActiveVolume : this.outcomes[i].totalActiveTradingVolume
         }))
 
-        return { returnThingsToUser, tradeCost }
+        return { calculatedOutcomes, tradeCost }
     }
 
-    sell() {
-        const providedQty = this.outcomes.map((outcome) => outcome.tradedQty);
+    sell(): { returnToTheUser: number, calculatedOutcomes: Outcome[] } {
+        const providedQty = this.outcomes.map((outcome) => outcome.totalActiveTradingVolume);
         const substractedQty = [...providedQty]
         substractedQty[this.selectedOutcomeIndex] -= this.orderedQty;
 
-        const returnToTheUser = (this.cost(providedQty) - this.cost(substractedQty))
+        const returnToTheUser = this.cost(substractedQty) - this.cost(providedQty)
         const newPrices = this.price(substractedQty)
-        const newActiveVolume = this.outcomes[this.selectedOutcomeIndex].totalActiveVolume - returnToTheUser;
+        const newActiveVolume = this.outcomes[this.selectedOutcomeIndex].totalActiveTradingVolume - this.orderedQty;
+
+        const calculatedOutcomes = this.outcomes.map((outcome, i) => ({
+            ...outcome,
+            price: newPrices[i],
+            totalActiveTradingVolume: i === this.selectedOutcomeIndex ? newActiveVolume : this.outcomes[i].totalActiveTradingVolume
+        }))
+
+        return { returnToTheUser, calculatedOutcomes }
 
     }
-}   
+}
+
+
+export { LMSRLogic }

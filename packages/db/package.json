@@ -12,6 +12,7 @@
   "license": "ISC",
    "dependencies": {
     "@repo/shared": "*",
+    "@repo/types": "*",
     "dotenv": "^17.2.1",
     "drizzle-orm": "^0.44.3",
     "pg": "^8.16.3"

@@ -15,6 +15,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.899.0",
     "@repo/db": "*",
+    "@repo/types": "*",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.59.0",
     "cookie-parser": "^1.4.7",

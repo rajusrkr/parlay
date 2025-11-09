@@ -25,7 +25,7 @@ function lmsrPriceFunc({ q, b }: { q: number[], b: number }): number[] {
 function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes: OutcomeInterface[], b: number, outcomeIndex: number, qty: number, orderType: string }): { calculatedOutcome: OutcomeInterface[], tradeCost?: number, returnToUser?: number } {
 
     // Get the qty array
-    const providedQty = outcomes.map((otcms) => otcms.tradedQty);
+    const providedQty = outcomes.map((otcms) => otcms.totalActiveTradingVolume);
     // Calculate current cost
     const costBefore = lmsrCostFunc({ q: providedQty, b })
 
@@ -45,8 +45,7 @@ function buySellShare({ b, orderType, outcomeIndex, outcomes, qty }: { outcomes:
                 ...otcms,
                 price: (newPrices[i]),
                 tradedQty: addedQty[i],
-                totalActiveBet: ++otcms.totalActiveBet,
-                totalActiveVolume: otcms.totalActiveVolume + tradeCost
+                totalActiveVolume: otcms.totalActiveTradingVolume + tradeCost
             }))
 
             return { calculatedOutcome: updatedOutcomes, tradeCost }
