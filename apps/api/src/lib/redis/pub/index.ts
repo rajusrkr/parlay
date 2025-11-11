@@ -1,31 +1,55 @@
 import Redis from "ioredis";
 import { Outcome } from "@repo/types/dist/src"
 
-interface Message {
+interface PriceUpdate {
     marketId: string,
-    calculatedOutcomes: Outcome[]
+    outcomes: Outcome[]
 }
 
+interface PortfolioUpdate {
+    marketId: string,
+    userId: string,
+    portfolio: {
+        newQty: number,
+        newAvgPrice: number
+    }
+}
 
 class Producer {
     private readonly host = "127.0.0.1";
     private readonly port = 6379
     private redis: Redis;
-    message: Message;
-    private readonly priceUpdateChannel = "priceUpdateChannel"
+    private readonly priceUpdateChannel = "price:update"
+    private readonly portfolioUpdateChannel = "portfolio:update"
 
-    constructor(message: Message) {
+
+    private readonly priceUpdateMessage: PriceUpdate;
+    private readonly portfolioUpdateMessage: PortfolioUpdate;
+
+    constructor(priceUpdateMessage: PriceUpdate, portfolioUpdateMessage: PortfolioUpdate) {
         this.redis = new Redis({
             host: this.host,
             port: this.port
         })
-        this.message = message
+        this.portfolioUpdateMessage = portfolioUpdateMessage
+        this.priceUpdateMessage = priceUpdateMessage
+
     }
 
 
     async publishUpdatedPrices() {
-        await this.redis.publish(this.priceUpdateChannel, JSON.stringify(this.message))
+        console.log("ran1");
+
+        await this.redis.publish(this.priceUpdateChannel, JSON.stringify(this.priceUpdateMessage))
     }
+
+    async publishPortfolioUpdate() {
+        console.log("ran2");
+
+        await this.redis.publish(this.portfolioUpdateChannel, JSON.stringify(this.portfolioUpdateMessage))
+    }
+
+
 }
 
 export { Producer }

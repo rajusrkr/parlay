@@ -332,12 +332,22 @@ const placeBet = async (req: Request, res: any) => {
          * calculated outcomes
          * market id
          */
-        const messageData = {
-          calculatedOutcomes,
-          marketId
+        const priceUpdateMessage = {
+          marketId: marketId,
+          outcomes: calculatedOutcomes
         }
-        const messagePublish = new Producer(messageData)
+
+        const portfolioUpdateMessage = {
+          marketId: marketId,
+          userId: userId,
+          portfolio: {
+            newQty: prevPosition ? prevPosition.totalQtyAndAvgPrice.totalQty + betQty : betQty,
+            newAvgPrice: prevPosition ? prevPosition.totalQtyAndAvgPrice.atTotalCost + tradeCost / prevPosition.totalQtyAndAvgPrice.totalQty + betQty : tradeCost / betQty
+          }
+        }
+        const messagePublish = new Producer(priceUpdateMessage, portfolioUpdateMessage)
         messagePublish.publishUpdatedPrices()
+        messagePublish.publishPortfolioUpdate()
         // =====================
         // BUY ORDER ENDS HERE
         // =====================          
@@ -414,12 +424,25 @@ const placeBet = async (req: Request, res: any) => {
          * calculated outcomes
          * market id
          */
-        const messageData = {
-          calculatedOutcomes,
-          marketId
+        const priceUpdateMessage = {
+          marketId: marketId,
+          outcomes: calculatedOutcomes
         }
-        const messagePublish = new Producer(messageData)
+
+        const portfolioUpdateMessage = {
+          marketId: marketId,
+          userId: userId,
+          portfolio: {
+            newQty: prevPosition.totalQtyAndAvgPrice.totalQty - betQty,
+            newAvgPrice: prevPosition.totalQtyAndAvgPrice.avgPrice
+          }
+        }
+
+        console.log("sending sell order");
+        
+        const messagePublish = new Producer(priceUpdateMessage, portfolioUpdateMessage)
         messagePublish.publishUpdatedPrices()
+        messagePublish.publishPortfolioUpdate()
         // =====================
         // SELL ORDER ENDS HERE
         // =====================   
