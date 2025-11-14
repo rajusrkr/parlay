@@ -27,6 +27,7 @@ import {
 import { dateFormater } from "../lib/utils";
 import { Link } from "react-router";
 import { useUserStore } from "../store/userStore";
+import { WS } from "../lib/websocket-service";
 
 export default function Market() {
   const { markets, fetchAllMarkets } = useUserStore();
@@ -46,8 +47,6 @@ export default function Market() {
   ];
 
   const [selectedKeys, setSelectedKeys] = useState(new Set(["all"]));
-  console.log(selectedKeys);
-
   const selectedValue = useMemo(
     () => Array.from(selectedKeys).join(", "),
     [selectedKeys]
@@ -57,6 +56,14 @@ export default function Market() {
     (async () => {
       await fetchAllMarkets();
     })();
+
+    const ws = new WS("http://localhost:8002");
+
+    ws.connect();
+
+    return () => {
+      ws.distconnect()
+    }
   }, []);
 
   return (
@@ -156,7 +163,7 @@ export default function Market() {
                   </Chip>
                 )}
 
-                 {market.currentStatus === "open-soon" && (
+                {market.currentStatus === "open-soon" && (
                   <Chip color="danger" variant="flat">
                     <span className="capitalize flex items-center gap-1">
                       <Timer size={18} /> {market.currentStatus}
@@ -164,8 +171,7 @@ export default function Market() {
                   </Chip>
                 )}
 
-
-                  {market.marketCategory === "sports" && (
+                {market.marketCategory === "sports" && (
                   <Chip variant="flat">
                     <span className="capitalize flex items-center gap-0.5">
                       <Trophy size={16} />
@@ -193,7 +199,11 @@ export default function Market() {
               </div>
               {/* title, descriptio and closing */}
               <div className="mb-4">
-                <Link to={`/market/${market.marketId}`}><span className="text-lg font-semibold mb-2 hover:underline">{market.title}</span></Link>
+                <Link to={`/market/${market.marketId}`}>
+                  <span className="text-lg font-semibold mb-2 hover:underline">
+                    {market.title}
+                  </span>
+                </Link>
                 <p className="text-sm text-default-500 truncate mb-4">
                   {market.description}
                 </p>

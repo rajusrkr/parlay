@@ -34,6 +34,7 @@ import {
 } from "@repo/shared/src";
 import { useEffect, useMemo, useState } from "react";
 import { useUserStore } from "../store/userStore";
+import { WS } from "../lib/websocket-service";
 
 function PageHeader({ market }: { market: MarketByIdInterface }) {
   return (
@@ -394,6 +395,15 @@ export default function MarketById() {
     (async () => {
       await fetchMarketById({ marketId: marketId! });
     })();
+
+    const ws = new WS("http://localhost:8002")
+
+    ws.connect()
+
+
+    return () => {
+      ws.distconnect()
+    }
   }, []);
 
   return (
