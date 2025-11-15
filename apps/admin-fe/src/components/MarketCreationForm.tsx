@@ -124,7 +124,10 @@ export default function MarketCreationForm() {
                 isRequired
                 size="lg"
                 onChange={(e) => {
-                  setFormData((prev) => ({ ...prev!, title: e.target.value }));
+                  setFormData((prev) => ({
+                    ...prev!,
+                    title: e.target.value.trim(),
+                  }));
                 }}
               />
               <Textarea

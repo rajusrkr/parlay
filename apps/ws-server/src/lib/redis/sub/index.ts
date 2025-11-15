@@ -39,23 +39,13 @@ class Sub {
                 console.log(`Subscribed to ${this.portfolioUpdateChannel}, sub count ${count} clannels`);
             }
         })
-
-        // This is not needed 
-        // this.redis.on("message", (channel, portfolioUpdatemessage) => {
-        //     console.log(`MESSAGE RECEIVED FROM ${channel}`);
-        //     console.log(portfolioUpdatemessage);
-        // })
     }
 
     async listenForMessage() {
         this.redis.on("message", (channel, message) => {
             console.log(`Message received from ${channel}`);
-
-
             console.log("sending message");
-            
             this.ws.send(message)
-
             console.log("message sent");
             
         })

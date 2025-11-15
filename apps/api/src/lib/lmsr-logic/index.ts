@@ -6,6 +6,7 @@ class LMSRLogic {
     private outcomes: Outcome[];
     private selectedOutcomeIndex: number;
     private orderedQty: number
+
     constructor(outcomes: Outcome[], selectedOutcomeIndex: number, orderedQty: number) {
         this.outcomes = outcomes;
         this.selectedOutcomeIndex = selectedOutcomeIndex;
