@@ -8,7 +8,7 @@ import { admin, market } from "@repo/db/dist/src";
 import { and, eq } from "drizzle-orm";
 
 import { RegisterSchema, LoginSchema } from "@repo/shared/dist/src"
-import { startMarketQueue } from "../lib/redis/bQueue/market.queue";
+import { startMarketQueue } from "../lib/redis/queue/market.queue";
 import { createMarket, editMarket } from "@repo/types/dist/src"
 
 // Admin account registration
@@ -172,7 +172,7 @@ const addNewMarket = async (req: Request, res: any) => {
       .returning();
 
     const queueDelayTime = (createNewMarket.marketStarts - Math.floor((Date.now() / 1000))) * 1000;
-    await startMarketQueue.add("start_market",
+    await startMarketQueue.add("market_open",
       { marketId: createNewMarket.marketId },
       { delay: queueDelayTime }
     )

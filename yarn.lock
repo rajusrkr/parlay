@@ -6049,6 +6049,19 @@ bullmq@^5.59.0:
     tslib "^2.0.0"
     uuid "^11.1.0"
 
+bullmq@^5.63.2:
+  version "5.63.2"
+  resolved "https://registry.yarnpkg.com/bullmq/-/bullmq-5.63.2.tgz#66f06d561247e29fa97643cb95c5ccde3bee6167"
+  integrity sha512-c1K5gcAh0a+C9lcRXaA1GePDYtmUywCH1pNXkUlZ8lFlqQnrtKyZpcr5aZJcjyZVx6y7t5259ru+ttJFNUQ5kw==
+  dependencies:
+    cron-parser "^4.9.0"
+    ioredis "^5.8.2"
+    msgpackr "^1.11.2"
+    node-abort-controller "^3.1.1"
+    semver "^7.5.4"
+    tslib "^2.0.0"
+    uuid "^11.1.0"
+
 busboy@^1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/busboy/-/busboy-1.6.0.tgz#966ea36a9502e43cdb9146962523b92f531f6893"

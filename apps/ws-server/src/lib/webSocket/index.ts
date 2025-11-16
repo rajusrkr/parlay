@@ -10,8 +10,6 @@ const wss = new WebSocketServer({ port: 8002 });
 const connectedClients = new Map<ExtendedWebsocket, string>();
 
 function ws() {
-  console.log("ws executed");
-
   wss.on("connection", (ws: ExtendedWebsocket, req: Request) => {
     ws.isAlive = true;
     ws.on("pong", () => {
