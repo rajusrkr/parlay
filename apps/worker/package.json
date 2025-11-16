@@ -1,0 +1,20 @@
+{
+  "name": "@repo/worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@repo/db": "*",
+    "bullmq": "^5.63.2",
+    "drizzle-orm": "^0.44.3",
+    "ioredis": "^5.8.2"
+  }
+}
