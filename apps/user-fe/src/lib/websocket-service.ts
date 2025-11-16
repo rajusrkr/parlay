@@ -24,6 +24,10 @@ class WS {
     this.wsRef.onmessage = (msg) => {
       console.log(JSON.parse(msg.data));
     };
+
+    this.wsRef.onopen = () => {
+      this.wsRef?.send(JSON.stringify({ type: "authHandShake" }));
+    };
   }
 
   distconnect() {

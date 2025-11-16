@@ -134,9 +134,9 @@ const userLogin = async (req: Request, res: any) => {
     );
 
     // ws auth cookie
-    const socketKey = jwt.sign({ role: "userFe" }, `${process.env.JWT_SECRET}`);
+    const socketKey = jwt.sign({ userId: findUser[0].userId }, `${process.env.JWT_SECRET}`);
 
-    res.cookie("socket-identity", socketKey, {
+    res.cookie("socketIndentity", socketKey, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       secure: true,
       sameSite: "strict",
@@ -401,6 +401,8 @@ const placeBet = async (req: Request, res: any) => {
         // BUY ORDER ENDS HERE
         // =====================
       } else if (betType === "sell") {
+        console.log("sell");
+        
         // 1. Check old position and perform checks
         console.log("going for sell");
 
@@ -507,9 +509,6 @@ const placeBet = async (req: Request, res: any) => {
             newAvgPrice: prevPosition.totalQtyAndAvgPrice.avgPrice,
           },
         };
-
-        console.log("sending sell order");
-
         const messagePublish = new Producer(
           priceUpdateMessage,
           portfolioUpdateMessage
