@@ -17,6 +17,10 @@ const createMarket = z.object({
     marketStarts: z.number(),
     marketEnds: z.number(),
     outcomes: z.array(outcome),
+    cryptoDetails: z.object({
+        interval: z.string(),
+        symbol: z.string()
+    }).optional()
 }).strict()
 
 const editMarket = z.object({

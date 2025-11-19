@@ -1,5 +1,8 @@
 import Redis from "ioredis";
 import { MarketQueue } from "./lib/queue/market";
+import dotenv from "dotenv"
+
+dotenv.config()
 
 const redis = new Redis({
   host: "127.0.0.1",
@@ -11,3 +14,5 @@ const marketQueue = new MarketQueue(redis);
 
 
 marketQueue.open()
+
+marketQueue.close()

@@ -2,6 +2,12 @@ import { bigint, jsonb, pgEnum, pgTable, serial, text, timestamp, varchar } from
 import { admin } from "./admin";
 import {type Outcome} from "@repo/types/src/index"
 
+
+interface CryptoDetails {
+    interval: string,
+    symbol: string
+}
+
 export const CurrentMarketStatus = pgEnum("current_status", ["open_soon", "open", "settled", "cancelled"]);
 export const MarketCategory = pgEnum("market_category", ["sports", "crypto", "politics", "regular"]);
 
@@ -31,6 +37,9 @@ const market = pgTable("market", {
 
     // Winner
     winnerSide: jsonb("winner"),
+
+    // Crypto details
+    cryptoDetails: jsonb("crypto_details").$type<CryptoDetails>(),
 
 
     // Timestamp

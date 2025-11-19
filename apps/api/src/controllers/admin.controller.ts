@@ -7,9 +7,12 @@ import { db } from "@repo/db/dist/src";
 import { admin, market } from "@repo/db/dist/src";
 import { and, eq } from "drizzle-orm";
 
-import { RegisterSchema, LoginSchema } from "@repo/shared/dist/src"
-import { startMarketQueue } from "../lib/redis/queue/market.queue";
-import { createMarket, editMarket } from "@repo/types/dist/src"
+import { RegisterSchema, LoginSchema } from "@repo/shared/dist/src";
+import {
+  startMarketQueue,
+  closeMarketQueue,
+} from "../lib/redis/queue/market.queue";
+import { createMarket, editMarket } from "@repo/types/dist/src";
 
 // Admin account registration
 const adminRegister = async (req: Request, res: any) => {
@@ -20,7 +23,7 @@ const adminRegister = async (req: Request, res: any) => {
     return res.status(400).json(validateAdminInput.error);
   }
 
-  const { email, name, password } = validateAdminInput.data
+  const { email, name, password } = validateAdminInput.data;
 
   try {
     const isAdminExists = await db
@@ -29,12 +32,10 @@ const adminRegister = async (req: Request, res: any) => {
       .where(eq(admin.email, email));
 
     if (isAdminExists.length !== 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "User already exists with provided email.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "User already exists with provided email.",
+      });
     }
 
     const hashedPassword = bcrypt.hashSync(password, 10);
@@ -55,13 +56,11 @@ const adminRegister = async (req: Request, res: any) => {
         .json({ success: false, message: "db error: unable to create user." });
     }
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Admin created successfully",
-        adminId: createAdmin[0].adminId,
-      });
+    return res.status(200).json({
+      success: true,
+      message: "Admin created successfully",
+      adminId: createAdmin[0].adminId,
+    });
   } catch (error) {
     console.log(error);
     return res
@@ -82,7 +81,7 @@ const adminLogin = async (req: Request, res: any) => {
       .json({ success: false, message: "Invalid credentials" });
   }
 
-  const { email, password } = validateAdminInput.data
+  const { email, password } = validateAdminInput.data;
 
   try {
     const findAdmin = await db
@@ -144,16 +143,23 @@ const addNewMarket = async (req: Request, res: any) => {
   const validateData = createMarket.safeParse(data);
 
   if (!validateData.success) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message: "Invalid data received from admin",
-        error: validateData.error,
-      });
+    return res.status(400).json({
+      success: false,
+      message: "Invalid data received from admin",
+      error: validateData.error,
+    });
   }
 
-  const { title, marketStarts, marketEnds, settlement, description, outcomes, marketCategory } = validateData.data;
+  const {
+    title,
+    marketStarts,
+    marketEnds,
+    settlement,
+    description,
+    outcomes,
+    marketCategory,
+    cryptoDetails,
+  } = validateData.data;
 
   try {
     const [createNewMarket] = await db
@@ -167,30 +173,44 @@ const addNewMarket = async (req: Request, res: any) => {
         marketEnds,
         outcomes,
         marketCategory,
-        marketCreatedBy: adminId
+        marketCreatedBy: adminId,
+
+        cryptoDetails: cryptoDetails,
       })
       .returning();
 
-    const queueDelayTime = (createNewMarket.marketStarts - Math.floor((Date.now() / 1000))) * 1000;
-    await startMarketQueue.add("market_open",
+    const openQueueDelay =
+      (createNewMarket.marketStarts - Math.floor(Date.now() / 1000)) * 1000;
+
+    await startMarketQueue.add(
+      "market_open",
       { marketId: createNewMarket.marketId },
-      { delay: queueDelayTime }
-    )
+      { delay: openQueueDelay }
+    );
+
+    const closingDelay =
+      createNewMarket.cryptoDetails?.interval === "1d"
+        ? createNewMarket.marketEnds + 2
+        : createNewMarket.marketEnds + 62;
+    const closeQueueDelay =
+      (closingDelay - Math.floor(Date.now() / 1000)) * 1000;
+
+    await closeMarketQueue.add(
+      "market_close",
+      { marketId: createNewMarket.marketId },
+      { delay: closeQueueDelay }
+    );
 
     return res
       .status(200)
-      .json({ success: true, message: "Market created successfully" });
-
-
+      .json({ success: true, message: "Market created successfully and added to queue" });
   } catch (error) {
     console.log(error);
     return res
       .status(500)
       .json({ success: false, message: "Internal server error" });
   }
-
-
-}
+};
 
 // Delete market
 const deleteMarket = async (req: Request, res: any) => {
@@ -211,12 +231,10 @@ const deleteMarket = async (req: Request, res: any) => {
       .returning();
 
     if (deleteMarketById.length === 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: `Nothing found with this id, ${marketId}`,
-        });
+      return res.status(400).json({
+        success: false,
+        message: `Nothing found with this id, ${marketId}`,
+      });
     }
 
     return res
@@ -235,37 +253,37 @@ const marketModify = async (req: Request, res: any) => {
   const data = req.body;
 
   // @ts-ignore
-  const adminId = req.adminId
-  const marketId = data.marketId
+  const adminId = req.adminId;
+  const marketId = data.marketId;
 
-  const validateData = editMarket.safeParse(data.data)
+  const validateData = editMarket.safeParse(data.data);
   if (validateData.error) {
-    return res.status(400).json({ success: false, message: "Invalid data received" })
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid data received" });
   }
-
 
   const marketData = validateData.data;
-  const cleanData = Object.fromEntries(Object.entries(marketData).filter(([_, v]) => v !== undefined))
+  const cleanData = Object.fromEntries(
+    Object.entries(marketData).filter(([_, v]) => v !== undefined)
+  );
 
   try {
-    await db.update(market).set(cleanData).where(and(
-      eq(market.marketId, marketId),
-      eq(market.marketCreatedBy, adminId)
-    ))
-
-
-    return res.status(200).json({ success: true, message: "Updated successfully" })
+    await db
+      .update(market)
+      .set(cleanData)
+      .where(
+        and(eq(market.marketId, marketId), eq(market.marketCreatedBy, adminId))
+      );
+    return res
+      .status(200)
+      .json({ success: true, message: "Updated successfully" });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ success: false, message: "Internal server error" })
-
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
-}
-
-export {
-  adminRegister,
-  adminLogin,
-  addNewMarket,
-  deleteMarket,
-  marketModify
 };
+
+export { adminRegister, adminLogin, addNewMarket, deleteMarket, marketModify };

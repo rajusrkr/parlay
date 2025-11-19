@@ -7,9 +7,14 @@ import {
   DatePicker,
   Form,
   Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalHeader,
   Select,
   SelectItem,
   Textarea,
+  useDisclosure,
 } from "@heroui/react";
 import { CalendarDateTime } from "@internationalized/date";
 
@@ -19,7 +24,8 @@ import {} from "@repo/types/src";
 import { useState } from "react";
 import { BACKEND_URI } from "../store/adminStore";
 import { useNavigate } from "react-router";
-import { Trash2 } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
+import { getCoins, type Coin } from "../utils/lib";
 
 export const marketCategory = [
   { key: "crypto", label: "Crypto" },
@@ -29,14 +35,14 @@ export const marketCategory = [
 
 export default function MarketCreationForm() {
   const [formData, setFormData] = useState<Market>();
-
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isFormSubmiting, setIsFormSubmiting] = useState(false);
   const [singleOutcome, setSingleOutcome] = useState("");
   const [singleOutcomeError, setSingleOutcomeError] = useState("");
   const [startDateError, setStartDateError] = useState("");
   const [endDateError, setEndDateError] = useState("");
-
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [coinList, setCoinList] = useState<Coin[]>([]);
   const navigate = useNavigate();
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -49,10 +55,7 @@ export default function MarketCreationForm() {
 
     if (!success) {
       const errorM =
-        error.issues[0].message +
-        " at " +
-        error.issues[0].path[0].toString() +
-        " field";
+        error.issues[0].message
       setErrorMessage(errorM);
       return;
     }
@@ -79,6 +82,9 @@ export default function MarketCreationForm() {
       return;
     }
 
+    console.log(data);
+
+    // return;
     try {
       setIsFormSubmiting(true);
       const sendReq = await fetch(`${BACKEND_URI}/admin/create-market`, {
@@ -105,6 +111,74 @@ export default function MarketCreationForm() {
 
   return (
     <div className="py-8">
+      {/* ===================== SEARCH MODAL===================*/}
+      <Modal
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        size="xl"
+        className="bg-default-200"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="">
+                <Input
+                  type="text"
+                  variant="underlined"
+                  startContent={<Search className="text-default-500" />}
+                  placeholder="Search coin..."
+                  size="lg"
+                  className="text-lg"
+                  onChange={(e) => {
+                    if (e.target.value.length === 0) {
+                      setCoinList([]);
+                    } else {
+                      const filter = getCoins().filter((c) =>
+                        c.key.includes(e.target.value.toUpperCase())
+                      );
+                      setCoinList(filter.slice(0, 6));
+                    }
+                  }}
+                />
+              </ModalHeader>
+              <ModalBody>
+                {coinList.length === 0 ? (
+                  <p className="pb-4">Please search your coin</p>
+                ) : (
+                  <>
+                    <div>
+                      <p>Search result:</p>
+                    </div>
+                    <div>
+                      {coinList.map((c, i) => (
+                        <div key={i} className="py-1">
+                          <p
+                            className="w-full rounded-lg p-3 text-lg shadow-sm hover:bg-primary-500 hover:text-default-50 hover:cursor-pointer transition-all bg-default-100"
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev!,
+                                cryptoDetails: {
+                                  ...prev!.cryptoDetails!,
+                                  symbol: c.key,
+                                },
+                              }));
+
+                              onClose();
+                            }}
+                          >
+                            {c.key}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+      {/* ======================================= */}
       <Card className="max-w-3xl mx-auto py-2">
         <CardHeader>
           <Chip radius="md" variant="dot" color="secondary">
@@ -258,6 +332,56 @@ export default function MarketCreationForm() {
                   ))}
                 </Select>
               </div>
+
+              {formData?.marketCategory === "crypto" && (
+                <div className="w-full">
+                  <Input
+                    label="Select coin"
+                    type="text"
+                    labelPlacement="outside"
+                    placeholder="Select a coin"
+                    variant="faded"
+                    isRequired
+                    size="lg"
+                    onClick={() => {
+                      setCoinList([]);
+                      onOpen();
+                    }}
+                    readOnly
+                    value={formData.cryptoDetails?.symbol}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="w-full">
+              {formData?.marketCategory === "crypto" && (
+                <Select
+                  label="Select interval"
+                  labelPlacement="outside"
+                  placeholder="Select market interval"
+                  selectionMode="single"
+                  size="lg"
+                  variant="faded"
+                  isRequired
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev!,
+                      cryptoDetails: {
+                        ...prev?.cryptoDetails!,
+                        interval: e.target.value,
+                      },
+                    }));
+                  }}
+                >
+                  {[
+                    { key: "1m", label: "1m" },
+                    { key: "1d", label: "1d" },
+                  ].map((intrvl) => (
+                    <SelectItem key={intrvl.key}>{intrvl.label}</SelectItem>
+                  ))}
+                </Select>
+              )}
             </div>
             {/* Outcomes */}
             <div className="w-full">

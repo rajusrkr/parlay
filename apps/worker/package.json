@@ -13,8 +13,11 @@
   "type": "commonjs",
   "dependencies": {
     "@repo/db": "*",
+    "axios": "^1.13.2",
     "bullmq": "^5.63.2",
+    "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.3",
+    "groq-sdk": "^0.35.0",
     "ioredis": "^5.8.2"
   }
 }

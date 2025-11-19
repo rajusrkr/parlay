@@ -17,10 +17,9 @@ interface Market {
     marketEnds: number
     outcomes: Outcome[]
     winnerSide?: string
-    orderHistory?: {
-        personName: string
-        orderQty: number,
-        orderExecutionPrice: number
+    cryptoDetails?: {
+        symbol: string,
+        interval: string
     }
 }
 
