@@ -7,6 +7,7 @@ import {
   DatePicker,
   Divider,
   Form,
+  Image,
   Input,
   Modal,
   ModalBody,
@@ -17,7 +18,7 @@ import {
   Textarea,
   useDisclosure,
 } from "@heroui/react";
-import type { Market2 } from "@repo/types/src";
+import type { Market } from "@repo/types/src";
 import { Controller, useForm } from "react-hook-form";
 import getDate, { getCoins, marketCategory, type Coin } from "../utils/lib";
 import {
@@ -25,18 +26,53 @@ import {
   today,
   type CalendarDateTime,
 } from "@internationalized/date";
-import { Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { useState } from "react";
+import { BACKEND_URI } from "../store/adminStore";
+
+interface Match {
+  id: number;
+  time: number;
+  venue: {
+    name: string;
+    city: string;
+  };
+  league: {
+    id: number;
+    name: string;
+    season: number;
+  };
+  teams: {
+    home: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+    away: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+  };
+}
 
 export default function MarketCreationForm2() {
-  const { register, handleSubmit, watch, control, reset } = useForm<Market2>();
-
+  const { register, handleSubmit, watch, control, reset } = useForm<Market>();
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
   const [coinSearchVal, setCoinSearchVal] = useState("");
   const formData = watch();
   const [filteredCoins, setFilteredCoins] = useState<Coin[]>([]);
   const [outcome, setOutcome] = useState("");
-  console.log(formData);
+  const [footballMatchDate, setFootBallMatchDate] = useState("");
+
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [sliceIndex, setSliceIndex] = useState(0);
+  const [sliceEnd, setSliceEnd] = useState(6);
+  const [nextBtnClick, setNextBtnClick] = useState(1);
+
+  const totalPageReq = Math.ceil(matches.length / 6);
+  console.log(totalPageReq);
+  console.log(nextBtnClick);
 
   const onSubmit = (data: any) => console.log(data);
 
@@ -47,13 +83,15 @@ export default function MarketCreationForm2() {
         onOpenChange={onOpenChange}
         className="py-3"
         size="xl"
+        scrollBehavior="normal"
+        isDismissable={false}
       >
         <ModalContent>
           {() => (
             <>
               <ModalHeader>
                 {/* Crypto market */}
-                {formData.categoryData?.category === "crypto" && (
+                {formData.category === "crypto" && (
                   <>
                     <Input
                       type="text"
@@ -77,33 +115,47 @@ export default function MarketCreationForm2() {
                 )}
 
                 {/* Sports market */}
-                {formData.categoryData?.category === "sports" && (
+                {formData.category === "sports" && (
                   <div className="w-full">
-                    <div className="space-y-2">
+                    <p>Search matches by date</p>
+                    <div className="flex items-center gap-2">
                       <DatePicker
-                        label="Select match date"
-                        labelPlacement="outside"
                         granularity="day"
-                        defaultValue={today(getLocalTimeZone())}
+                        size="lg"
+                        variant="faded"
                         maxValue={today(getLocalTimeZone()).add({ days: 1 })}
                         minValue={today(getLocalTimeZone())}
                         onChange={(e) => {
-                          console.log(e?.year);
+                          const date = `${e?.year}-${e?.month}-${e?.day}`;
+                          setFootBallMatchDate(date);
                         }}
                       />
-                      <Button size="sm" color="secondary" variant="faded">
+                      <Button
+                        size="lg"
+                        color="secondary"
+                        variant="faded"
+                        isDisabled={footballMatchDate.length === 0}
+                        onPress={async () => {
+                          const data = await fetch(
+                            `${BACKEND_URI}/admin/matches/football/?date=${footballMatchDate}`,
+                            {
+                              credentials: "include",
+                            }
+                          );
+                          const res = await data.json();
+                          setMatches(res.matches);
+                        }}
+                      >
                         Search
                       </Button>
                     </div>
                     <Divider className="my-4" />
-
-                    <div></div>
                   </div>
                 )}
               </ModalHeader>
-              <ModalBody>
+              <ModalBody className="overflow-y-auto">
                 {/* Crypto market */}
-                {formData.categoryData?.category === "crypto" && (
+                {formData.category === "crypto" && (
                   <>
                     {filteredCoins.length === 0 ? (
                       <p className="font-semibold text-default-500">
@@ -114,7 +166,7 @@ export default function MarketCreationForm2() {
                         {filteredCoins.map((cn) => (
                           <Controller
                             key={cn.key}
-                            name="categoryData.coinName"
+                            name="cryptoCoinName"
                             control={control}
                             rules={{ required: true }}
                             render={({ field }) => (
@@ -135,6 +187,103 @@ export default function MarketCreationForm2() {
                       </div>
                     )}
                   </>
+                )}
+
+                {formData.category === "sports" && (
+                  <div>
+                    <p className="font-bold text-default-700">{
+                      matches.length === 0 ? "Search for matches, will appear here" : "Matches"
+                      }</p>
+                    {matches.slice(sliceIndex, sliceEnd).map((match, i) => (
+                      <div key={i} className="p-2 grid grid-rows-1">
+                        <Card radius="sm" className="p-2">
+                          <div className="flex">
+                            <div className="flex items-center gap-1">
+                              <span className="font-semibold">
+                                {match.teams.home.name}
+                              </span>
+                              <span>
+                                <Image src={match.teams.home.logo} width={20} />
+                              </span>
+                              <span className="font-semibold">V/S</span>
+                            </div>
+
+                            <div className="flex items-center gap-1 ml-1">
+                              <span>
+                                <Image src={match.teams.away.logo} width={20} />
+                              </span>
+                              <span className="font-semibold">
+                                {match.teams.away.name}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <p className="font-semibold text-default-600 text-sm">
+                              Date and time:{" "}
+                              {new Date(match.time * 1000).toLocaleString(
+                                "en-US",
+                                {
+                                  timeZone: "Asia/Kolkata",
+                                  dateStyle: "medium",
+                                  timeStyle: "medium",
+                                }
+                              )}
+                            </p>
+                            <p className="font-semibold text-default-600 text-sm">
+                              {`League: ${match.league.name}`}
+                            </p>
+                          </div>
+                        </Card>
+                      </div>
+                    ))}
+
+                    <div>
+                      {matches.length !== 0 && (
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            isDisabled={sliceIndex === 0 && sliceEnd === 6}
+                            color={
+                              sliceIndex === 0 && sliceEnd === 6
+                                ? "default"
+                                : "secondary"
+                            }
+                            variant="ghost"
+                            size="sm"
+                            onPress={() => {
+                              setSliceIndex((prev) => prev - 6);
+                              setSliceEnd((prev) => prev - 6);
+                              setNextBtnClick((prev) => (prev -= 1));
+                            }}
+                          >
+                            <ChevronLeft />
+                          </Button>
+
+                          <Button
+                            color={
+                              totalPageReq === nextBtnClick ||
+                              matches.length === 0
+                                ? "default"
+                                : "secondary"
+                            }
+                            variant="ghost"
+                            size="sm"
+                            isDisabled={
+                              totalPageReq === nextBtnClick ||
+                              matches.length === 0
+                            }
+                            onPress={() => {
+                              setSliceIndex((prev) => prev + 6);
+                              setSliceEnd((prev) => prev + 6);
+                              setNextBtnClick((prev) => (prev += 1));
+                            }}
+                          >
+                            <ChevronRight />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 {/* Sports market */}
@@ -173,7 +322,7 @@ export default function MarketCreationForm2() {
                   label="Market category"
                   labelPlacement="outside"
                   isRequired
-                  {...register("categoryData.category")}
+                  {...register("category")}
                 >
                   {marketCategory.map((mrktctgry) => (
                     <SelectItem key={mrktctgry.key}>
@@ -184,7 +333,7 @@ export default function MarketCreationForm2() {
               </div>
 
               <>
-                {formData.categoryData?.category === "crypto" && (
+                {formData.category === "crypto" && (
                   <div className="w-full">
                     <Input
                       size="lg"
@@ -194,7 +343,7 @@ export default function MarketCreationForm2() {
                       label="Select coin"
                       labelPlacement="outside"
                       variant="faded"
-                      value={formData.categoryData.coinName}
+                      value={formData.cryptoCoinName}
                       onClick={() => {
                         onOpen();
                       }}
@@ -202,7 +351,7 @@ export default function MarketCreationForm2() {
                   </div>
                 )}
 
-                {formData.categoryData?.category === "sports" && (
+                {formData.category === "sports" && (
                   <div className="w-full">
                     <Input
                       size="lg"
@@ -213,6 +362,8 @@ export default function MarketCreationForm2() {
                       labelPlacement="outside"
                       variant="faded"
                       onClick={() => {
+                        setFootBallMatchDate("");
+                        setMatches([]);
                         onOpen();
                       }}
                     />
@@ -223,7 +374,7 @@ export default function MarketCreationForm2() {
 
             {/*Crypto market interval field  */}
             <>
-              {formData.categoryData?.category === "crypto" && (
+              {formData.category === "crypto" && (
                 <div className="w-full">
                   <Select
                     variant="faded"
@@ -232,7 +383,7 @@ export default function MarketCreationForm2() {
                     label="Select interval"
                     labelPlacement="outside"
                     placeholder="Select an interval"
-                    {...register("categoryData.interval")}
+                    {...register("cryptoInterval")}
                   >
                     {[
                       { label: "1m", key: "1m" },
@@ -246,7 +397,7 @@ export default function MarketCreationForm2() {
             </>
             {/* Foot ball match start time */}
             <>
-              {formData.categoryData?.category === "sports" && (
+              {formData.category === "sports" && (
                 <div className="w-full">
                   <DatePicker
                     size="lg"
@@ -271,7 +422,7 @@ export default function MarketCreationForm2() {
                 isRequired
                 size="lg"
                 variant="faded"
-                {...register("metadata.title")}
+                {...register("question")}
               />
             </div>
 
@@ -284,7 +435,7 @@ export default function MarketCreationForm2() {
                 isRequired
                 size="lg"
                 variant="faded"
-                {...register("metadata.settlementRules")}
+                {...register("settlementRules")}
               />
             </div>
 
@@ -294,9 +445,9 @@ export default function MarketCreationForm2() {
                 Outcomes <span className="text-danger">*</span>
               </p>
 
-              {formData.categoryData?.category === "crypto" ? (
+              {formData.category === "crypto" ? (
                 <Controller
-                  name="metadata.ouctomes"
+                  name="outcomes"
                   control={control}
                   defaultValue={[]}
                   rules={{ required: true }}
@@ -307,7 +458,7 @@ export default function MarketCreationForm2() {
                       </CardHeader>
                       <CardBody>
                         <div className="mb-4">
-                          {formData.metadata?.ouctomes.map((otcm, i) => (
+                          {formData.outcomes?.map((otcm, i) => (
                             <ul key={i}>
                               <li className="capitalize font-semibold text-default-500">{`${i + 1}.  ${otcm.title}`}</li>
                             </ul>
@@ -361,7 +512,7 @@ export default function MarketCreationForm2() {
             <>
               <div className="w-full flex md:flex-row gap-2">
                 <Controller
-                  name="metadata.marketStarts"
+                  name="marketStarts"
                   control={control}
                   rules={{ required: true }}
                   render={({ field }) => (
@@ -381,9 +532,9 @@ export default function MarketCreationForm2() {
                   )}
                 />
 
-                {formData.categoryData?.category === "crypto" && (
+                {formData.category === "crypto" && (
                   <Controller
-                    name="metadata.marketEnds"
+                    name="marketEnds"
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
@@ -405,7 +556,6 @@ export default function MarketCreationForm2() {
                 )}
               </div>
             </>
-
             <div className="w-full">
               <Button type="submit" color="secondary" className="w-full">
                 Submit

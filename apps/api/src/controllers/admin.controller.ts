@@ -12,7 +12,9 @@ import {
   startMarketQueue,
   closeMarketQueue,
 } from "../lib/redis/queue/market.queue";
-import { createMarket, editMarket } from "@repo/types/dist/src";
+import { createMarket, editMarket, newMarket } from "@repo/types/dist/src";
+import axios from "axios";
+// import { newMarket } from "@repo/types/src";
 
 // Admin account registration
 const adminRegister = async (req: Request, res: any) => {
@@ -140,7 +142,7 @@ const addNewMarket = async (req: Request, res: any) => {
   // @ts-ignore
   const adminId = req.adminId;
 
-  const validateData = createMarket.safeParse(data);
+  const validateData = newMarket.safeParse(data);
 
   if (!validateData.success) {
     return res.status(400).json({
@@ -150,32 +152,12 @@ const addNewMarket = async (req: Request, res: any) => {
     });
   }
 
-  const {
-    title,
-    marketStarts,
-    marketEnds,
-    settlement,
-    description,
-    outcomes,
-    marketCategory,
-    cryptoDetails,
-  } = validateData.data;
-
   try {
     const [createNewMarket] = await db
       .insert(market)
       .values({
-        marketId: uuidv4(),
-        title,
-        description,
-        settlement,
-        marketStarts,
-        marketEnds,
-        outcomes,
-        marketCategory,
-        marketCreatedBy: adminId,
-
-        cryptoDetails: cryptoDetails,
+        ...validateData.data,
+        createdBy: adminId,
       })
       .returning();
 
@@ -184,26 +166,27 @@ const addNewMarket = async (req: Request, res: any) => {
 
     await startMarketQueue.add(
       "market_open",
-      { marketId: createNewMarket.marketId },
+      { marketId: createNewMarket.id },
       { delay: openQueueDelay }
     );
 
     const closingDelay =
-      createNewMarket.cryptoDetails?.interval === "1d"
-        ? createNewMarket.marketEnds + 2
-        : createNewMarket.marketEnds + 62;
+      createNewMarket.cryptoInterval === "1d"
+        ? createNewMarket.marketEnds! + 2
+        : createNewMarket.marketEnds! + 62;
     const closeQueueDelay =
       (closingDelay - Math.floor(Date.now() / 1000)) * 1000;
 
     await closeMarketQueue.add(
       "market_close",
-      { marketId: createNewMarket.marketId },
+      { marketId: createNewMarket.id },
       { delay: closeQueueDelay }
     );
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Market created successfully and added to queue" });
+    return res.status(200).json({
+      success: true,
+      message: "Market created successfully and added to queue",
+    });
   } catch (error) {
     console.log(error);
     return res
@@ -223,10 +206,7 @@ const deleteMarket = async (req: Request, res: any) => {
     const deleteMarketById = await db
       .delete(market)
       .where(
-        and(
-          eq(market.marketId, marketId!.toString()),
-          eq(market.marketCreatedBy, adminId)
-        )
+        and(eq(market.id, marketId!.toString()), eq(market.createdBy, adminId))
       )
       .returning();
 
@@ -272,9 +252,7 @@ const marketModify = async (req: Request, res: any) => {
     await db
       .update(market)
       .set(cleanData)
-      .where(
-        and(eq(market.marketId, marketId), eq(market.marketCreatedBy, adminId))
-      );
+      .where(and(eq(market.id, marketId), eq(market.createdBy, adminId)));
     return res
       .status(200)
       .json({ success: true, message: "Updated successfully" });
@@ -286,4 +264,99 @@ const marketModify = async (req: Request, res: any) => {
   }
 };
 
-export { adminRegister, adminLogin, addNewMarket, deleteMarket, marketModify };
+// Fetch football match
+const getFootBallMatches = async (req: Request, res: any) => {
+  const data = req.query;
+  //@ts-ignore
+  const admin = req.adminId;
+  console.log(admin);
+
+  console.log(data.date);
+
+  const date = data.date;
+
+  // return res.status(200).json({message: "hey there"})
+
+  try {
+    const reqFootBallApi = await axios.get(
+      "https://v3.football.api-sports.io/fixtures",
+      {
+        params: {
+          date,
+        },
+        headers: {
+          "x-apisports-key": process.env.FOOTBALL_SECRET,
+        },
+      }
+    );
+
+    const data = reqFootBallApi.data.response;
+
+    const matches = data.filter((mt: any) => mt.fixture.status.long === "Not Started").map((m: any) => ({
+        id: m.fixture.id,
+      time: m.fixture.timestamp,
+      venue: {
+        name: m.fixture.venue.name,
+        city: m.fixture.venue.city,
+      },
+      league: {
+        id: m.league.id,
+        name: m.league.name,
+        season: m.league.season,
+      },
+      teams: {
+        home: {
+          id: m.teams.home.id,
+          name: m.teams.home.name,
+          logo: m.teams.home.logo,
+        },
+        away: {
+          id: m.teams.away.id,
+          name: m.teams.away.name,
+          logo: m.teams.away.logo,
+        },
+      },
+    }))
+  
+    // const matches = data.map((m: any) => ({
+    //   id: m.fixture.id,
+    //   time: m.fixture.timestamp,
+    //   venue: {
+    //     name: m.fixture.venue.name,
+    //     city: m.fixture.venue.city,
+    //   },
+    //   league: {
+    //     id: m.league.id,
+    //     name: m.league.name,
+    //     season: m.league.season,
+    //   },
+    //   teams: {
+    //     home: {
+    //       id: m.teams.home.id,
+    //       name: m.teams.home.name,
+    //       logo: m.teams.home.logo,
+    //     },
+    //     away: {
+    //       id: m.teams.away.id,
+    //       name: m.teams.away.name,
+    //       logo: m.teams.away.logo,
+    //     },
+    //   },
+    // }));
+
+    console.log(matches);
+
+    return res.status(200).json({ matches });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export {
+  adminRegister,
+  adminLogin,
+  addNewMarket,
+  deleteMarket,
+  marketModify,
+  getFootBallMatches,
+};
