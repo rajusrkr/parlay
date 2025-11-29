@@ -1,51 +1,62 @@
-import { bigint, jsonb, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
+import { type Outcome } from "@repo/types/src/index";
 import { admin } from "./admin";
-import {type Outcome} from "@repo/types/src/index"
 
-
-interface CryptoDetails {
-    interval: string,
-    symbol: string
-}
-
-export const CurrentMarketStatus = pgEnum("current_status", ["open_soon", "open", "settled", "cancelled"]);
-export const MarketCategory = pgEnum("market_category", ["sports", "crypto", "politics", "regular"]);
+export const CategoryEnum = pgEnum("category", ["sports", "crypto"]);
+export const MarketStateEnum = pgEnum("market_state", [
+  "open",
+  "not_started",
+  "resolved",
+  "resolving",
+  "new_order_stoped",
+]);
 
 const market = pgTable("market", {
-    // Market identity
-    id: serial("id").primaryKey(),
-    marketId: varchar("market_id", { length: 36 }).unique().notNull(),
+  id: uuid("id").primaryKey().defaultRandom(),
+  question: text("question").notNull(),
+  settlementRules: text("settlement_rules").notNull(),
+  category: CategoryEnum("category").notNull(),
+  outcomes: jsonb("outcomes").$type<Outcome[]>().notNull(),
+  marketStarts: bigint("market_starts", { mode: "number" }).notNull(),
+  marketEnds: bigint("market_ends", { mode: "number" }).notNull(),
+  resolution: text("resolution"),
+  marketState: MarketStateEnum("market_state").notNull().default("not_started"),
+  createdBy: uuid("created_by").references(() => admin.id, {
+    onDelete: "cascade",
+  }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
+});
 
-    // Market creater identity
-    marketCreatedBy: varchar("market_created_by", { length: 36 }).references(() => admin.adminId, { onDelete: "cascade" }).notNull(),
+const category_sports = pgTable("category_sports", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  matchId: text("matchId").notNull(),
+  matchStarts: bigint("match_starts", { mode: "number" }).notNull(),
+  matchEnds: bigint("match_ends", { mode: "number" }).notNull(),
+  marketId: uuid("market_id")
+    .references(() => market.id, {onDelete: "cascade"})
+    .notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
+});
 
+const category_crypto = pgTable("category_crypto", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cryptoInterval: text("crypto_interval").notNull(),
+  cryptoCoinName: text("crypto_coin_name").notNull(),
+  marketId: uuid("market_id")
+    .references(() => market.id, {onDelete: "cascade"})
+    .notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
+});
 
-    // Market details
-    title: varchar("market_title", { length: 255 }).notNull(),
-    description: text("market_overview").notNull(),
-    settlement: text("market_settlement").notNull(),
-    currentStatus: CurrentMarketStatus("current_status").default("open_soon"),
-    marketCategory: MarketCategory("market_category").notNull(),
-
-    // Timing
-    marketStarts: bigint("market_starts", { mode: "number" }).notNull(),
-    marketEnds: bigint("market_ends", { mode: "number" }).notNull(),
-
-    // Outcome and prices, will store latest prices
-    outcomes: jsonb("outcome_and_price").$type<Outcome[]>().notNull(),
-
-
-    // Winner
-    winnerSide: jsonb("winner"),
-
-    // Crypto details
-    cryptoDetails: jsonb("crypto_details").$type<CryptoDetails>(),
-
-
-    // Timestamp
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").$onUpdate(() => new Date())
-})
-
-
-export { market }
+export { market, category_sports, category_crypto };

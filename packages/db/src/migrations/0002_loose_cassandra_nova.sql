@@ -1,1 +1,0 @@
-ALTER TABLE "market" ALTER COLUMN "market_category" SET NOT NULL;

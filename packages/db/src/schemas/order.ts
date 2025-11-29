@@ -1,4 +1,4 @@
-import { decimal, integer, jsonb, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import { decimal, integer, jsonb, pgEnum, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { user } from "./user";
 import { market } from "./market";
 
@@ -6,16 +6,14 @@ export const OrderType = pgEnum("order_type", ["buy", "sell"])
 
 const order = pgTable("order", {
     // Order Identity
-    id: serial("id").primaryKey(),
-    orderId: varchar("order_id", { length: 36 }).notNull(),
-
+    id: uuid("id").primaryKey().defaultRandom(),
 
     // User Identity
-    orderPlacedBy: varchar("order_palced_by", { length: 36 }).references(() => user.userId, { onDelete: "cascade" }).notNull(),
+    orderPlacedBy: uuid("order_palced_by").references(() => user.id, { onDelete: "cascade" }).notNull(),
 
 
     // Order details
-    orderTakenIn: varchar("order_taken_id", { length: 36 }).references(() => market.marketId, { onDelete: "cascade" }).notNull(),
+    orderTakenIn: uuid("order_taken_id").references(() => market.id, { onDelete: "cascade" }).notNull(),
     orderPlacedFor: varchar("order_plced_for", { length: 255 }), // order outcome
     orderType: OrderType().notNull(), // buy or sell
     orderQty: integer("order_qty").notNull(),

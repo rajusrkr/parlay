@@ -5,85 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1759229977764,
-      "tag": "0000_charming_guardsmen",
+      "when": 1764068640143,
+      "tag": "0000_talented_bromley",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1760209034004,
-      "tag": "0001_married_shotgun",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1760251188258,
-      "tag": "0002_loose_cassandra_nova",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1760849915067,
-      "tag": "0003_flippant_marvel_boy",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1760852285883,
-      "tag": "0004_brief_fantastic_four",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1760852388964,
-      "tag": "0005_eminent_master_mold",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1760900975444,
-      "tag": "0006_unique_demogoblin",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1761943107806,
-      "tag": "0007_graceful_morg",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1761991599848,
-      "tag": "0008_public_tenebrous",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1761997066920,
-      "tag": "0009_hot_boomerang",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1762692717784,
-      "tag": "0010_curvy_spyke",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1763469363411,
-      "tag": "0011_huge_boomerang",
+      "when": 1764074052678,
+      "tag": "0001_dark_klaw",
       "breakpoints": true
     }
   ]

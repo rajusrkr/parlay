@@ -1,5 +1,5 @@
 {
-  "id": "7097131b-02d2-4b53-9448-f31f224bfdc2",
+  "id": "4d523af8-5bc8-4f36-8adc-2ac5b4852dbd",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -10,15 +10,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
-        },
-        "admin_id": {
-          "name": "admin_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "name": {
           "name": "name",
@@ -64,13 +59,6 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "admin_admin_id_unique": {
-          "name": "admin_admin_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "admin_id"
-          ]
-        },
         "admin_email_unique": {
           "name": "admin_email_unique",
           "nullsNotDistinct": false,
@@ -83,71 +71,175 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.category_crypto": {
+      "name": "category_crypto",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "crypto_interval": {
+          "name": "crypto_interval",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "crypto_coin_name": {
+          "name": "crypto_coin_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "market_id": {
+          "name": "market_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "category_crypto_market_id_market_id_fk": {
+          "name": "category_crypto_market_id_market_id_fk",
+          "tableFrom": "category_crypto",
+          "tableTo": "market",
+          "columnsFrom": [
+            "market_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.category_sports": {
+      "name": "category_sports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "matchId": {
+          "name": "matchId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "match_starts": {
+          "name": "match_starts",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "match_ends": {
+          "name": "match_ends",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "market_id": {
+          "name": "market_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "category_sports_market_id_market_id_fk": {
+          "name": "category_sports_market_id_market_id_fk",
+          "tableFrom": "category_sports",
+          "tableTo": "market",
+          "columnsFrom": [
+            "market_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.market": {
       "name": "market",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
-        "market_id": {
-          "name": "market_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "market_created_by": {
-          "name": "market_created_by",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "market_title": {
-          "name": "market_title",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "market_overview": {
-          "name": "market_overview",
+        "question": {
+          "name": "question",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "market_settlement": {
-          "name": "market_settlement",
+        "settlement_rules": {
+          "name": "settlement_rules",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "current_status": {
-          "name": "current_status",
-          "type": "current_status",
+        "category": {
+          "name": "category",
+          "type": "category",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'not_started'"
+          "notNull": true
         },
-        "market_category": {
-          "name": "market_category",
-          "type": "market_category",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "market_type": {
-          "name": "market_type",
-          "type": "market_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "market_thumbnail_image_url": {
-          "name": "market_thumbnail_image_url",
-          "type": "text",
+        "outcomes": {
+          "name": "outcomes",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },
@@ -161,17 +253,25 @@
           "name": "market_ends",
           "type": "bigint",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "outcome_and_price": {
-          "name": "outcome_and_price",
-          "type": "jsonb",
+        "resolution": {
+          "name": "resolution",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "winner": {
-          "name": "winner",
-          "type": "jsonb",
+        "market_state": {
+          "name": "market_state",
+          "type": "market_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'not_started'"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -191,30 +291,22 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "market_market_created_by_admin_admin_id_fk": {
-          "name": "market_market_created_by_admin_admin_id_fk",
+        "market_created_by_admin_id_fk": {
+          "name": "market_created_by_admin_id_fk",
           "tableFrom": "market",
           "tableTo": "admin",
           "columnsFrom": [
-            "market_created_by"
+            "created_by"
           ],
           "columnsTo": [
-            "admin_id"
+            "id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "market_market_id_unique": {
-          "name": "market_market_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "market_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -225,31 +317,26 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
-        },
-        "order_id": {
-          "name": "order_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "order_palced_by": {
           "name": "order_palced_by",
-          "type": "varchar(36)",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
         "order_taken_id": {
           "name": "order_taken_id",
-          "type": "varchar(36)",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
         "order_plced_for": {
           "name": "order_plced_for",
-          "type": "varchar(12)",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
         },
@@ -268,7 +355,7 @@
         },
         "average_traded_price": {
           "name": "average_traded_price",
-          "type": "numeric(12, 2)",
+          "type": "numeric(12, 4)",
           "primaryKey": false,
           "notNull": false
         },
@@ -294,111 +381,28 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "order_order_palced_by_user_user_id_fk": {
-          "name": "order_order_palced_by_user_user_id_fk",
+        "order_order_palced_by_user_id_fk": {
+          "name": "order_order_palced_by_user_id_fk",
           "tableFrom": "order",
           "tableTo": "user",
           "columnsFrom": [
             "order_palced_by"
           ],
           "columnsTo": [
-            "user_id"
+            "id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "order_order_taken_id_market_market_id_fk": {
-          "name": "order_order_taken_id_market_market_id_fk",
+        "order_order_taken_id_market_id_fk": {
+          "name": "order_order_taken_id_market_id_fk",
           "tableFrom": "order",
           "tableTo": "market",
           "columnsFrom": [
             "order_taken_id"
           ],
           "columnsTo": [
-            "market_id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.pl": {
-      "name": "pl",
-      "schema": "",
-      "columns": {
-        "pl": {
-          "name": "pl",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "market_id": {
-          "name": "market_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "pl_outcome": {
-          "name": "pl_outcome",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "net_pl": {
-          "name": "net_pl",
-          "type": "numeric(12, 2)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "pl_market_id_market_market_id_fk": {
-          "name": "pl_market_id_market_market_id_fk",
-          "tableFrom": "pl",
-          "tableTo": "market",
-          "columnsFrom": [
-            "market_id"
-          ],
-          "columnsTo": [
-            "market_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "pl_user_id_user_user_id_fk": {
-          "name": "pl_user_id_user_user_id_fk",
-          "tableFrom": "pl",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
+            "id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -416,31 +420,26 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
-        },
-        "position_id": {
-          "name": "position_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "position_taken_by": {
           "name": "position_taken_by",
-          "type": "varchar(36)",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
         "position_taken_in": {
           "name": "position_taken_in",
-          "type": "varchar(36)",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
         "position_taken_for": {
           "name": "position_taken_for",
-          "type": "varchar(12)",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
@@ -450,12 +449,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "is_position_settles": {
-          "name": "is_position_settles",
-          "type": "boolean",
+        "pnL": {
+          "name": "pnL",
+          "type": "numeric(12, 4)",
           "primaryKey": false,
-          "notNull": false,
-          "default": false
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -473,87 +471,28 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "position_position_taken_by_user_user_id_fk": {
-          "name": "position_position_taken_by_user_user_id_fk",
+        "position_position_taken_by_user_id_fk": {
+          "name": "position_position_taken_by_user_id_fk",
           "tableFrom": "position",
           "tableTo": "user",
           "columnsFrom": [
             "position_taken_by"
           ],
           "columnsTo": [
-            "user_id"
+            "id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "position_position_taken_in_market_market_id_fk": {
-          "name": "position_position_taken_in_market_market_id_fk",
+        "position_position_taken_in_market_id_fk": {
+          "name": "position_position_taken_in_market_id_fk",
           "tableFrom": "position",
           "tableTo": "market",
           "columnsFrom": [
             "position_taken_in"
           ],
           "columnsTo": [
-            "market_id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "position_position_id_unique": {
-          "name": "position_position_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "position_id"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.price": {
-      "name": "price",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "market_id": {
-          "name": "market_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "outcomes_and_prices": {
-          "name": "outcomes_and_prices",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "price_market_id_market_market_id_fk": {
-          "name": "price_market_id_market_market_id_fk",
-          "tableFrom": "price",
-          "tableTo": "market",
-          "columnsFrom": [
-            "market_id"
-          ],
-          "columnsTo": [
-            "market_id"
+            "id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -571,9 +510,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "name": {
           "name": "name",
@@ -584,12 +524,6 @@
         "email": {
           "name": "email",
           "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true
         },
@@ -616,10 +550,10 @@
         },
         "wallet_balance": {
           "name": "wallet_balance",
-          "type": "numeric(12, 2)",
+          "type": "numeric(12, 4)",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'50000.00'"
+          "notNull": true,
+          "default": 50000
         },
         "currencyCode": {
           "name": "currencyCode",
@@ -627,7 +561,7 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
-          "default": "'USD'"
+          "default": "'INR'"
         },
         "created_at": {
           "name": "created_at",
@@ -653,13 +587,6 @@
           "columns": [
             "email"
           ]
-        },
-        "user_user_id_unique": {
-          "name": "user_user_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
         }
       },
       "policies": {},
@@ -668,32 +595,23 @@
     }
   },
   "enums": {
-    "public.current_status": {
-      "name": "current_status",
-      "schema": "public",
-      "values": [
-        "not_started",
-        "open",
-        "settled",
-        "cancelled"
-      ]
-    },
-    "public.market_category": {
-      "name": "market_category",
+    "public.category": {
+      "name": "category",
       "schema": "public",
       "values": [
         "sports",
-        "crypto",
-        "politics",
-        "regular"
+        "crypto"
       ]
     },
-    "public.market_type": {
-      "name": "market_type",
+    "public.market_state": {
+      "name": "market_state",
       "schema": "public",
       "values": [
-        "binary",
-        "other"
+        "open",
+        "not_started",
+        "resolved",
+        "resolving",
+        "new_order_stoped"
       ]
     },
     "public.order_type": {

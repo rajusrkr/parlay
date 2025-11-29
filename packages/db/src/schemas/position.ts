@@ -1,36 +1,44 @@
-import { boolean, decimal, jsonb, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import {
+  decimal,
+  jsonb,
+  pgTable,
+  timestamp,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 import { user } from "./user";
 import { market } from "./market";
 
 interface TotalQtyAndAvgPrice {
-    totalQty: number,
-    avgPrice: number
-    atTotalCost: number,
+  totalQty: number;
+  avgPrice: number;
+  atTotalCost: number;
 }
 
 const position = pgTable("position", {
-    // Position identity
-    id: serial("id").primaryKey(),
-    positionId: varchar("position_id", { length: 36 }).unique().notNull(),
+  // Position identity
+  id: uuid("id").primaryKey().defaultRandom(),
 
+  // User Identity
+  positionTakenBy: uuid("position_taken_by")
+    .references(() => user.id, { onDelete: "cascade" })
+    .notNull(),
 
-    // User Identity
-    positionTakenBy: varchar("position_taken_by", { length: 36 }).references(() => user.userId, { onDelete: "cascade" }).notNull(),
+  // Position details
+  positionTakenIn: uuid("position_taken_in")
+    .references(() => market.id, { onDelete: "cascade" })
+    .notNull(), // Market id
+  positionTakenFor: varchar("position_taken_for", { length: 255 }).notNull(), // Selected outcome
+  totalQtyAndAvgPrice: jsonb("total_qty_&_avg_price")
+    .$type<TotalQtyAndAvgPrice>()
+    .notNull(),
 
+  // PnL
+  pnL: decimal("pnL", { precision: 12, scale: 4, mode: "number" }),
 
-    // Position details
-    positionTakenIn: varchar("position_taken_in", { length: 36 }).references(() => market.marketId, { onDelete: "cascade" }).notNull(), // Market id
-    positionTakenFor: varchar("position_taken_for", { length: 255 }).notNull(), // Selected outcome
-    totalQtyAndAvgPrice: jsonb("total_qty_&_avg_price").$type<TotalQtyAndAvgPrice>().notNull(),
-    
-    // PnL
-    pnL: decimal("pnL", { precision: 12, scale: 4, mode: "number" }),
+  // Timestamp
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
+});
 
-
-    // Timestamp
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").$onUpdate(() => new Date())
-})
-
-export { position }
-
+export { position };

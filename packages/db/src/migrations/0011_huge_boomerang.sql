@@ -1,1 +1,0 @@
-ALTER TABLE "market" ADD COLUMN "crypto_details" jsonb;

@@ -1,1 +1,0 @@
-ALTER TABLE "position" DROP COLUMN "is_position_settles";

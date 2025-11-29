@@ -1,1 +1,0 @@
-ALTER TABLE "position" ALTER COLUMN "position_taken_for" SET DATA TYPE varchar(255);
